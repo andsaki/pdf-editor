@@ -1,6 +1,13 @@
 import React from "react";
-import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
-import type { InvoiceData, InvoiceImage } from "../types";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Image,
+} from "@react-pdf/renderer";
+import type { InvoiceData } from "../types";
 
 const styles = StyleSheet.create({
   page: {
@@ -68,7 +75,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   total: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 100,
     right: 60, // Corresponds to page paddingRight
   },

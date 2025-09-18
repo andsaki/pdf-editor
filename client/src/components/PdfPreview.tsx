@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { Document, Page } from "react-pdf";
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { InvoiceData, InvoiceImage } from "../types";
 import { Rnd } from "react-rnd";
 
@@ -67,55 +67,75 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       const page = pdfDoc.addPage();
       const { width, height } = page.getSize();
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontSize = 16;
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fontSize = 12;
+      const padding = 5;
 
       let y = height - 50;
-      page.drawText("Invoice", { x: 50, y, size: 40, font });
+      page.drawText("Invoice", { x: 50, y, size: 24, font: boldFont });
       y -= 60;
 
-      page.drawText(`To: ${invoiceData.to || ""}`, {
-        x: 50,
-        y,
-        size: fontSize,
-        font,
-      });
-      y -= 25;
-      page.drawText(`From: ${invoiceData.from || ""}`, {
-        x: 50,
-        y,
-        size: fontSize,
-        font,
-      });
+      page.drawText(`To: ${invoiceData.to || ""}`, { x: 50, y, size: fontSize, font });
+      page.drawText(`From: ${invoiceData.from || ""}`, { x: width - 250, y, size: fontSize, font });
       y -= 50;
 
-      // Position items below the new interactive headers
-      y = height - 225;
+      // Table drawing logic
+      const tableTop = y;
+      const tableLeft = 50;
+      const tableRight = width - 50;
+      const descriptionColWidth = 350;
+      const rowHeight = 25;
+
+      // Draw Header
+      page.drawRectangle({
+        x: tableLeft,
+        y: tableTop - rowHeight,
+        width: tableRight - tableLeft,
+        height: rowHeight,
+        color: rgb(0.9, 0.9, 0.9),
+      });
+      page.drawText("Description", { x: tableLeft + padding, y: tableTop - 18, size: fontSize, font: boldFont });
+      page.drawText("Amount", { x: tableLeft + descriptionColWidth + padding, y: tableTop - 18, size: fontSize, font: boldFont });
+      y = tableTop - rowHeight;
 
       let total = 0;
+      // Draw Rows
       if (invoiceData.items && Array.isArray(invoiceData.items)) {
         invoiceData.items.forEach((item) => {
-          page.drawText(item.description || "", {
-            x: 50,
-            y,
-            size: fontSize,
-            font,
-          });
-          page.drawText(`$${(item.amount || 0).toFixed(2)}`, {
-            x: width - 150,
-            y,
-            size: fontSize,
-            font,
-          });
-          y -= 25;
+          const itemDescription = item.description || "";
+          const itemAmount = `$${(item.amount || 0).toFixed(2)}`;
+          
+          page.drawText(itemDescription, { x: tableLeft + padding, y: y - 18, size: fontSize, font });
+          page.drawText(itemAmount, { x: tableLeft + descriptionColWidth + padding, y: y - 18, size: fontSize, font });
+          
+          y -= rowHeight;
           total += item.amount || 0;
         });
       }
 
+      // Draw table borders
+      const tableBottom = y;
+      page.drawRectangle({ // Outer border
+        x: tableLeft,
+        y: tableBottom,
+        width: tableRight - tableLeft,
+        height: tableTop - tableBottom,
+        borderColor: rgb(0, 0, 0),
+        borderWidth: 1,
+      });
+      page.drawLine({ // Vertical line
+        start: { x: tableLeft + descriptionColWidth, y: tableTop },
+        end: { x: tableLeft + descriptionColWidth, y: tableBottom },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+
+
       page.drawText(`Total: $${total.toFixed(2)}`, {
         x: width - 150,
         y: 100, // Position at the bottom of the page
-        size: fontSize,
-        font,
+        size: 16,
+        font: boldFont,
       });
 
       // Embed and draw images
@@ -351,7 +371,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
             <Rnd
               key={`image-${index}`}
               style={{ border: "1px dashed gray", zIndex: 15 }}
-              size={{                width: image.width * displayScale,
+              size={{
+                width: image.width * displayScale,
                 height: image.height * displayScale,
               }}
               position={{
