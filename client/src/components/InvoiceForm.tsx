@@ -31,9 +31,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
     setInvoiceData({ ...invoiceData, items: newItems });
   };
 
-  const handleCustomTextChange = (index: number, value: string) => {
+  const handleCustomTextChange = (index: number, field: 'content' | 'x' | 'y', value: string) => {
     const newCustomTexts = [...invoiceData.customTexts];
-    newCustomTexts[index] = value;
+    if (field === 'x' || field === 'y') {
+      newCustomTexts[index][field] = parseFloat(value) || 0;
+    } else {
+      newCustomTexts[index][field] = value;
+    }
     setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
   };
 
@@ -41,7 +45,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
     if (newCustomText.trim() !== '') {
       setInvoiceData({
         ...invoiceData,
-        customTexts: [...invoiceData.customTexts, newCustomText.trim()],
+        customTexts: [...invoiceData.customTexts, { content: newCustomText.trim(), x: 50, y: 50 }], // Default position
       });
       setNewCustomText('');
     }
@@ -101,13 +105,28 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
       </button>
 
       <h3 className="text-xl font-bold mb-2 mt-6 text-gray-800">Custom Texts</h3>
-      {invoiceData.customTexts.map((text, index) => (
+      {invoiceData.customTexts.map((textBlock, index) => (
         <div key={index} className="flex items-center mb-2">
           <input
             type="text"
+            placeholder="Content"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mr-2 leading-tight focus:outline-none focus:shadow-outline"
-            value={text}
-            onChange={(e) => handleCustomTextChange(index, e.target.value)}
+            value={textBlock.content}
+            onChange={(e) => handleCustomTextChange(index, 'content', e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="X"
+            className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 mr-2 leading-tight focus:outline-none focus:shadow-outline"
+            value={textBlock.x}
+            onChange={(e) => handleCustomTextChange(index, 'x', e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Y"
+            className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 mr-2 leading-tight focus:outline-none focus:shadow-outline"
+            value={textBlock.y}
+            onChange={(e) => handleCustomTextChange(index, 'y', e.target.value)}
           />
           <button onClick={() => removeCustomText(index)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Remove

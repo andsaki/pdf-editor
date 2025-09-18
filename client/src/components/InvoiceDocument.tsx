@@ -112,8 +112,10 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData })
       </Text>
 
       <View style={{ marginTop: 20 }}>
-        {invoiceData.customTexts.map((text, index) => (
-          <Text key={index} style={{ marginBottom: 5 }}>{text}</Text>
+        {invoiceData.customTexts.map((textBlock, index) => (
+          <Text key={index} style={{ position: 'absolute', left: textBlock.x, top: textBlock.y }}>
+            {textBlock.content}
+          </Text>
         ))}
       </View>
     </Page>
