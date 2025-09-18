@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter client dev\" \"pnpm --filter server dev\""
+    "dev": "concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "volta": {
+    "node": "20.19.4"
+  },
   "devDependencies": {
     "concurrently": "^9.2.1"
   }
