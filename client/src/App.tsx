@@ -2,48 +2,19 @@ import { useState } from 'react';
 import { InvoiceForm } from './components/InvoiceForm';
 import { PdfPreview } from './components/PdfPreview';
 import type { InvoiceData } from './types';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { pdf } from '@react-pdf/renderer';
+import { InvoiceDocument } from './components/InvoiceDocument';
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     to: 'John Doe',
     from: 'Jane Doe',
     items: [{ description: 'Sample Item', amount: 100 }],
+    customTexts: [],
   });
 
   const downloadPdf = async () => {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    const { width, height } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontSize = 12;
-
-    let y = height - 40;
-    page.drawText('Invoice', { x: 50, y, size: 30, font });
-    y -= 50;
-
-    page.drawText(`To: ${invoiceData.to}`, { x: 50, y, size: fontSize, font });
-    y -= 20;
-    page.drawText(`From: ${invoiceData.from}`, { x: 50, y, size: fontSize, font });
-    y -= 40;
-
-    page.drawText('Description', { x: 50, y, size: fontSize, font });
-    page.drawText('Amount', { x: width - 150, y, size: fontSize, font });
-    y -= 20;
-
-    let total = 0;
-    invoiceData.items.forEach(item => {
-      page.drawText(item.description, { x: 50, y, size: fontSize, font });
-      page.drawText(`$${item.amount.toFixed(2)}`, { x: width - 150, y, size: fontSize, font });
-      y -= 20;
-      total += item.amount;
-    });
-
-    y -= 20;
-    page.drawText(`Total: $${total.toFixed(2)}`, { x: width - 150, y, size: fontSize, font });
-
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blob = await pdf(<InvoiceDocument invoiceData={invoiceData} />).toBlob();
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'invoice.pdf';
@@ -53,8 +24,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white p-8">
-      <header className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gray-800 text-white py-8">
+      <header className="flex justify-between items-center mb-8 px-8">
         <h1 className="text-4xl font-bold">Invoice Editor</h1>
         <button 
           onClick={downloadPdf}
@@ -63,9 +34,13 @@ function App() {
           Download PDF
         </button>
       </header>
-      <main className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)]">
-        <InvoiceForm invoiceData={invoiceData} setInvoiceData={setInvoiceData} />
-        <PdfPreview invoiceData={invoiceData} />
+      <main className="grid grid-cols-3 gap-8 h-[calc(100vh-120px)] px-8">
+        <div className="col-span-1">
+          <InvoiceForm invoiceData={invoiceData} setInvoiceData={setInvoiceData} />
+        </div>
+        <div className="col-span-2">
+          <PdfPreview invoiceData={invoiceData} />
+        </div>
       </main>
     </div>
   );
