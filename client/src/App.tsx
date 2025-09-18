@@ -15,6 +15,7 @@ function App() {
       { content: 'Description', x: 50, y: 200 },
       { content: 'Amount', x: 445, y: 200 },
     ],
+    images: [],
   });
 
   const downloadPdf = async () => {

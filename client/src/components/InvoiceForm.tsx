@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { InvoiceData } from '../types';
 
 interface InvoiceFormProps {
@@ -8,6 +8,7 @@ interface InvoiceFormProps {
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData }) => {
   const [newCustomText, setNewCustomText] = useState('');
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleItemChange = (index: number, field: 'description' | 'amount', value: string) => {
     const newItems = [...invoiceData.items];
@@ -55,6 +56,46 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
     const newCustomTexts = invoiceData.customTexts.filter((_, i) => i !== index);
     setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
   };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result as string;
+      if (data) {
+        const img = new Image();
+        img.onload = () => {
+          setInvoiceData((prev) => ({
+            ...prev,
+            images: [
+              ...(prev.images || []),
+              {
+                data,
+                x: 50,
+                y: 50,
+                width: img.width,
+                height: img.height,
+              },
+            ],
+          }));
+        };
+        img.src = data;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImagePropChange = (index: number, field: 'x' | 'y' | 'width' | 'height', value: string) => {
+    const newImages = [...(invoiceData.images || [])];
+    newImages[index] = {
+      ...newImages[index],
+      [field]: parseFloat(value) || 0,
+    };
+    setInvoiceData((prev) => ({ ...prev, images: newImages }));
+  };
+
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
@@ -144,6 +185,34 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
         <button onClick={addCustomText} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Add Text
         </button>
+      </div>
+
+      <h3 className="text-xl font-bold mb-2 mt-6 text-gray-800">Images</h3>
+      <input
+        type="file"
+        accept="image/*"
+        ref={imageInputRef}
+        onChange={handleImageUpload}
+        style={{ display: 'none' }}
+      />
+      <button
+        onClick={() => imageInputRef.current?.click()}
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Add Image
+      </button>
+      <div className="mt-4 space-y-2">
+        {invoiceData.images?.map((image, index) => (
+          <div key={`image-form-${index}`} className="p-2 border rounded">
+            <p className="text-sm font-bold">Image {index + 1}</p>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <input type="number" placeholder="X" value={image.x} onChange={(e) => handleImagePropChange(index, 'x', e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+              <input type="number" placeholder="Y" value={image.y} onChange={(e) => handleImagePropChange(index, 'y', e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+              <input type="number" placeholder="Width" value={image.width} onChange={(e) => handleImagePropChange(index, 'width', e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+              <input type="number" placeholder="Height" value={image.height} onChange={(e) => handleImagePropChange(index, 'height', e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

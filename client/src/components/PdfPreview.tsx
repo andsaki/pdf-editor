@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import type { InvoiceData } from "../types";
+import type { InvoiceData, InvoiceImage } from "../types";
+import { Rnd } from "react-rnd";
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
@@ -117,7 +118,27 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         font,
       });
 
-      // Custom texts are rendered as HTML overlays, not drawn on the canvas
+      // Embed and draw images
+      if (invoiceData.images && Array.isArray(invoiceData.images)) {
+        for (const image of invoiceData.images) {
+          try {
+            const imageBytes = image.data.startsWith('data:image/jpeg')
+              ? await pdfDoc.embedJpg(image.data)
+              : await pdfDoc.embedPng(image.data);
+
+            const pdfY = height - image.y - image.height;
+
+            page.drawImage(imageBytes, {
+              x: image.x,
+              y: pdfY,
+              width: image.width,
+              height: image.height,
+            });
+          } catch (imgErr) {
+            console.error("Failed to embed image:", imgErr);
+          }
+        }
+      }
 
       const bytes = await pdfDoc.save();
       setPdfBytesForDisplay(bytes);
@@ -185,6 +206,22 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setEditingText(null);
   };
 
+  const handleImageChange = (
+    index: number,
+    pos: { x: number; y: number },
+    size: { width: string | number; height: string | number }
+  ) => {
+    const newImages = [...(invoiceData.images || [])];
+    newImages[index] = {
+      ...newImages[index],
+      x: pos.x / displayScale,
+      y: pos.y / displayScale,
+      width: parseFloat(size.width.toString()),
+      height: parseFloat(size.height.toString()),
+    };
+    setInvoiceData((prev) => ({ ...prev, images: newImages }));
+  };
+
   const handleCanvasClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.currentTarget && pageDimensions && containerWidth > 0) {
       const rect = event.currentTarget.getBoundingClientRect();
@@ -194,9 +231,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       const scale = pageDimensions.width / containerWidth;
       const x = displayX * scale;
       const y = displayY * scale;
-
-      console.log("Clicked at (display):", displayX, displayY);
-      console.log("Converted to (original PDF):", x, y);
 
       const newCustomTexts = [
         ...(invoiceData.customTexts || []),
@@ -309,6 +343,35 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 </span>
               )}
             </div>
+          ))}
+
+        {/* Overlay for draggable/resizable images */}
+        {pdfFile &&
+          invoiceData.images?.map((image, index) => (
+            <Rnd
+              key={`image-${index}`}
+              style={{ border: "1px dashed gray", zIndex: 15 }}
+              size={{                width: image.width * displayScale,
+                height: image.height * displayScale,
+              }}
+              position={{
+                x: image.x * displayScale,
+                y: image.y * displayScale,
+              }}
+              onDragStop={(_e, d) => {
+                const newSize = { width: image.width, height: image.height };
+                handleImageChange(index, { x: d.x, y: d.y }, newSize);
+              }}
+              onResizeStop={(_e, _direction, ref, _delta, position) => {
+                handleImageChange(index, position, { width: ref.style.width, height: ref.style.height });
+              }}
+            >
+              <img
+                src={image.data}
+                style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+                alt={`invoice-image-${index}`}
+              />
+            </Rnd>
           ))}
 
         {/* Transparent overlay for adding new text */}

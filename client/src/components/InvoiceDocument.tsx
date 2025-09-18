@@ -1,6 +1,6 @@
 import React from "react";
-import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
-import type { InvoiceData } from "../types";
+import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
+import type { InvoiceData, InvoiceImage } from "../types";
 
 const styles = StyleSheet.create({
   page: {
@@ -129,6 +129,22 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
           >
             {textBlock.content}
           </Text>
+        ))}
+      </View>
+
+      <View>
+        {invoiceData.images?.map((image, index) => (
+          <Image
+            key={`image-${index}`}
+            src={image.data}
+            style={{
+              position: "absolute",
+              left: image.x,
+              top: image.y,
+              width: image.width,
+              height: image.height,
+            }}
+          />
         ))}
       </View>
     </Page>
