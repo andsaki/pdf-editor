@@ -30,16 +30,32 @@ function App() {
     document.body.removeChild(link);
   };
 
+  const openPdfInNewTab = async () => {
+    const blob = await pdf(
+      <InvoiceDocument invoiceData={invoiceData} />
+    ).toBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url);
+  };
+
   return (
     <div className="min-h-screen bg-gray-800 text-white py-8">
       <header className="flex justify-between items-center mb-8 px-8">
         <h1 className="text-4xl font-bold">Invoice Editor</h1>
-        <button
-          onClick={downloadPdf}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Download PDF
-        </button>
+        <div>
+          <button
+            onClick={openPdfInNewTab}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
+          >
+            Open in New Tab
+          </button>
+          <button
+            onClick={downloadPdf}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Download PDF
+          </button>
+        </div>
       </header>
       <main className="grid grid-cols-3 gap-8 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
