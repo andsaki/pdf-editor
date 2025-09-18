@@ -20,6 +20,9 @@ importers:
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
