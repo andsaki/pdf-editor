@@ -10,7 +10,10 @@ function App() {
     to: "John Doe",
     from: "Jane Doe",
     items: [{ description: "Sample Item", amount: 100 }],
-    customTexts: [],
+    customTexts: [
+      { content: 'Description', x: 50, y: 200 },
+      { content: 'Amount', x: 445, y: 200 },
+    ],
   });
 
   const downloadPdf = async () => {

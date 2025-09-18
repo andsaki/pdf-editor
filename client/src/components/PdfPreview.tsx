@@ -1,14 +1,13 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+import { Document, Page } from "react-pdf";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import type { InvoiceData } from "../types";
-
-// Configure the PDF worker to prevent a 404 error in Vite.
-// This tells react-pdf where to find its worker file.
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.js",
-  import.meta.url
-).toString();
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
@@ -19,13 +18,14 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
 }) => {
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const [_numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, _setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pageDimensions, setPageDimensions] = useState<{
     width: number;
     height: number;
   } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [editingText, setEditingText] = useState<{
@@ -39,17 +39,29 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
 
+  // Initialize page dimensions
   useEffect(() => {
-    const generatePdfBytes = async () => {
-      // If pageDimensions are not set, we can't calculate coordinates correctly.
-      // We will set them and let the effect re-run.
-      if (!pageDimensions) {
+    const initializePageDimensions = async () => {
+      try {
         const tempDoc = await PDFDocument.create();
         const { width, height } = tempDoc.addPage().getSize();
         setPageDimensions({ width, height });
-        return; // Exit and wait for re-render with pageDimensions
+      } catch (err) {
+        console.error("Failed to initialize page dimensions:", err);
+        setError("ページの初期化に失敗しました");
       }
+    };
 
+    initializePageDimensions();
+  }, []);
+
+  // Generate PDF bytes
+  const generatePdfBytes = useCallback(async () => {
+    if (!pageDimensions) return;
+
+    setError(null);
+
+    try {
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage();
       const { width, height } = page.getSize();
@@ -60,14 +72,14 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       page.drawText("Invoice", { x: 50, y, size: 40, font });
       y -= 60;
 
-      page.drawText(`To: ${invoiceData.to}`, {
+      page.drawText(`To: ${invoiceData.to || ""}`, {
         x: 50,
         y,
         size: fontSize,
         font,
       });
       y -= 25;
-      page.drawText(`From: ${invoiceData.from}`, {
+      page.drawText(`From: ${invoiceData.from || ""}`, {
         x: 50,
         y,
         size: fontSize,
@@ -75,22 +87,28 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       });
       y -= 50;
 
-      page.drawText("Description", { x: 50, y, size: fontSize, font });
-      page.drawText("Amount", { x: width - 150, y, size: fontSize, font });
-      y -= 25;
+      // Position items below the new interactive headers
+      y = height - 225;
 
       let total = 0;
-      invoiceData.items.forEach((item) => {
-        page.drawText(item.description, { x: 50, y, size: fontSize, font });
-        page.drawText(`$${item.amount.toFixed(2)}`, {
-          x: width - 150,
-          y,
-          size: fontSize,
-          font,
+      if (invoiceData.items && Array.isArray(invoiceData.items)) {
+        invoiceData.items.forEach((item) => {
+          page.drawText(item.description || "", {
+            x: 50,
+            y,
+            size: fontSize,
+            font,
+          });
+          page.drawText(`$${(item.amount || 0).toFixed(2)}`, {
+            x: width - 150,
+            y,
+            size: fontSize,
+            font,
+          });
+          y -= 25;
+          total += item.amount || 0;
         });
-        y -= 25;
-        total += item.amount;
-      });
+      }
 
       y -= 25;
       page.drawText(`Total: $${total.toFixed(2)}`, {
@@ -100,38 +118,41 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         font,
       });
 
-      // Draw custom texts (for display only, actual editing is via overlay)
-      invoiceData.customTexts.forEach((textBlock) => {
-        // The stored coordinates are already scaled to the original PDF size.
-        // We just need to convert the Y-coordinate from top-left origin to bottom-left origin.
-        const pdfY = height - textBlock.y; // height is original page height
-
-        page.drawText(textBlock.content, {
-          x: textBlock.x,
-          y: pdfY,
-          size: fontSize,
-          font,
-        });
-      });
+      // Custom texts are rendered as HTML overlays, not drawn on the canvas
 
       const bytes = await pdfDoc.save();
       setPdfBytesForDisplay(bytes);
-    };
-
-    generatePdfBytes();
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      setError("PDFの生成に失敗しました");
+    }
   }, [invoiceData, pageDimensions]);
 
+  // Debounce PDF generation to improve performance
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      generatePdfBytes();
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [generatePdfBytes]);
+
+  // Container width observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Use ResizeObserver to keep track of the container's width.
-    // This is more robust than setting it once on mount.
     const resizeObserver = new ResizeObserver((entries) => {
       if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width);
+        const newWidth = entries[0].contentRect.width;
+        if (newWidth > 0) {
+          setContainerWidth(newWidth);
+        }
       }
     });
+
     resizeObserver.observe(container);
 
     return () => {
@@ -141,11 +162,17 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+    setError(null); // Clear error on successful load
+  };
+
+  const onDocumentLoadError = (error: Error) => {
+    console.error("PDF load error:", error);
+    setError("PDFの読み込みに失敗しました");
   };
 
   const handleTextEditChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (editingText) {
-      const newCustomTexts = [...invoiceData.customTexts];
+      const newCustomTexts = [...(invoiceData.customTexts || [])];
       newCustomTexts[editingText.index] = {
         ...newCustomTexts[editingText.index],
         content: event.target.value,
@@ -160,24 +187,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // Use event.currentTarget to get the element the event listener is attached to (the overlay).
-    // This ensures coordinates are relative to the PDF's rendered area, not the outer container.
-    if (event.currentTarget && pageDimensions) {
-      // Ensure containerWidth is valid to prevent division by zero
-      if (containerWidth <= 0) {
-        console.error(
-          "Container width is not ready. Cannot calculate coordinates."
-        );
-        return;
-      }
-      const rect = event.currentTarget.getBoundingClientRect(); // The overlay's rect
-      const displayX = event.clientX - rect.left; // X relative to the overlay
-      const displayY = event.clientY - rect.top; // Y relative to the overlay
+    if (event.currentTarget && pageDimensions && containerWidth > 0) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const displayX = event.clientX - rect.left;
+      const displayY = event.clientY - rect.top;
 
-      // Calculate the scale factor between the original PDF and the displayed version
       const scale = pageDimensions.width / containerWidth;
-
-      // Convert display coordinates to original PDF coordinates (top-left origin)
       const x = displayX * scale;
       const y = displayY * scale;
 
@@ -185,23 +200,41 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       console.log("Converted to (original PDF):", x, y);
 
       const newCustomTexts = [
-        ...invoiceData.customTexts,
+        ...(invoiceData.customTexts || []),
         { x, y, content: "新しいテキスト" },
       ];
       setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
     }
   };
 
-  // Calculate the scale for rendering the overlay elements
-  const displayScale = pageDimensions
-    ? containerWidth / pageDimensions.width
-    : 1;
+  const displayScale =
+    pageDimensions && containerWidth > 0
+      ? containerWidth / pageDimensions.width
+      : 1;
 
-  // Memoize the file object to prevent unnecessary re-renders of the PDF document.
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
     return { data: pdfBytesForDisplay };
   }, [pdfBytesForDisplay]);
+
+  if (error) {
+    return (
+      <div className="w-full h-[1000px] bg-gray-200 rounded-lg flex justify-center items-center">
+        <div className="text-red-500 text-center">
+          <p>{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              generatePdfBytes();
+            }}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            再試行
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -209,71 +242,82 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       ref={containerRef}
     >
       <div className="relative">
-        {pdfFile ? (
-          <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
+        {pdfFile && containerWidth > 0 ? (
+          <Document
+            file={pdfFile}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading="PDFを読み込んでいます..."
+          >
             <Page pageNumber={pageNumber} width={containerWidth} />
           </Document>
         ) : (
-          <p>Generating PDF preview...</p>
+          <div className="flex justify-center items-center h-full">
+            <p>PDFプレビューを準備しています...</p>
+          </div>
         )}
 
         {/* Overlay for editable text fields */}
-        {invoiceData.customTexts.map((textBlock, index) => (
-          <div
-            key={index}
-            style={{
-              position: "absolute",
-              left: textBlock.x * displayScale,
-              top: textBlock.y * displayScale,
-              cursor: "text",
-              border: editingText?.index === index ? "1px dashed blue" : "none",
-            }}
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent canvas click when clicking on text block
-              setEditingText({
-                index,
-                x: textBlock.x,
-                y: textBlock.y,
-                content: textBlock.content,
-              });
-            }}
-          >
-            {editingText?.index === index ? (
-              <input
-                type="text"
-                value={editingText.content}
-                onChange={handleTextEditChange}
-                onBlur={handleTextEditBlur}
-                autoFocus
-                style={{
-                  background: "yellow",
-                  color: "black",
-                  border: "none",
-                  padding: 0,
-                  fontSize: `${16 * displayScale}px`,
-                }}
-                className="cursor-text"
-              />
-            ) : (
-              <span
-                style={{
-                  color: "black",
-                  fontSize: `${16 * displayScale}px`,
-                  whiteSpace: "nowrap",
-                }}
-                className="cursor-text"
-              >
-                {textBlock.content}
-              </span>
-            )}
-          </div>
-        ))}
+        {pdfFile &&
+          invoiceData.customTexts?.map((textBlock, index) => (
+            <div
+              key={index}
+              style={{
+                position: "absolute",
+                left: textBlock.x * displayScale,
+                top: textBlock.y * displayScale,
+                cursor: "text",
+                border:
+                  editingText?.index === index ? "1px solid blue" : "none",
+                zIndex: 10,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingText({
+                  index,
+                  x: textBlock.x,
+                  y: textBlock.y,
+                  content: textBlock.content,
+                });
+              }}
+            >
+              {editingText?.index === index ? (
+                <input
+                  type="text"
+                  value={editingText.content}
+                  onChange={handleTextEditChange}
+                  onBlur={handleTextEditBlur}
+                  autoFocus
+                  style={{
+                    background: "yellow",
+                    color: "black",
+                    border: "none",
+                    padding: 0,
+                    fontSize: `${16 * displayScale}px`,
+                  }}
+                  className="cursor-text"
+                />
+              ) : (
+                <span
+                  style={{
+                    color: "black",
+                    fontSize: `${16 * displayScale}px`,
+                    whiteSpace: "nowrap",
+                  }}
+                  className="cursor-text"
+                >
+                  {textBlock.content}
+                </span>
+              )}
+            </div>
+          ))}
 
-        {/* Transparent overlay for adding new text, only shown when not editing */}
-        {!editingText && pdfFile && (
+        {/* Transparent overlay for adding new text */}
+        {!editingText && pdfFile && containerWidth > 0 && (
           <div
             className="absolute inset-0 cursor-text"
             onClick={handleCanvasClick}
+            style={{ zIndex: 5 }}
           ></div>
         )}
       </div>
