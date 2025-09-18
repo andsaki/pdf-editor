@@ -110,10 +110,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         });
       }
 
-      y -= 25;
       page.drawText(`Total: $${total.toFixed(2)}`, {
         x: width - 150,
-        y,
+        y: 100, // Position at the bottom of the page
         size: fontSize,
         font,
       });

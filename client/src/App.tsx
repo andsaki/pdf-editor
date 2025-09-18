@@ -4,6 +4,7 @@ import { PdfPreview } from "./components/PdfPreview";
 import type { InvoiceData } from "./types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
+import { StatePreview } from "./components/StatePreview";
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
@@ -45,6 +46,7 @@ function App() {
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
           />
+          <StatePreview data={invoiceData} />
         </div>
         <div className="col-span-2">
           <PdfPreview

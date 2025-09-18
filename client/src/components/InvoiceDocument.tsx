@@ -68,8 +68,9 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   total: {
-    textAlign: "right",
-    marginTop: 20,
+    position: 'absolute',
+    bottom: 100,
+    right: 60, // Corresponds to page paddingRight
   },
 });
 
