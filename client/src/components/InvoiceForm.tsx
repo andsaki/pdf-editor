@@ -62,15 +62,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg space-y-6">
+    <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Invoice Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">To:</label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={invoiceData.to}
               onChange={(e) => setInvoiceData({ ...invoiceData, to: e.target.value })}
             />
@@ -79,7 +79,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             <label className="block text-gray-700 text-sm font-bold mb-2">From:</label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={invoiceData.from}
               onChange={(e) => setInvoiceData({ ...invoiceData, from: e.target.value })}
             />
@@ -88,37 +88,44 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
       </div>
 
       <div>
-        <h3 className="text-xl font-bold mb-2 text-gray-800">Items</h3>
-        <div className="space-y-2">
+        <h3 className="text-xl font-bold mb-4 text-gray-800">Items</h3>
+        <div className="space-y-4">
           {invoiceData.items.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="Description"
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                value={item.description}
-                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="Amount"
-                className="shadow appearance-none border rounded w-32 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                value={item.amount}
-                onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
-              />
-              <button onClick={() => removeItem(index)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Remove
+            <div key={index} className="flex items-center space-x-2 group">
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <input
+                  type="text"
+                  placeholder="Description"
+                  className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={item.description}
+                  onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                />
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={item.amount}
+                  onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
+                />
+              </div>
+              <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+                </svg>
               </button>
             </div>
           ))}
         </div>
-        <button onClick={addItem} className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          Add Item
+        <button onClick={addItem} className="mt-4 flex items-center space-x-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          <span>Add Item</span>
         </button>
       </div>
 
       <div>
-        <h3 className="text-xl font-bold mb-2 mt-6 text-gray-800">Images</h3>
+        <h3 className="text-xl font-bold mb-4 text-gray-800">Images</h3>
         <input
           type="file"
           accept="image/*"
@@ -128,9 +135,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
         />
         <button
           onClick={() => imageInputRef.current?.click()}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="flex items-center space-x-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
-          Add Image
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+          </svg>
+          <span>Add Image</span>
         </button>
         <div className="mt-4 space-y-2">
           {invoiceData.images?.map((_, index) => (
