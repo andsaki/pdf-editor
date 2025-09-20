@@ -6,6 +6,7 @@ export interface InvoiceImage {
   height: number;
 }
 
+// 状態管理のService Interfaceに該当
 export interface InvoiceData {
   to: string;
   from: string;

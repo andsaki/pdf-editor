@@ -7,13 +7,15 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { InvoiceData, InvoiceImage } from "../types";
+import type { InvoiceData } from "../types";
 import { Rnd } from "react-rnd";
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
 }
+
+type Tool = "select" | "text";
 
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
@@ -29,6 +31,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [activeTool, setActiveTool] = useState<Tool>("select");
   const [editingText, setEditingText] = useState<{
     index: number;
     x: number;
@@ -36,11 +39,38 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     content: string;
   } | null>(null);
 
-  // Generate PDF bytes for display
+  // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
 
-  // Initialize page dimensions
+  // ツールのキーボードショートカット
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement &&
+        ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+      ) {
+        return; // ユーザーが入力中の場合はツールを切り替えない
+      }
+      if (e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        setActiveTool("text");
+      } else if (e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        setActiveTool("select");
+      } else if (e.key === "Escape") {
+        setActiveTool("select");
+        setEditingText(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // ページの寸法を初期化
   useEffect(() => {
     const initializePageDimensions = async () => {
       try {
@@ -56,7 +86,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     initializePageDimensions();
   }, []);
 
-  // Generate PDF bytes
+  // PDFバイトを生成
   const generatePdfBytes = useCallback(async () => {
     if (!pageDimensions) return;
 
@@ -75,18 +105,28 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       page.drawText("Invoice", { x: 50, y, size: 24, font: boldFont });
       y -= 60;
 
-      page.drawText(`To: ${invoiceData.to || ""}`, { x: 50, y, size: fontSize, font });
-      page.drawText(`From: ${invoiceData.from || ""}`, { x: width - 250, y, size: fontSize, font });
+      page.drawText(`To: ${invoiceData.to || ""}`, {
+        x: 50,
+        y,
+        size: fontSize,
+        font,
+      });
+      page.drawText(`From: ${invoiceData.from || ""}`, {
+        x: width - 250,
+        y,
+        size: fontSize,
+        font,
+      });
       y -= 50;
 
-      // Table drawing logic
+      // テーブル描画ロジック
       const tableTop = y;
       const tableLeft = 50;
       const tableRight = width - 50;
       const descriptionColWidth = 350;
       const rowHeight = 25;
 
-      // Draw Header
+      // ヘッダーを描画
       page.drawRectangle({
         x: tableLeft,
         y: tableTop - rowHeight,
@@ -94,28 +134,49 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         height: rowHeight,
         color: rgb(0.9, 0.9, 0.9),
       });
-      page.drawText("Description", { x: tableLeft + padding, y: tableTop - 18, size: fontSize, font: boldFont });
-      page.drawText("Amount", { x: tableLeft + descriptionColWidth + padding, y: tableTop - 18, size: fontSize, font: boldFont });
+      page.drawText("Description", {
+        x: tableLeft + padding,
+        y: tableTop - 18,
+        size: fontSize,
+        font: boldFont,
+      });
+      page.drawText("Amount", {
+        x: tableLeft + descriptionColWidth + padding,
+        y: tableTop - 18,
+        size: fontSize,
+        font: boldFont,
+      });
       y = tableTop - rowHeight;
 
       let total = 0;
-      // Draw Rows
+      // 行を描画
       if (invoiceData.items && Array.isArray(invoiceData.items)) {
         invoiceData.items.forEach((item) => {
           const itemDescription = item.description || "";
           const itemAmount = `$${(item.amount || 0).toFixed(2)}`;
-          
-          page.drawText(itemDescription, { x: tableLeft + padding, y: y - 18, size: fontSize, font });
-          page.drawText(itemAmount, { x: tableLeft + descriptionColWidth + padding, y: y - 18, size: fontSize, font });
-          
+
+          page.drawText(itemDescription, {
+            x: tableLeft + padding,
+            y: y - 18,
+            size: fontSize,
+            font,
+          });
+          page.drawText(itemAmount, {
+            x: tableLeft + descriptionColWidth + padding,
+            y: y - 18,
+            size: fontSize,
+            font,
+          });
+
           y -= rowHeight;
           total += item.amount || 0;
         });
       }
 
-      // Draw table borders
+      // テーブルの罫線を描画
       const tableBottom = y;
-      page.drawRectangle({ // Outer border
+      page.drawRectangle({
+        // 外枠
         x: tableLeft,
         y: tableBottom,
         width: tableRight - tableLeft,
@@ -123,26 +184,26 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         borderColor: rgb(0, 0, 0),
         borderWidth: 1,
       });
-      page.drawLine({ // Vertical line
+      page.drawLine({
+        // 垂直線
         start: { x: tableLeft + descriptionColWidth, y: tableTop },
         end: { x: tableLeft + descriptionColWidth, y: tableBottom },
         thickness: 1,
         color: rgb(0, 0, 0),
       });
 
-
       page.drawText(`Total: $${total.toFixed(2)}`, {
         x: width - 150,
-        y: 100, // Position at the bottom of the page
+        y: 100, // ページ下部に配置
         size: 16,
         font: boldFont,
       });
 
-      // Embed and draw images
+      // 画像を埋め込んで描画
       if (invoiceData.images && Array.isArray(invoiceData.images)) {
         for (const image of invoiceData.images) {
           try {
-            const imageBytes = image.data.startsWith('data:image/jpeg')
+            const imageBytes = image.data.startsWith("data:image/jpeg")
               ? await pdfDoc.embedJpg(image.data)
               : await pdfDoc.embedPng(image.data);
 
@@ -168,18 +229,18 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     }
   }, [invoiceData, pageDimensions]);
 
-  // Debounce PDF generation to improve performance
+  // パフォーマンス向上のためPDF生成をデバウンス
   useEffect(() => {
     const handler = setTimeout(() => {
       generatePdfBytes();
-    }, 300); // 300ms delay
+    }, 300); // 300msの遅延
 
     return () => {
       clearTimeout(handler);
     };
   }, [generatePdfBytes]);
 
-  // Container width observer
+  // コンテナ幅のオブザーバー
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -202,7 +263,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setError(null); // Clear error on successful load
+    setError(null); // 読み込み成功時にエラーをクリア
   };
 
   const onDocumentLoadError = (error: Error) => {
@@ -242,7 +303,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setInvoiceData((prev) => ({ ...prev, images: newImages }));
   };
 
-  const handleCanvasClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleAddTextObject = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.currentTarget && pageDimensions && containerWidth > 0) {
       const rect = event.currentTarget.getBoundingClientRect();
       const displayX = event.clientX - rect.left;
@@ -257,6 +318,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         { x, y, content: "新しいテキスト" },
       ];
       setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
+      setActiveTool("select"); // 選択ツールに戻す
     }
   };
 
@@ -310,7 +372,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           </div>
         )}
 
-        {/* Overlay for editable text fields */}
+        {/* 編集可能なテキストフィールドのオーバーレイ */}
         {pdfFile &&
           invoiceData.customTexts?.map((textBlock, index) => (
             <div
@@ -365,7 +427,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
             </div>
           ))}
 
-        {/* Overlay for draggable/resizable images */}
+        {/* ドラッグ/リサイズ可能な画像のオーバーレイ */}
         {pdfFile &&
           invoiceData.images?.map((image, index) => (
             <Rnd
@@ -384,7 +446,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 handleImageChange(index, { x: d.x, y: d.y }, newSize);
               }}
               onResizeStop={(_e, _direction, ref, _delta, position) => {
-                handleImageChange(index, position, { width: ref.style.width, height: ref.style.height });
+                handleImageChange(index, position, {
+                  width: ref.style.width,
+                  height: ref.style.height,
+                });
               }}
             >
               <img
@@ -395,14 +460,17 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
             </Rnd>
           ))}
 
-        {/* Transparent overlay for adding new text */}
-        {!editingText && pdfFile && containerWidth > 0 && (
-          <div
-            className="absolute inset-0 cursor-text"
-            onClick={handleCanvasClick}
-            style={{ zIndex: 5 }}
-          ></div>
-        )}
+        {/* 新しいテキストを追加するための透明なオーバーレイ */}
+        {activeTool === "text" &&
+          !editingText &&
+          pdfFile &&
+          containerWidth > 0 && (
+            <div
+              className="absolute inset-0 cursor-text"
+              onClick={handleAddTextObject}
+              style={{ zIndex: 5 }}
+            ></div>
+          )}
       </div>
     </div>
   );
