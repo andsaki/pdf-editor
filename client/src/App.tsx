@@ -14,6 +14,7 @@ function App() {
     customTexts: [],
     images: [],
   });
+  const [activeTool, setActiveTool] = useState<"select" | "text">("select");
 
   const downloadPdf = async () => {
     const blob = await pdf(
@@ -59,12 +60,16 @@ function App() {
           <InvoiceForm
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
           />
         </div>
         <div className="col-span-1">
           <PdfPreview
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
           />
         </div>
       </main>

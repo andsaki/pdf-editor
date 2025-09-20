@@ -4,9 +4,11 @@ import type { InvoiceData } from '../types';
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  activeTool: "select" | "text";
+  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text">>;
 }
 
-export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData }) => {
+export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, activeTool, setActiveTool }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleItemChange = (index: number, field: 'description' | 'amount', value: string) => {
@@ -63,6 +65,26 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-gray-800">Tools</h3>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setActiveTool("text")}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'text' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            <span>Add Text</span>
+          </button>
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            className="flex items-center space-x-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+            </svg>
+            <span>Add Image</span>
+          </button>
+        </div>
+      </div>
+
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Invoice Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -122,34 +144,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
           </svg>
           <span>Add Item</span>
         </button>
-      </div>
-
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-gray-800">Images</h3>
-        <input
-          type="file"
-          accept="image/*"
-          ref={imageInputRef}
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          className="flex items-center space-x-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-          </svg>
-          <span>Add Image</span>
-        </button>
-        <div className="mt-4 space-y-2">
-          {invoiceData.images?.map((_, index) => (
-            <div key={`image-form-${index}`} className="p-2 border rounded flex justify-between items-center">
-              <p className="text-sm font-bold">Image {index + 1}</p>
-              <p className="text-xs text-gray-500">You can move and resize the image on the preview.</p>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
