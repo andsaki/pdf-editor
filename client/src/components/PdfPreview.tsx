@@ -43,38 +43,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
 
-  const imageInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result as string;
-      if (data) {
-        const img = new Image();
-        img.onload = () => {
-          setInvoiceData((prev) => ({
-            ...prev,
-            images: [
-              ...(prev.images || []),
-              {
-                data,
-                x: 50,
-                y: 50,
-                width: img.width,
-                height: img.height,
-              },
-            ],
-          }));
-        };
-        img.src = data;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   // ツールのキーボードショートカット
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -384,8 +352,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   }
 
   return (
-    <div className="w-full h-full bg-gray-100 rounded-lg flex justify-center items-start overflow-auto relative">
-      <div className="absolute top-4 z-20 flex items-center mb-4 bg-white p-2 rounded shadow">
+    <div className="w-full h-full bg-gray-100 rounded-lg p-4 flex flex-col items-center overflow-auto">
+      <div className="flex items-center mb-4 bg-white p-2 rounded shadow">
         <button
           onClick={() => setActiveTool("select")}
           className={`px-3 py-1 rounded ${activeTool === "select" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
@@ -396,21 +364,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           className={`ml-2 px-3 py-1 rounded ${activeTool === "text" ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
           Text
         </button>
-        <input
-          type="file"
-          accept="image/*"
-          ref={imageInputRef}
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          className={`ml-2 px-3 py-1 rounded bg-gray-200`}>
-          Add Image
-        </button>
       </div>
       <div
-        className="w-full h-full flex justify-center items-start overflow-auto pt-16"
+        className="w-full h-full flex justify-center items-start overflow-auto"
         ref={containerRef}
       >
         <div className="relative shadow-lg">
@@ -511,11 +467,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   });
                 }}
               >
-                              <img
-                                src={image.data}
-                                style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-                                alt={`invoice-image-${index}`}
-                              />              </Rnd>
+                <img
+                  src={image.data}
+                  style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+                  alt={`invoice-image-${index}`}
+                />
+              </Rnd>
             ))}
 
           {/* 新しいテキストを追加するための透明なオーバーレイ */}
