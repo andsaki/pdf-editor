@@ -36,9 +36,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white py-8">
+    <div className="min-h-screen bg-gray-100 text-gray-800 py-8">
       <header className="flex justify-between items-center mb-8 px-8">
-        <h1 className="text-4xl font-bold">Invoice Editor</h1>
+        <h1 className="text-4xl font-bold text-gray-900">Invoice Editor</h1>
         <div>
           <button
             onClick={openPdfInNewTab}
@@ -54,21 +54,26 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-3 gap-8 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
           />
-          <StatePreview data={invoiceData} />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-1">
           <PdfPreview
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
           />
         </div>
       </main>
+      <div className="px-8 mt-8">
+        <details>
+          <summary>State Preview</summary>
+          <StatePreview data={invoiceData} />
+        </details>
+      </div>
     </div>
   );
 }
