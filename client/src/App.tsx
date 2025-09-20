@@ -54,7 +54,7 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-2 gap-8 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-2 gap-12 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
             invoiceData={invoiceData}
