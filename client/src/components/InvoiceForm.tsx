@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import type { InvoiceData } from '../types';
 
 interface InvoiceFormProps {
@@ -7,8 +7,6 @@ interface InvoiceFormProps {
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData }) => {
-  const imageInputRef = useRef<HTMLInputElement>(null);
-
   const handleItemChange = (index: number, field: 'description' | 'amount', value: string) => {
     const newItems = [...invoiceData.items];
     if (field === 'amount') {
@@ -29,36 +27,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
   const removeItem = (index: number) => {
     const newItems = invoiceData.items.filter((_, i) => i !== index);
     setInvoiceData({ ...invoiceData, items: newItems });
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result as string;
-      if (data) {
-        const img = new Image();
-        img.onload = () => {
-          setInvoiceData((prev) => ({
-            ...prev,
-            images: [
-              ...(prev.images || []),
-              {
-                data,
-                x: 50,
-                y: 50,
-                width: img.width,
-                height: img.height,
-              },
-            ],
-          }));
-        };
-        img.src = data;
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   return (
@@ -122,34 +90,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
           </svg>
           <span>Add Item</span>
         </button>
-      </div>
-
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-gray-800">Images</h3>
-        <input
-          type="file"
-          accept="image/*"
-          ref={imageInputRef}
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          className="flex items-center space-x-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-          </svg>
-          <span>Add Image</span>
-        </button>
-        <div className="mt-4 space-y-2">
-          {invoiceData.images?.map((_, index) => (
-            <div key={`image-form-${index}`} className="p-2 border rounded flex justify-between items-center">
-              <p className="text-sm font-bold">Image {index + 1}</p>
-              <p className="text-xs text-gray-500">You can move and resize the image on the preview.</p>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
