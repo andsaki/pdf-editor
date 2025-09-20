@@ -17,8 +17,6 @@ interface PdfPreviewProps {
   setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text">>;
 }
 
-type Tool = "select" | "text";
-
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
@@ -45,6 +43,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
+
+  useEffect(() => {
+    console.log('PdfPreview activeTool:', activeTool);
+  }, [activeTool]);
 
   // ツールのキーボードショートカット
   useEffect(() => {
@@ -332,7 +334,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
-    return { data: pdfBytesForDisplay };
+    return { data: pdfBytesForDisplay.slice(0) };
   }, [pdfBytesForDisplay]);
 
   if (error) {
@@ -359,123 +361,147 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
       ref={containerRef}
     >
-              <div className="relative shadow-lg">
-                {pdfFile && containerWidth > 0 ? (
-                  <Document
-                    file={pdfFile}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    onLoadError={onDocumentLoadError}
-                    loading="PDFを読み込んでいます..."
-                  >
-                    <Page pageNumber={pageNumber} width={containerWidth} />
-                  </Document>
-                ) : (
-                  <div className="flex justify-center items-center h-full">
-                    <p>PDFプレビューを準備しています...</p>
-                  </div>
-                )}
-      
-                {/* 編集可能なテキストフィールドのオーバーレイ */}
-                {pdfFile &&
-                  invoiceData.customTexts?.map((textBlock, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        position: "absolute",
-                        left: textBlock.x * displayScale,
-                        top: textBlock.y * displayScale,
-                        cursor: "text",
-                        border:
-                          editingText?.index === index ? "1px solid blue" : "1px dashed transparent",
-                        zIndex: 10,
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.border = "1px dashed gray")}
-                      onMouseLeave={(e) => (e.currentTarget.style.border = editingText?.index === index ? "1px solid blue" : "1px dashed transparent")}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingText({
-                          index,
-                          x: textBlock.x,
-                          y: textBlock.y,
-                          content: textBlock.content,
-                        });
-                      }}
-                    >
-                      {editingText?.index === index ? (
-                        <input
-                          type="text"
-                          value={editingText.content}
-                          onChange={handleTextEditChange}
-                          onBlur={handleTextEditBlur}
-                          autoFocus
-                          style={{
-                            background: "rgba(255, 255, 255, 0.8)",
-                            color: "black",
-                            border: "none",
-                            padding: 0,
-                            fontSize: `${16 * displayScale}px`,
-                          }}
-                          className="cursor-text"
-                        />
-                      ) : (
-                        <span
-                          style={{
-                            color: "black",
-                            fontSize: `${16 * displayScale}px`,
-                            whiteSpace: "nowrap",
-                          }}
-                          className="cursor-text"
-                        >
-                          {textBlock.content}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-      
-                {/* ドラッグ/リサイズ可能な画像のオーバーレイ */}
-                {pdfFile &&
-                  invoiceData.images?.map((image, index) => (
-                    <Rnd
-                      key={`image-${index}`}
-                      style={{ border: "1px dashed gray", zIndex: 15 }}
-                      size={{
-                        width: image.width * displayScale,
-                        height: image.height * displayScale,
-                      }}
-                      position={{
-                        x: image.x * displayScale,
-                        y: image.y * displayScale,
-                      }}
-                      onDragStop={(_e, d) => {
-                        const newSize = { width: image.width, height: image.height };
-                        handleImageChange(index, { x: d.x, y: d.y }, newSize);
-                      }}
-                      onResizeStop={(_e, _direction, ref, _delta, position) => {
-                        handleImageChange(index, position, {
-                          width: ref.style.width,
-                          height: ref.style.height,
-                        });
-                      }}
-                    >
-                      <img
-                        src={image.data}
-                        style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-                        alt={`invoice-image-${index}`}
-                      />
-                    </Rnd>
-                  ))}
-      
-                {/* 新しいテキストを追加するための透明なオーバーレイ */}
-                {activeTool === "text" &&
-                  !editingText &&
-                  pdfFile &&
-                  containerWidth > 0 && (
-                    <div
-                      className="absolute inset-0 cursor-text"
-                      onClick={handleAddTextObject}
-                      style={{ zIndex: 5 }}
-                    ></div>
-                  )}
-              </div>
-          </div>
-        );};
+      <div
+        className="relative shadow-lg"
+        style={{
+          width: pageDimensions ? pageDimensions.width * displayScale : 0,
+          height: pageDimensions ? pageDimensions.height * displayScale : 0,
+        }}
+      >
+        <div style={{ position: "absolute", zIndex: 1 }}>
+          {pdfFile && containerWidth > 0 ? (
+            <Document
+              file={pdfFile}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading="PDFを読み込んでいます..."
+            >
+              <Page pageNumber={pageNumber} width={containerWidth} />
+            </Document>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p>PDFプレビューを準備しています...</p>
+            </div>
+          )}
+        </div>
+
+        {/* 編集可能なテキストフィールドのオーバーレイ */}
+        {pdfFile &&
+          invoiceData.customTexts?.map((textBlock, index) => (
+            <div
+              key={index}
+              style={{
+                position: "absolute",
+                left: textBlock.x * displayScale,
+                top: textBlock.y * displayScale,
+                cursor: "text",
+                border:
+                  editingText?.index === index
+                    ? "1px solid blue"
+                    : "1px dashed transparent",
+                zIndex: 10,
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.border = "1px dashed gray")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.border =
+                  editingText?.index === index
+                    ? "1px solid blue"
+                    : "1px dashed transparent")
+              }
+              onClick={(e) => {
+                console.log("text overlay clicked");
+                e.stopPropagation();
+                setEditingText({
+                  index,
+                  x: textBlock.x,
+                  y: textBlock.y,
+                  content: textBlock.content,
+                });
+              }}
+            >
+              {editingText?.index === index ? (
+                <input
+                  type="text"
+                  value={editingText.content}
+                  onChange={handleTextEditChange}
+                  onBlur={handleTextEditBlur}
+                  autoFocus
+                  style={{
+                    background: "rgba(255, 255, 255, 0.8)",
+                    color: "black",
+                    border: "none",
+                    padding: 0,
+                    fontSize: `${16 * displayScale}px`,
+                  }}
+                  className="cursor-text"
+                />
+              ) : (
+                <span
+                  style={{
+                    color: "black",
+                    fontSize: `${16 * displayScale}px`,
+                    whiteSpace: "nowrap",
+                  }}
+                  className="cursor-text"
+                >
+                  {textBlock.content}
+                </span>
+              )}
+            </div>
+          ))}
+
+        {/* ドラッグ/リサイズ可能な画像のオーバーレイ */}
+        {/* {pdfFile &&
+          invoiceData.images?.map((image, index) => (
+            <Rnd
+              key={`image-${index}`}
+              style={{ border: "1px dashed gray", zIndex: 15 }}
+              size={{
+                width: image.width * displayScale,
+                height: image.height * displayScale,
+              }}
+              position={{
+                x: image.x * displayScale,
+                y: image.y * displayScale,
+              }}
+              onDragStop={(_e, d) => {
+                console.log('onDragStop', d);
+                const newSize = { width: image.width, height: image.height };
+                handleImageChange(index, { x: d.x, y: d.y }, newSize);
+              }}
+              onResizeStop={(_e, _direction, ref, _delta, position) => {
+                console.log('onResizeStop', position);
+                handleImageChange(index, position, {
+                  width: ref.style.width,
+                  height: ref.style.height,
+                });
+              }}
+            >
+              <img
+                src={image.data}
+                style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+                alt={`invoice-image-${index}`}
+              />
+            </Rnd>
+          ))} */}
+
+        {/* 新しいテキストを追加するための透明なオーバーレイ */}
+        {activeTool === "text" &&
+          !editingText &&
+          pdfFile &&
+          containerWidth > 0 && (
+            <div
+              className="absolute inset-0 cursor-text"
+              onClick={(e) => {
+                console.log("add text overlay clicked");
+                handleAddTextObject(e);
+              }}
+              style={{ zIndex: 20 }}
+            ></div>
+          )}
+      </div>
+    </div>
+  );
+};

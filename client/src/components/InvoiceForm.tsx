@@ -69,7 +69,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
         <h3 className="text-xl font-bold mb-4 text-gray-800">Tools</h3>
         <div className="flex space-x-2">
           <button
-            onClick={() => setActiveTool("text")}
+            onClick={() => {
+              console.log('Select button clicked');
+              setActiveTool("select");
+            }}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'select' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            <span>Select</span>
+          </button>
+          <button
+            onClick={() => {
+              console.log('Add Text button clicked');
+              setActiveTool("text");
+            }}
             className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'text' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
             <span>Add Text</span>
           </button>
@@ -82,6 +93,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             </svg>
             <span>Add Image</span>
           </button>
+          <input
+            type="file"
+            accept="image/*"
+            ref={imageInputRef}
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
         </div>
       </div>
 

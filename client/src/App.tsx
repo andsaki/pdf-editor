@@ -11,7 +11,7 @@ function App() {
     to: "John Doe",
     from: "Jane Doe",
     items: [{ description: "Sample Item", amount: 100 }],
-    customTexts: [],
+    customTexts: [{ content: "Sample Text", x: 100, y: 100 }],
     images: [],
   });
   const [activeTool, setActiveTool] = useState<"select" | "text">("select");
