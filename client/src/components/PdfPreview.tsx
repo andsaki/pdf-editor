@@ -45,7 +45,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     useState<Uint8Array | null>(null);
 
   useEffect(() => {
-    console.log('PdfPreview activeTool:', activeTool);
+    console.log("PdfPreview activeTool:", activeTool);
   }, [activeTool]);
 
   // ツールのキーボードショートカット
@@ -388,29 +388,30 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         {/* 編集可能なテキストフィールドのオーバーレイ */}
         {pdfFile &&
           invoiceData.customTexts?.map((textBlock, index) => (
-            <div
-              key={index}
+            <Rnd
+              key={`text-${index}`}
+              className={activeTool === "select" ? "cursor-grab" : ""}
               style={{
-                position: "absolute",
-                left: textBlock.x * displayScale,
-                top: textBlock.y * displayScale,
-                cursor: "text",
                 border:
                   editingText?.index === index
                     ? "1px solid blue"
                     : "1px dashed transparent",
                 zIndex: 10,
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.border = "1px dashed gray")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.border =
-                  editingText?.index === index
-                    ? "1px solid blue"
-                    : "1px dashed transparent")
-              }
-              onClick={(e) => {
+              position={{
+                x: textBlock.x * displayScale,
+                y: textBlock.y * displayScale,
+              }}
+              onDragStop={(_e, d) => {
+                const newCustomTexts = [...(invoiceData.customTexts || [])];
+                newCustomTexts[index] = {
+                  ...newCustomTexts[index],
+                  x: d.x / displayScale,
+                  y: d.y / displayScale,
+                };
+                setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
+              }}
+              onClick={(e: React.MouseEvent) => {
                 console.log("text overlay clicked");
                 e.stopPropagation();
                 setEditingText({
@@ -449,14 +450,15 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   {textBlock.content}
                 </span>
               )}
-            </div>
+            </Rnd>
           ))}
 
         {/* ドラッグ/リサイズ可能な画像のオーバーレイ */}
-        {/* {pdfFile &&
+        {pdfFile &&
           invoiceData.images?.map((image, index) => (
             <Rnd
               key={`image-${index}`}
+              className={activeTool === "select" ? "cursor-grab" : ""}
               style={{ border: "1px dashed gray", zIndex: 15 }}
               size={{
                 width: image.width * displayScale,
@@ -467,12 +469,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 y: image.y * displayScale,
               }}
               onDragStop={(_e, d) => {
-                console.log('onDragStop', d);
+                console.log("onDragStop", d);
                 const newSize = { width: image.width, height: image.height };
                 handleImageChange(index, { x: d.x, y: d.y }, newSize);
               }}
               onResizeStop={(_e, _direction, ref, _delta, position) => {
-                console.log('onResizeStop', position);
+                console.log("onResizeStop", position);
                 handleImageChange(index, position, {
                   width: ref.style.width,
                   height: ref.style.height,
@@ -485,7 +487,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 alt={`invoice-image-${index}`}
               />
             </Rnd>
-          ))} */}
+          ))}
 
         {/* 新しいテキストを追加するための透明なオーバーレイ */}
         {activeTool === "text" &&
