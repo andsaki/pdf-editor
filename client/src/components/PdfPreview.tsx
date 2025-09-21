@@ -41,7 +41,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [editingText, setEditingText] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string | null>(null); // 現在編集中のテキストオブジェクトのID
   const [editingCell, setEditingCell] = useState<{
     itemId: string;
     rowIndex: number;
