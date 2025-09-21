@@ -9,6 +9,9 @@ import { Document, Page } from "react-pdf";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { InvoiceData, TableItem } from "../types";
 import { Rnd } from "react-rnd";
+import { z } from "zod";
+
+const contentSchema = z.string().min(1, "テーブルのセルは空にできません");
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
@@ -42,6 +45,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     cellIndex: number;
     content: string;
   } | null>(null);
+
+  const [validationErrors, setValidationErrors] = useState<any>({});
 
   // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
@@ -148,13 +153,26 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const handleTextEditChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (editingText) {
+      const content = event.target.value;
+      const validation = contentSchema.safeParse(content);
+      if (!validation.success) {
+        setValidationErrors({
+          ...validationErrors,
+          [`text-${editingText.index}`]: validation.error.issues[0].message,
+        });
+      } else {
+        const newErrors = { ...validationErrors };
+        delete newErrors[`text-${editingText.index}`];
+        setValidationErrors(newErrors);
+      }
+
       const newCustomTexts = [...(invoiceData.customTexts || [])];
       newCustomTexts[editingText.index] = {
         ...newCustomTexts[editingText.index],
-        content: event.target.value,
+        content: content,
       };
       setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
-      setEditingText({ ...editingText, content: event.target.value });
+      setEditingText({ ...editingText, content: content });
     }
   };
 
@@ -196,17 +214,30 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const handleTableCellChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (editingCell) {
+      const content = event.target.value;
+      const validation = contentSchema.safeParse(content);
+      if (!validation.success) {
+        setValidationErrors({
+          ...validationErrors,
+          [`cell-${editingCell.tableIndex}-${editingCell.rowIndex}-${editingCell.cellIndex}`]: validation.error.issues[0].message,
+        });
+      } else {
+        const newErrors = { ...validationErrors };
+        delete newErrors[`cell-${editingCell.tableIndex}-${editingCell.rowIndex}-${editingCell.cellIndex}`];
+        setValidationErrors(newErrors);
+      }
+
       const newTables = [...(invoiceData.tables || [])];
       const newTable = { ...newTables[editingCell.tableIndex] };
       const newTableData = [...newTable.data];
       const newRow = [...newTableData[editingCell.rowIndex]];
-      newRow[editingCell.cellIndex] = event.target.value;
+      newRow[editingCell.cellIndex] = content;
       newTableData[editingCell.rowIndex] = newRow;
       newTable.data = newTableData;
       newTables[editingCell.tableIndex] = newTable;
 
       setInvoiceData({ ...invoiceData, tables: newTables });
-      setEditingCell({ ...editingCell, content: event.target.value });
+      setEditingCell({ ...editingCell, content: content });
     }
   };
 
@@ -310,21 +341,28 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
               }}
             >
               {editingText?.index === index ? (
-                <input
-                  type="text"
-                  value={editingText.content}
-                  onChange={handleTextEditChange}
-                  onBlur={handleTextEditBlur}
-                  autoFocus
-                  style={{
-                    background: "rgba(255, 255, 255, 0.8)",
-                    color: "black",
-                    border: "none",
-                    padding: 0,
-                    fontSize: `${16 * displayScale}px`,
-                  }}
-                  className="cursor-text"
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={editingText.content}
+                    onChange={handleTextEditChange}
+                    onBlur={handleTextEditBlur}
+                    autoFocus
+                    style={{
+                      background: "rgba(255, 255, 255, 0.8)",
+                      color: "black",
+                      border: "none",
+                      padding: 0,
+                      fontSize: `${16 * displayScale}px`,
+                    }}
+                    className="cursor-text"
+                  />
+                  {validationErrors[`text-${index}`] && (
+                    <span style={{ color: 'red', fontSize: '10px' }}>
+                      {validationErrors[`text-${index}`]}
+                    </span>
+                  )}
+                </div>
               ) : (
                 <span
                   style={{
@@ -427,14 +465,21 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                               }}
                             >
                               {isEditing ? (
-                                <input
-                                  type="text"
-                                  value={editingCell.content}
-                                  onChange={handleTableCellChange}
-                                  onBlur={handleTableCellBlur}
-                                  autoFocus
-                                  style={{ width: "100%", border: "none", background: "transparent", outline: "none" }}
-                                />
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={editingCell.content}
+                                    onChange={handleTableCellChange}
+                                    onBlur={handleTableCellBlur}
+                                    autoFocus
+                                    style={{ width: "100%", border: "none", background: "transparent", outline: "none" }}
+                                  />
+                                  {validationErrors[`cell-${index}-${rowIndex}-${cellIndex}`] && (
+                                    <span style={{ color: 'red', fontSize: '10px' }}>
+                                      {validationErrors[`cell-${index}-${rowIndex}-${cellIndex}`]}
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 cell
                               )}
