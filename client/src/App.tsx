@@ -8,13 +8,24 @@ import { StatePreview } from "./components/StatePreview";
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    to: "John Doe",
-    from: "Jane Doe",
     items: [{ description: "Sample Item", amount: 100 }],
-    customTexts: [{ content: "Sample Text", x: 100, y: 100 }],
+    customTexts: [{ id: crypto.randomUUID(), content: "Sample Text", x: 100, y: 100 }],
     images: [],
+    tables: [
+      {
+        id: crypto.randomUUID(),
+        x: 150,
+        y: 150,
+        width: 300,
+        height: 100,
+        data: [
+          ["Default Header 1", "Default Header 2"],
+          ["Default Cell 1", "Default Cell 2"],
+        ],
+      },
+    ],
   });
-  const [activeTool, setActiveTool] = useState<"select" | "text">("select");
+  const [activeTool, setActiveTool] = useState<"select" | "text" | "table">("select");
 
   const downloadPdf = async () => {
     const blob = await pdf(
@@ -63,6 +74,12 @@ function App() {
             activeTool={activeTool}
             setActiveTool={setActiveTool}
           />
+          <div className="mt-8">
+            <details open>
+              <summary>State Preview</summary>
+              <StatePreview data={invoiceData} />
+            </details>
+          </div>
         </div>
         <div className="col-span-1">
           <PdfPreview
@@ -73,12 +90,7 @@ function App() {
           />
         </div>
       </main>
-      <div className="px-8 mt-8">
-        <details>
-          <summary>State Preview</summary>
-          <StatePreview data={invoiceData} />
-        </details>
-      </div>
+
     </div>
   );
 }

@@ -4,8 +4,8 @@ import type { InvoiceData } from '../types';
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
-  activeTool: "select" | "text";
-  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text">>;
+  activeTool: "select" | "text" | "table";
+  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text" | "table">>;
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, activeTool, setActiveTool }) => {
@@ -48,6 +48,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             images: [
               ...(prev.images || []),
               {
+                id: crypto.randomUUID(),
                 data,
                 x: 50,
                 y: 50,
@@ -83,6 +84,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             }}
             className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'text' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
             <span>Add Text</span>
+          </button>
+          <button
+            onClick={() => {
+              console.log('Add Table button clicked');
+              setActiveTool("table");
+            }}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            <span>Add Table</span>
           </button>
           <button
             onClick={() => imageInputRef.current?.click()}

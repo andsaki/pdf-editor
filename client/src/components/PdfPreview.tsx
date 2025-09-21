@@ -7,14 +7,14 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { InvoiceData } from "../types";
+import type { InvoiceData, TableItem } from "../types";
 import { Rnd } from "react-rnd";
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
-  activeTool: "select" | "text";
-  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text">>;
+  activeTool: "select" | "text" | "table";
+  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text" | "table">>;
 }
 
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
@@ -315,6 +315,52 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     }
   };
 
+  const handleAddTableObject = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.currentTarget && pageDimensions && containerWidth > 0) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const displayX = event.clientX - rect.left;
+      const displayY = event.clientY - rect.top;
+
+      const scale = pageDimensions.width / containerWidth;
+      const x = displayX * scale;
+      const y = displayY * scale;
+
+      const newTable: TableItem = {
+        id: crypto.randomUUID(),
+        x,
+        y,
+        width: 300, // default width
+        height: 100, // default height
+        data: [
+          ["Header 1", "Header 2"],
+          ["Cell 1", "Cell 2"],
+        ],
+      };
+
+      setInvoiceData((prev) => ({
+        ...prev,
+        tables: [...(prev.tables || []), newTable],
+      }));
+      setActiveTool("select"); // 選択ツールに戻す
+    }
+  };
+
+  const handleTableChange = (
+    index: number,
+    pos: { x: number; y: number },
+    size: { width: string | number; height: string | number }
+  ) => {
+    const newTables = [...(invoiceData.tables || [])];
+    newTables[index] = {
+      ...newTables[index],
+      x: pos.x / displayScale,
+      y: pos.y / displayScale,
+      width: parseFloat(size.width.toString()),
+      height: parseFloat(size.height.toString()),
+    };
+    setInvoiceData((prev) => ({ ...prev, tables: newTables }));
+  };
+
   const displayScale =
     pageDimensions && containerWidth > 0
       ? containerWidth / pageDimensions.width
@@ -477,6 +523,50 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
             </Rnd>
           ))}
 
+        {/* ドラッグ/リサイズ可能なテーブルのオーバーレイ */}
+        {pdfFile &&
+          invoiceData.tables?.map((table, index) => (
+            <Rnd
+              key={table.id}
+              className={activeTool === "select" ? "cursor-grab" : ""}
+              style={{ border: "1px dashed green", zIndex: 15 }}
+              size={{
+                width: table.width * displayScale,
+                height: table.height * displayScale,
+              }}
+              position={{
+                x: table.x * displayScale,
+                y: table.y * displayScale,
+              }}
+              onDragStop={(_e, d) => {
+                const newSize = { width: table.width, height: table.height };
+                handleTableChange(index, { x: d.x, y: d.y }, newSize);
+              }}
+              onResizeStop={(_e, _direction, ref, _delta, position) => {
+                handleTableChange(index, position, {
+                  width: ref.style.width,
+                  height: ref.style.height,
+                });
+              }}
+            >
+              <div style={{ width: "100%", height: "100%", backgroundColor: "rgba(0, 255, 0, 0.1)", overflow: "hidden" }}>
+                <table style={{ width: "100%", height: "100%", borderCollapse: "collapse" }}>
+                  <tbody>
+                    {table.data.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {row.map((cell, cellIndex) => (
+                          <td key={cellIndex} style={{ border: "1px solid #ccc", padding: "5px", fontSize: `${12 * displayScale}px` }}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Rnd>
+          ))}
+
         {/* 新しいテキストを追加するための透明なオーバーレイ */}
         {activeTool === "text" &&
           !editingText &&
@@ -488,6 +578,18 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 console.log("add text overlay clicked");
                 handleAddTextObject(e);
               }}
+              style={{ zIndex: 20 }}
+            ></div>
+          )}
+
+        {/* 新しいテーブルを追加するための透明なオーバーレイ */}
+        {activeTool === "table" &&
+          !editingText &&
+          pdfFile &&
+          containerWidth > 0 && (
+            <div
+              className="absolute inset-0 cursor-crosshair"
+              onClick={handleAddTableObject}
               style={{ zIndex: 20 }}
             ></div>
           )}
