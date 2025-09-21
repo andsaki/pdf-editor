@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import {
   InvoiceDataSchema,
-  InvoiceImageSchema,
-  TableItemSchema,
+  LayoutItemSchema,
 } from './schemas';
 
-export type InvoiceImage = z.infer<typeof InvoiceImageSchema>;
-export type TableItem = z.infer<typeof TableItemSchema>;
+export type LayoutItem = z.infer<typeof LayoutItemSchema>;
 export type InvoiceData = z.infer<typeof InvoiceDataSchema>;

@@ -23,108 +23,65 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 30,
-  },
-  table: {
-    display: "flex",
-    width: "auto",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-  },
-  tableRow: {
-    margin: "auto",
-    flexDirection: "row",
-  },
-  tableColHeader: {
-    width: "70%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    backgroundColor: "#f0f0f0",
-    padding: 5,
-  },
-  tableCol: {
-    width: "70%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    padding: 5,
-  },
-  amountColHeader: {
-    width: "30%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    backgroundColor: "#f0f0f0",
-    padding: 5,
-  },
-  amountCol: {
-    width: "30%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    padding: 5,
-  },
-  total: {
-    position: "absolute",
-    bottom: 100,
-    right: 60, // Corresponds to page paddingRight
-  },
 });
 
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
 }
 
-export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
-  invoiceData,
-}) => (
+export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <Text style={styles.title}>Invoice</Text>
 
-
-
-
-      <View style={{ marginTop: 20 }}>
-        {invoiceData.customTexts.map((textBlock, index) => (
-          <Text
-            key={index}
-            style={{
-              position: "absolute",
-              left: textBlock.x,
-              top: textBlock.y,
-            }}
-          >
-            {textBlock.content}
-          </Text>
-        ))}
-      </View>
-
-      <View>
-        {invoiceData.images?.map((image, index) => (
-          <Image
-            key={`image-${index}`}
-            src={image.data}
-            style={{
-              position: "absolute",
-              left: image.x,
-              top: image.y,
-              width: image.width,
-              height: image.height,
-            }}
-          />
-        ))}
-      </View>
+      {
+        invoiceData.layout.map(item => {
+          if (item.type === 'text') {
+            return (
+              <Text
+                key={item.id}
+                style={{
+                  position: "absolute",
+                  left: item.x,
+                  top: item.y,
+                }}
+              >
+                {item.content}
+              </Text>
+            );
+          }
+          if (item.type === 'image') {
+            return (
+              <Image
+                key={item.id}
+                src={item.data}
+                style={{
+                  position: "absolute",
+                  left: item.x,
+                  top: item.y,
+                  width: item.width,
+                  height: item.height,
+                }}
+              />
+            );
+          }
+          if (item.type === 'table') {
+            // PDF table rendering can be complex, for now, we just render the data as text
+            return (
+              <View key={item.id} style={{ position: 'absolute', left: item.x, top: item.y }}>
+                {item.data.map((row, rowIndex) => (
+                  <View key={rowIndex} style={{ flexDirection: 'row' }}>
+                    {row.map((cell, cellIndex) => (
+                      <Text key={cellIndex} style={{ border: '1px solid #ccc', padding: 5 }}>{cell}</Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )
+          }
+          return null;
+        })
+      }
     </Page>
   </Document>
 );

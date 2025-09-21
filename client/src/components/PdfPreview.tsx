@@ -6,8 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import { Document, Page } from "react-pdf";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { InvoiceData, TableItem } from "../types";
+import { PDFDocument } from "pdf-lib";
+import type { InvoiceData, LayoutItem } from "../types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 
@@ -16,11 +16,15 @@ const contentSchema = z.string().min(1, "テーブルのセルは空にできま
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  selectedObjectId: string | null;
+  setSelectedObjectId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
+  selectedObjectId,
+  setSelectedObjectId,
 }) => {
   const [_numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, _setPageNumber] = useState(1);
@@ -32,27 +36,18 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [editingText, setEditingText] = useState<{
-    index: number;
-    x: number;
-    y: number;
-    content: string;
-  } | null>(null);
-
+  const [editingText, setEditingText] = useState<string | null>(null);
   const [editingCell, setEditingCell] = useState<{
-    tableIndex: number;
+    itemId: string;
     rowIndex: number;
     cellIndex: number;
-    content: string;
   } | null>(null);
 
   const [validationErrors, setValidationErrors] = useState<any>({});
 
-  // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
 
-  // ページの寸法を初期化
   useEffect(() => {
     const initializePageDimensions = async () => {
       try {
@@ -68,7 +63,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     initializePageDimensions();
   }, []);
 
-  // PDFバイトを生成
   const generatePdfBytes = useCallback(async () => {
     if (!pageDimensions) return;
 
@@ -77,23 +71,22 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     try {
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage();
-      const { width, height } = page.getSize();
+      const { height } = page.getSize();
 
-      // 画像を埋め込んで描画
-      if (invoiceData.images && Array.isArray(invoiceData.images)) {
-        for (const image of invoiceData.images) {
+      for (const item of invoiceData.layout) {
+        if (item.type === "image") {
           try {
-            const imageBytes = image.data.startsWith("data:image/jpeg")
-              ? await pdfDoc.embedJpg(image.data)
-              : await pdfDoc.embedPng(image.data);
+            const imageBytes = item.data.startsWith("data:image/jpeg")
+              ? await pdfDoc.embedJpg(item.data)
+              : await pdfDoc.embedPng(item.data);
 
-            const pdfY = height - image.y - image.height;
+            const pdfY = height - item.y - item.height;
 
             page.drawImage(imageBytes, {
-              x: image.x,
+              x: item.x,
               y: pdfY,
-              width: image.width,
-              height: image.height,
+              width: item.width,
+              height: item.height,
             });
           } catch (imgErr) {
             console.error("Failed to embed image:", imgErr);
@@ -109,18 +102,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     }
   }, [invoiceData, pageDimensions]);
 
-  // パフォーマンス向上のためPDF生成をデバウンス
   useEffect(() => {
     const handler = setTimeout(() => {
       generatePdfBytes();
-    }, 300); // 300msの遅延
+    }, 300);
 
     return () => {
       clearTimeout(handler);
     };
   }, [generatePdfBytes]);
 
-  // コンテナ幅のオブザーバー
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -143,7 +134,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setError(null); // 読み込み成功時にエラーをクリア
+    setError(null);
   };
 
   const onDocumentLoadError = (error: Error) => {
@@ -151,98 +142,60 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setError("PDFの読み込みに失敗しました");
   };
 
-  const handleTextEditChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (editingText) {
-      const content = event.target.value;
-      const validation = contentSchema.safeParse(content);
-      if (!validation.success) {
-        setValidationErrors({
-          ...validationErrors,
-          [`text-${editingText.index}`]: validation.error.issues[0].message,
-        });
-      } else {
-        const newErrors = { ...validationErrors };
-        delete newErrors[`text-${editingText.index}`];
-        setValidationErrors(newErrors);
-      }
-
-      const newCustomTexts = [...(invoiceData.customTexts || [])];
-      newCustomTexts[editingText.index] = {
-        ...newCustomTexts[editingText.index],
-        content: content,
-      };
-      setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
-      setEditingText({ ...editingText, content: content });
-    }
-  };
-
-  const handleTextEditBlur = () => {
-    setEditingText(null);
-  };
-
-  const handleImageChange = (
-    index: number,
-    pos: { x: number; y: number },
-    size: { width: string | number; height: string | number }
+  const handleLayoutItemChange = (
+    itemId: string,
+    newProps: Partial<LayoutItem>
   ) => {
-    const newImages = [...(invoiceData.images || [])];
-    newImages[index] = {
-      ...newImages[index],
-      x: pos.x / displayScale,
-      y: pos.y / displayScale,
-      width: parseFloat(size.width.toString()),
-      height: parseFloat(size.height.toString()),
-    };
-    setInvoiceData((prev) => ({ ...prev, images: newImages }));
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: prev.layout.map((item) =>
+        item.id === itemId ? { ...item, ...newProps } : item
+      ),
+    }));
   };
 
-  const handleTableChange = (
-    index: number,
-    pos: { x: number; y: number },
-    size: { width: string | number; height: string | number }
-  ) => {
-    const newTables = [...(invoiceData.tables || [])];
-    newTables[index] = {
-      ...newTables[index],
-      x: pos.x / displayScale,
-      y: pos.y / displayScale,
-      width: parseFloat(size.width.toString()),
-      height: parseFloat(size.height.toString()),
-    };
-    setInvoiceData((prev) => ({ ...prev, tables: newTables }));
-  };
-
-  const handleTableCellChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (editingCell) {
-      const content = event.target.value;
-      const validation = contentSchema.safeParse(content);
-      if (!validation.success) {
-        setValidationErrors({
-          ...validationErrors,
-          [`cell-${editingCell.tableIndex}-${editingCell.rowIndex}-${editingCell.cellIndex}`]: validation.error.issues[0].message,
-        });
-      } else {
-        const newErrors = { ...validationErrors };
-        delete newErrors[`cell-${editingCell.tableIndex}-${editingCell.rowIndex}-${editingCell.cellIndex}`];
-        setValidationErrors(newErrors);
-      }
-
-      const newTables = [...(invoiceData.tables || [])];
-      const newTable = { ...newTables[editingCell.tableIndex] };
-      const newTableData = [...newTable.data];
-      const newRow = [...newTableData[editingCell.rowIndex]];
-      newRow[editingCell.cellIndex] = content;
-      newTableData[editingCell.rowIndex] = newRow;
-      newTable.data = newTableData;
-      newTables[editingCell.tableIndex] = newTable;
-
-      setInvoiceData({ ...invoiceData, tables: newTables });
-      setEditingCell({ ...editingCell, content: content });
+  const handleTextChange = (itemId: string, content: string) => {
+    const validation = contentSchema.safeParse(content);
+    if (!validation.success) {
+      setValidationErrors({
+        ...validationErrors,
+        [itemId]: validation.error.issues[0].message,
+      });
+    } else {
+      const newErrors = { ...validationErrors };
+      delete newErrors[itemId];
+      setValidationErrors(newErrors);
     }
+    handleLayoutItemChange(itemId, { content });
   };
 
-  const handleTableCellBlur = () => {
-    setEditingCell(null);
+  const handleTableCellChange = (
+    itemId: string,
+    rowIndex: number,
+    cellIndex: number,
+    content: string
+  ) => {
+    const validation = contentSchema.safeParse(content);
+    const errorKey = `${itemId}-${rowIndex}-${cellIndex}`;
+    if (!validation.success) {
+      setValidationErrors({
+        ...validationErrors,
+        [errorKey]: validation.error.issues[0].message,
+      });
+    } else {
+      const newErrors = { ...validationErrors };
+      delete newErrors[errorKey];
+      setValidationErrors(newErrors);
+    }
+
+    const item = invoiceData.layout.find((it) => it.id === itemId);
+    if (item && item.type === "table") {
+      const newTableData = [...item.data];
+      const newRow = [...newTableData[rowIndex]];
+      newRow[cellIndex] = content;
+      newTableData[rowIndex] = newRow;
+      handleLayoutItemChange(itemId, { data: newTableData });
+    }
   };
 
   const displayScale =
@@ -285,6 +238,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           width: pageDimensions ? pageDimensions.width * displayScale : 0,
           height: pageDimensions ? pageDimensions.height * displayScale : 0,
         }}
+        onClick={() => setSelectedObjectId(null)}
       >
         <div style={{ position: "absolute", zIndex: 1 }}>
           {pdfFile && containerWidth > 0 ? (
@@ -303,194 +257,181 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           )}
         </div>
 
-        {/* 編集可能なテキストフィールドのオーバーレイ */}
         {pdfFile &&
-          invoiceData.customTexts?.map((textBlock, index) => (
+          invoiceData.layout.map((item) => (
             <Rnd
-              key={textBlock.id}
+              key={item.id}
               className="cursor-grab"
               style={{
                 border:
-                  editingText?.index === index
+                  selectedObjectId === item.id
                     ? "1px solid blue"
                     : "1px dashed transparent",
                 zIndex: 10,
               }}
-              position={{
-                x: textBlock.x * displayScale,
-                y: textBlock.y * displayScale,
+              size={{
+                width: item.width * displayScale,
+                height: item.height * displayScale,
               }}
-              onDragStop={(_e, d) => {
-                const newCustomTexts = [...(invoiceData.customTexts || [])];
-                newCustomTexts[index] = {
-                  ...newCustomTexts[index],
-                  x: d.x / displayScale,
-                  y: d.y / displayScale,
-                };
-                setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
+              position={{
+                x: item.x * displayScale,
+                y: item.y * displayScale,
               }}
               onClick={(e: React.MouseEvent) => {
-                console.log("text overlay clicked");
                 e.stopPropagation();
-                setEditingText({
-                  index,
-                  x: textBlock.x,
-                  y: textBlock.y,
-                  content: textBlock.content,
+                setSelectedObjectId(item.id);
+              }}
+              onDragStop={(_e, d) => {
+                handleLayoutItemChange(item.id, {
+                  x: d.x / displayScale,
+                  y: d.y / displayScale,
+                });
+              }}
+              onResizeStop={(_e, _direction, ref, _delta, position) => {
+                handleLayoutItemChange(item.id, {
+                  x: position.x / displayScale,
+                  y: position.y / displayScale,
+                  width: parseFloat(ref.style.width) / displayScale,
+                  height: parseFloat(ref.style.height) / displayScale,
                 });
               }}
             >
-              {editingText?.index === index ? (
-                <div>
-                  <input
-                    type="text"
-                    value={editingText.content}
-                    onChange={handleTextEditChange}
-                    onBlur={handleTextEditBlur}
-                    autoFocus
+              {item.type === "text" &&
+                (editingText === item.id ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={item.content}
+                      onChange={(e) =>
+                        handleTextChange(item.id, e.target.value)
+                      }
+                      onBlur={() => setEditingText(null)}
+                      autoFocus
+                      style={{
+                        background: "rgba(255, 255, 255, 0.8)",
+                        color: "black",
+                        border: "none",
+                        padding: 0,
+                        fontSize: `${16 * displayScale}px`,
+                      }}
+                      className="cursor-text"
+                    />
+                    {validationErrors[item.id] && (
+                      <span style={{ color: "red", fontSize: "10px" }}>
+                        {validationErrors[item.id]}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span
                     style={{
-                      background: "rgba(255, 255, 255, 0.8)",
                       color: "black",
-                      border: "none",
-                      padding: 0,
                       fontSize: `${16 * displayScale}px`,
+                      whiteSpace: "nowrap",
                     }}
                     className="cursor-text"
-                  />
-                  {validationErrors[`text-${index}`] && (
-                    <span style={{ color: 'red', fontSize: '10px' }}>
-                      {validationErrors[`text-${index}`]}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span
+                    onDoubleClick={() => setEditingText(item.id)}
+                  >
+                    {item.content}
+                  </span>
+                ))}
+              {item.type === "image" && (
+                <img
+                  src={item.data}
                   style={{
-                    color: "black",
-                    fontSize: `${16 * displayScale}px`,
-                    whiteSpace: "nowrap",
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
                   }}
-                  className="cursor-text"
-                >
-                  {textBlock.content}
-                </span>
+                  alt={`invoice-image`}
+                />
               )}
-            </Rnd>
-          ))}
-
-        {/* ドラッグ/リサイズ可能な画像のオーバーレイ */}
-        {pdfFile &&
-          invoiceData.images?.map((image, index) => (
-            <Rnd
-              key={image.id}
-              className="cursor-grab"
-              style={{ border: "1px dashed gray", zIndex: 15 }}
-              size={{
-                width: image.width * displayScale,
-                height: image.height * displayScale,
-              }}
-              position={{
-                x: image.x * displayScale,
-                y: image.y * displayScale,
-              }}
-              onDragStop={(_e, d) => {
-                console.log("onDragStop", d);
-                const newSize = { width: image.width, height: image.height };
-                handleImageChange(index, { x: d.x, y: d.y }, newSize);
-              }}
-              onResizeStop={(_e, _direction, ref, _delta, position) => {
-                console.log("onResizeStop", position);
-                handleImageChange(index, position, {
-                  width: ref.style.width,
-                  height: ref.style.height,
-                });
-              }}
-            >
-              <img
-                src={image.data}
-                style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-                alt={`invoice-image-${index}`}
-              />
-            </Rnd>
-          ))}
-
-        {/* ドラッグ/リサイズ可能なテーブルのオーバーレイ */}
-        {pdfFile &&
-          invoiceData.tables?.map((table, index) => (
-            <Rnd
-              key={table.id}
-              className="cursor-grab"
-              style={{ border: "1px dashed green", zIndex: 15 }}
-              size={{
-                width: table.width * displayScale,
-                height: table.height * displayScale,
-              }}
-              position={{
-                x: table.x * displayScale,
-                y: table.y * displayScale,
-              }}
-              onDragStop={(_e, d) => {
-                const newSize = { width: table.width, height: table.height };
-                handleTableChange(index, { x: d.x, y: d.y }, newSize);
-              }}
-              onResizeStop={(_e, _direction, ref, _delta, position) => {
-                handleTableChange(index, position, {
-                  width: ref.style.width,
-                  height: ref.style.height,
-                });
-              }}
-            >
-              <div style={{ width: "100%", height: "100%", backgroundColor: "rgba(0, 255, 0, 0.1)", overflow: "hidden" }}>
-                <table style={{ width: "100%", height: "100%", borderCollapse: "collapse" }}>
-                  <tbody>
-                    {table.data.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {row.map((cell, cellIndex) => {
-                          const isEditing = editingCell &&
-                            editingCell.tableIndex === index &&
-                            editingCell.rowIndex === rowIndex &&
-                            editingCell.cellIndex === cellIndex;
-
-                          return (
-                            <td
-                              key={cellIndex}
-                              style={{ border: "1px solid #ccc", padding: "5px", fontSize: `${12 * displayScale}px` }}
-                              onClick={() => {
-                                setEditingCell({
-                                  tableIndex: index,
-                                  rowIndex,
-                                  cellIndex,
-                                  content: cell,
-                                });
-                              }}
-                            >
-                              {isEditing ? (
-                                <div>
-                                  <input
-                                    type="text"
-                                    value={editingCell.content}
-                                    onChange={handleTableCellChange}
-                                    onBlur={handleTableCellBlur}
-                                    autoFocus
-                                    style={{ width: "100%", border: "none", background: "transparent", outline: "none" }}
-                                  />
-                                  {validationErrors[`cell-${index}-${rowIndex}-${cellIndex}`] && (
-                                    <span style={{ color: 'red', fontSize: '10px' }}>
-                                      {validationErrors[`cell-${index}-${rowIndex}-${cellIndex}`]}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                cell
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {item.type === "table" && (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0, 255, 0, 0.1)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <table
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderCollapse: "collapse",
+                    }}
+                  >
+                    <tbody>
+                      {item.data.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          {row.map((cell, cellIndex) => {
+                            const isEditing =
+                              editingCell?.itemId === item.id &&
+                              editingCell.rowIndex === rowIndex &&
+                              editingCell.cellIndex === cellIndex;
+                            const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
+                            return (
+                              <td
+                                key={cellIndex}
+                                style={{
+                                  border: "1px solid #ccc",
+                                  padding: "5px",
+                                  fontSize: `${12 * displayScale}px`,
+                                }}
+                                onDoubleClick={() => {
+                                  setEditingCell({
+                                    itemId: item.id,
+                                    rowIndex,
+                                    cellIndex,
+                                  });
+                                }}
+                              >
+                                {isEditing ? (
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={cell}
+                                      onChange={(e) =>
+                                        handleTableCellChange(
+                                          item.id,
+                                          rowIndex,
+                                          cellIndex,
+                                          e.target.value
+                                        )
+                                      }
+                                      onBlur={() => setEditingCell(null)}
+                                      autoFocus
+                                      style={{
+                                        width: "100%",
+                                        border: "none",
+                                        background: "transparent",
+                                        outline: "none",
+                                      }}
+                                    />
+                                    {validationErrors[errorKey] && (
+                                      <span
+                                        style={{
+                                          color: "red",
+                                          fontSize: "10px",
+                                        }}
+                                      >
+                                        {validationErrors[errorKey]}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  cell
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </Rnd>
           ))}
       </div>

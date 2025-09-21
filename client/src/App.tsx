@@ -5,14 +5,23 @@ import type { InvoiceData } from "./types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
 import { StatePreview } from "./components/StatePreview";
+import { LayoutPalette } from "./components/LayoutPalette";
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    customTexts: [{ id: crypto.randomUUID(), content: "Sample Text", x: 100, y: 100 }],
-    images: [],
-    tables: [
+    layout: [
       {
         id: crypto.randomUUID(),
+        type: "text",
+        content: "Sample Text",
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 20,
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "table",
         x: 150,
         y: 150,
         width: 300,
@@ -24,6 +33,7 @@ function App() {
       },
     ],
   });
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
   const downloadPdf = async () => {
     const blob = await pdf(
@@ -45,6 +55,8 @@ function App() {
     window.open(url);
   };
 
+  const selectedObject = invoiceData.layout.find(obj => obj.id === selectedObjectId);
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 py-8">
       <header className="flex justify-between items-center mb-8 px-8">
@@ -64,12 +76,19 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-2 gap-16 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-3 gap-8 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
-            invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
           />
+          {selectedObject && (
+            <div className="mt-8">
+              <LayoutPalette
+                selectedObject={selectedObject}
+                setInvoiceData={setInvoiceData}
+              />
+            </div>
+          )}
           <div className="mt-8">
             <details open>
               <summary>State Preview</summary>
@@ -77,10 +96,12 @@ function App() {
             </details>
           </div>
         </div>
-        <div className="col-span-1">
+        <div className="col-span-2">
           <PdfPreview
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
+            selectedObjectId={selectedObjectId}
+            setSelectedObjectId={setSelectedObjectId}
           />
         </div>
       </main>

@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import type { InvoiceData } from '../types';
 
 interface InvoiceFormProps {
-  invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
 }
 
@@ -12,19 +11,23 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData }) => {
   const addTextObject = () => {
     const newText = {
       id: crypto.randomUUID(),
+      type: "text" as const,
       content: "Sample Text",
       x: 100,
       y: 100,
+      width: 100,
+      height: 20,
     };
     setInvoiceData((prev) => ({
       ...prev,
-      customTexts: [...(prev.customTexts || []), newText],
+      layout: [...(prev.layout || []), newText],
     }));
   };
 
   const addTableObject = () => {
     const newTable = {
       id: crypto.randomUUID(),
+      type: "table" as const,
       x: 100,
       y: 200,
       width: 300,
@@ -36,7 +39,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData }) => {
     };
     setInvoiceData((prev) => ({
       ...prev,
-      tables: [...(prev.tables || []), newTable],
+      layout: [...(prev.layout || []), newTable],
     }));
   };
 
@@ -50,19 +53,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData }) => {
       if (data) {
         const img = new Image();
         img.onload = () => {
+          const newImage = {
+            id: crypto.randomUUID(),
+            type: "image" as const,
+            data,
+            x: 50,
+            y: 50,
+            width: img.width,
+            height: img.height,
+          };
           setInvoiceData((prev) => ({
             ...prev,
-            images: [
-              ...(prev.images || []),
-              {
-                id: crypto.randomUUID(),
-                data,
-                x: 50,
-                y: 50,
-                width: img.width,
-                height: img.height,
-              },
-            ],
+            layout: [...(prev.layout || []), newImage],
           }));
         };
         img.src = data;
