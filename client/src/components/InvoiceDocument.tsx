@@ -6,8 +6,19 @@ import {
   Document,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 import type { InvoiceData } from "../types";
+
+// 重要: フォントファイルを /public/fonts ディレクトリに追加してください。
+// BIZ UDPGothic は Google Fonts からダウンロードできます。
+Font.register({
+  family: 'BIZ UDPGothic',
+  fonts: [
+    { src: '/fonts/BIZUDPGothic-Regular.ttf' }, // font-style: normal, font-weight: normal
+    { src: '/fonts/BIZUDPGothic-Bold.ttf', fontWeight: 'bold' },
+  ],
+});
 
 const styles = StyleSheet.create({
   page: {
@@ -47,10 +58,13 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData })
               fontSize: item.style?.fontSize || 12,
               lineHeight: item.style?.lineHeight || 1,
               textAlign: item.style?.textAlign || 'left',
-              fontFamily: item.style?.bold ? 'Helvetica-Bold' : (item.style?.italic ? 'Helvetica-Oblique' : 'Helvetica'),
+              fontFamily: item.style?.fontFamily || 'Helvetica',
             };
-            if (item.style?.italic && item.style?.bold) {
-              style.fontFamily = 'Helvetica-BoldOblique';
+            if (item.style?.bold) {
+              style.fontWeight = 'bold';
+            }
+            if (item.style?.italic) {
+              style.fontStyle = 'italic';
             }
 
             return (

@@ -12,7 +12,7 @@ export const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal('text'),
   content: z.string(),
   style: z.object({
-    fontFamily: z.string().optional(),
+    fontFamily: z.enum(['Helvetica', 'BIZ UDPGothic']).optional(),
     fontSize: z.number().optional(),
     lineHeight: z.number().optional(),
     textAlign: z.enum(['left', 'center', 'right']).optional(),

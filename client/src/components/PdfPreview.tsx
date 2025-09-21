@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { Document, Page } from "react-pdf";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts, ColorTypes } from "pdf-lib";
 import type { InvoiceData, LayoutItem } from "../types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
@@ -344,6 +344,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         border: "none",
                         padding: 0,
                         fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                        fontFamily: item.style?.fontFamily || 'Helvetica',
                       }}
                       className="cursor-text"
                     />
@@ -366,6 +367,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                       display: 'flex',
                       alignItems: item.style?.verticalAlign === 'center' ? 'center' : item.style?.verticalAlign === 'bottom' ? 'flex-end' : 'flex-start',
                       height: '100%',
+                      fontFamily: item.style?.fontFamily || 'Helvetica',
                     }}
                     className="cursor-text"
                     onDoubleClick={() => setEditingText(item.id)}

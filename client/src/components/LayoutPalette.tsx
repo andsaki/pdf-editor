@@ -1,5 +1,9 @@
 import React from 'react';
 import type { InvoiceData, LayoutItem } from '../types';
+import { TextItemSchema } from '../schemas';
+import { z } from 'zod';
+
+type TextItem = z.infer<typeof TextItemSchema>;
 
 interface LayoutPaletteProps {
   selectedObject: LayoutItem;
@@ -8,11 +12,11 @@ interface LayoutPaletteProps {
 
 export const LayoutPalette: React.FC<LayoutPaletteProps> = ({ selectedObject, setInvoiceData }) => {
 
-  const handleStyleChange = (newStyle: Partial<LayoutItem['style']>) => {
+  const handleStyleChange = (newStyle: Partial<TextItem['style']>) => {
     setInvoiceData(prev => ({
       ...prev,
       layout: prev.layout.map(item => {
-        if (item.id === selectedObject.id) {
+        if (item.id === selectedObject.id && item.type === 'text') {
           return { ...item, style: { ...item.style, ...newStyle } };
         }
         return item;
@@ -57,6 +61,13 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({ selectedObject, se
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">Content:</label>
             <textarea value={selectedObject.content} onChange={e => setInvoiceData(prev => ({ ...prev, layout: prev.layout.map(item => item.id === selectedObject.id && item.type === 'text' ? { ...item, content: e.target.value } : item) }))} />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Font Family:</label>
+            <select value={selectedObject.style?.fontFamily || 'Helvetica'} onChange={e => handleStyleChange({ fontFamily: e.target.value as any })}>
+              <option value="Helvetica">Helvetica</option>
+              <option value="BIZ UDPGothic">BIZ UDPGothic</option>
+            </select>
           </div>
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">Font Size:</label>
