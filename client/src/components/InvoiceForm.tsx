@@ -1,17 +1,44 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import type { InvoiceData } from '../types';
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
-  activeTool: "select" | "text" | "table";
-  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text" | "table">>;
 }
 
-export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, activeTool, setActiveTool }) => {
+export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  const addTextObject = () => {
+    const newText = {
+      id: crypto.randomUUID(),
+      content: "Sample Text",
+      x: 100,
+      y: 100,
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      customTexts: [...(prev.customTexts || []), newText],
+    }));
+  };
 
+  const addTableObject = () => {
+    const newTable = {
+      id: crypto.randomUUID(),
+      x: 100,
+      y: 200,
+      width: 300,
+      height: 100,
+      data: [
+        ["Header 1", "Header 2"],
+        ["Cell 1", "Cell 2"],
+      ],
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      tables: [...(prev.tables || []), newTable],
+    }));
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,27 +77,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
         <h3 className="text-xl font-bold mb-4 text-gray-800">Tools</h3>
         <div className="flex space-x-2">
           <button
-            onClick={() => {
-              console.log('Select button clicked');
-              setActiveTool("select");
-            }}
-            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'select' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
-            <span>Select</span>
-          </button>
-          <button
-            onClick={() => {
-              console.log('Add Text button clicked');
-              setActiveTool("text");
-            }}
-            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'text' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            onClick={addTextObject}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800'}`}>
             <span>Add Text</span>
           </button>
           <button
-            onClick={() => {
-              console.log('Add Table button clicked');
-              setActiveTool("table");
-            }}
-            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${activeTool === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            onClick={addTableObject}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800'}`}>
             <span>Add Table</span>
           </button>
           <button

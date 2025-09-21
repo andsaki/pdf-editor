@@ -8,7 +8,6 @@ import { StatePreview } from "./components/StatePreview";
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-
     customTexts: [{ id: crypto.randomUUID(), content: "Sample Text", x: 100, y: 100 }],
     images: [],
     tables: [
@@ -25,7 +24,6 @@ function App() {
       },
     ],
   });
-  const [activeTool, setActiveTool] = useState<"select" | "text" | "table">("select");
 
   const downloadPdf = async () => {
     const blob = await pdf(
@@ -71,8 +69,6 @@ function App() {
           <InvoiceForm
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
           />
           <div className="mt-8">
             <details open>
@@ -85,8 +81,6 @@ function App() {
           <PdfPreview
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
           />
         </div>
       </main>

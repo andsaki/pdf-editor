@@ -13,15 +13,11 @@ import { Rnd } from "react-rnd";
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
-  activeTool: "select" | "text" | "table";
-  setActiveTool: React.Dispatch<React.SetStateAction<"select" | "text" | "table">>;
 }
 
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
-  activeTool,
-  setActiveTool,
 }) => {
   const [_numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, _setPageNumber] = useState(1);
@@ -43,37 +39,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
-
-  useEffect(() => {
-    console.log("PdfPreview activeTool:", activeTool);
-  }, [activeTool]);
-
-  // ツールのキーボードショートカット
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        document.activeElement &&
-        ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
-      ) {
-        return; // ユーザーが入力中の場合はツールを切り替えない
-      }
-      if (e.key.toLowerCase() === "t") {
-        e.preventDefault();
-        setActiveTool("text");
-      } else if (e.key.toLowerCase() === "v") {
-        e.preventDefault();
-        setActiveTool("select");
-      } else if (e.key === "Escape") {
-        setActiveTool("select");
-        setEditingText(null);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   // ページの寸法を初期化
   useEffect(() => {
@@ -101,18 +66,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage();
       const { width, height } = page.getSize();
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const fontSize = 12;
-      const padding = 5;
-
-      let y = height - 50;
-      page.drawText("Invoice", { x: 50, y, size: 24, font: boldFont });
-      y -= 60;
-
-
-
-
 
       // 画像を埋め込んで描画
       if (invoiceData.images && Array.isArray(invoiceData.images)) {
@@ -218,55 +171,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setInvoiceData((prev) => ({ ...prev, images: newImages }));
   };
 
-  const handleAddTextObject = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.currentTarget && pageDimensions && containerWidth > 0) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const displayX = event.clientX - rect.left;
-      const displayY = event.clientY - rect.top;
-
-      const scale = pageDimensions.width / containerWidth;
-      const x = displayX * scale;
-      const y = displayY * scale;
-
-      const newCustomTexts = [
-        ...(invoiceData.customTexts || []),
-        { id: crypto.randomUUID(), x, y, content: "新しいテキスト" },
-      ];
-      setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
-      setActiveTool("select"); // 選択ツールに戻す
-    }
-  };
-
-  const handleAddTableObject = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.currentTarget && pageDimensions && containerWidth > 0) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const displayX = event.clientX - rect.left;
-      const displayY = event.clientY - rect.top;
-
-      const scale = pageDimensions.width / containerWidth;
-      const x = displayX * scale;
-      const y = displayY * scale;
-
-      const newTable: TableItem = {
-        id: crypto.randomUUID(),
-        x,
-        y,
-        width: 300, // default width
-        height: 100, // default height
-        data: [
-          ["Header 1", "Header 2"],
-          ["Cell 1", "Cell 2"],
-        ],
-      };
-
-      setInvoiceData((prev) => ({
-        ...prev,
-        tables: [...(prev.tables || []), newTable],
-      }));
-      setActiveTool("select"); // 選択ツールに戻す
-    }
-  };
-
   const handleTableChange = (
     index: number,
     pos: { x: number; y: number },
@@ -346,7 +250,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           invoiceData.customTexts?.map((textBlock, index) => (
             <Rnd
               key={textBlock.id}
-              className={activeTool === "select" ? "cursor-grab" : ""}
+              className="cursor-grab"
               style={{
                 border:
                   editingText?.index === index
@@ -414,7 +318,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           invoiceData.images?.map((image, index) => (
             <Rnd
               key={image.id}
-              className={activeTool === "select" ? "cursor-grab" : ""}
+              className="cursor-grab"
               style={{ border: "1px dashed gray", zIndex: 15 }}
               size={{
                 width: image.width * displayScale,
@@ -450,7 +354,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           invoiceData.tables?.map((table, index) => (
             <Rnd
               key={table.id}
-              className={activeTool === "select" ? "cursor-grab" : ""}
+              className="cursor-grab"
               style={{ border: "1px dashed green", zIndex: 15 }}
               size={{
                 width: table.width * displayScale,
@@ -488,33 +392,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
               </div>
             </Rnd>
           ))}
-
-        {/* 新しいテキストを追加するための透明なオーバーレイ */}
-        {activeTool === "text" &&
-          !editingText &&
-          pdfFile &&
-          containerWidth > 0 && (
-            <div
-              className="absolute inset-0 cursor-text"
-              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                console.log("add text overlay clicked");
-                handleAddTextObject(e);
-              }}
-              style={{ zIndex: 20 }}
-            ></div>
-          )}
-
-        {/* 新しいテーブルを追加するための透明なオーバーレイ */}
-        {activeTool === "table" &&
-          !editingText &&
-          pdfFile &&
-          containerWidth > 0 && (
-            <div
-              className="absolute inset-0 cursor-crosshair"
-              onClick={handleAddTableObject}
-              style={{ zIndex: 20 }}
-            ></div>
-          )}
       </div>
     </div>
   );
