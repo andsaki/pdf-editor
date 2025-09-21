@@ -11,6 +11,17 @@ const BaseLayoutItemSchema = z.object({
 export const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal('text'),
   content: z.string(),
+  style: z.object({
+    fontFamily: z.string().optional(),
+    fontSize: z.number().optional(),
+    lineHeight: z.number().optional(),
+    textAlign: z.enum(['left', 'center', 'right']).optional(),
+    verticalAlign: z.enum(['top', 'center', 'bottom']).optional(),
+    color: z.string().optional(),
+    bold: z.boolean().optional(),
+    italic: z.boolean().optional(),
+    wordWrap: z.boolean().optional(),
+  }).optional(),
 });
 
 export const ImageItemSchema = BaseLayoutItemSchema.extend({

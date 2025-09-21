@@ -176,6 +176,13 @@ Undo/Redo機能は、カスタムフック `useHistoryState` を使用して実�
     - `onBlur` イベントで編集モードを終了します。
 - **移動とリサイズ:** `Rnd` コンポーネントの汎用的な `onDragStop` および `onResizeStop` ハンドラが、テキストアイテムの `x`、`y`、`width`、`height` プロパティを更新します。
 
+#### 6.1.2. テキストのスタイリング
+
+- **データモデル:** `TextItem` スキーマに、`fontFamily`, `fontSize`, `lineHeight`, `textAlign`, `verticalAlign`, `color`, `bold`, `italic`, `wordWrap` のプロパティを含むオプションの `style` オブジェクトが追加されました。
+- **レイアウトパレット:** テキストオブジェクトが選択されると、`LayoutPalette` に利用可能なすべてのスタイルプロパティの入力フィールドが表示されます。
+- **ライブプレビュー:** `PdfPreview` コンポーネントは、これらのスタイルをレンダリングされたテキストオブジェクトにリアルタイムで適用します。
+- **PDF出力:** `InvoiceDocument` コンポーネントは、これらのスタイルプロパティを `@react-pdf/renderer` の対応するスタイルにマッピングし、最終的なPDFが選択したスタイルを反映するようにします。
+
 ### 6.2. PDF生成
 
 本アプリケーションでは、目的別に2つのライブラリを使い分けてPDFを生成します。

@@ -37,14 +37,26 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData })
       {
         invoiceData.layout.map(item => {
           if (item.type === 'text') {
+            const style: any = {
+              position: "absolute",
+              left: item.x,
+              top: item.y,
+              width: item.width,
+              height: item.height,
+              color: item.style?.color || 'black',
+              fontSize: item.style?.fontSize || 12,
+              lineHeight: item.style?.lineHeight || 1,
+              textAlign: item.style?.textAlign || 'left',
+              fontFamily: item.style?.bold ? 'Helvetica-Bold' : (item.style?.italic ? 'Helvetica-Oblique' : 'Helvetica'),
+            };
+            if (item.style?.italic && item.style?.bold) {
+              style.fontFamily = 'Helvetica-BoldOblique';
+            }
+
             return (
               <Text
                 key={item.id}
-                style={{
-                  position: "absolute",
-                  left: item.x,
-                  top: item.y,
-                }}
+                style={style}
               >
                 {item.content}
               </Text>

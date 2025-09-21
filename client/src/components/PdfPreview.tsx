@@ -343,7 +343,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         color: "black",
                         border: "none",
                         padding: 0,
-                        fontSize: `${16 * displayScale}px`,
+                        fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
                       }}
                       className="cursor-text"
                     />
@@ -356,9 +356,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 ) : (
                   <span
                     style={{
-                      color: "black",
-                      fontSize: `${16 * displayScale}px`,
-                      whiteSpace: "nowrap",
+                      color: item.style?.color || "black",
+                      fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                      fontWeight: item.style?.bold ? 'bold' : 'normal',
+                      fontStyle: item.style?.italic ? 'italic' : 'normal',
+                      textAlign: item.style?.textAlign || 'left',
+                      lineHeight: item.style?.lineHeight || 1,
+                      whiteSpace: item.style?.wordWrap ? 'pre-wrap' : 'nowrap',
+                      display: 'flex',
+                      alignItems: item.style?.verticalAlign === 'center' ? 'center' : item.style?.verticalAlign === 'bottom' ? 'flex-end' : 'flex-start',
+                      height: '100%',
                     }}
                     className="cursor-text"
                     onDoubleClick={() => setEditingText(item.id)}
