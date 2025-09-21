@@ -20,6 +20,11 @@ interface PdfPreviewProps {
   setSelectedObjectId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
+/**
+ * 請求書のプレビューを表示し、レイアウト編集のユーザー操作を処理します。
+ * @param {PdfPreviewProps} props コンポーネントのプロパティ
+ * @returns {JSX.Element} レンダリングされたコンポーネント
+ */
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
@@ -63,6 +68,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     initializePageDimensions();
   }, []);
 
+  /**
+   * 表示用のPDFバイトを生成します。
+   */
   const generatePdfBytes = useCallback(async () => {
     if (!pageDimensions) return;
 
@@ -142,18 +150,28 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setError("PDFの読み込みに失敗しました");
   };
 
-  const handleLayoutItemChange = (
+  /**
+   * レイアウト項目を新しいプロパティで更新します。
+   * @param {string} itemId 更新するアイテムのID
+   * @param {function(LayoutItem): LayoutItem} updateFn 古いアイテムを受け取り、新しいアイテムを返す関数
+   */
+  const updateLayoutItem = (
     itemId: string,
-    newProps: Partial<LayoutItem>
+    updateFn: (item: LayoutItem) => LayoutItem
   ) => {
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) =>
-        item.id === itemId ? { ...item, ...newProps } : item
+        item.id === itemId ? updateFn(item) : item
       ),
     }));
   };
 
+  /**
+   * テキストアイテムのコンテンツの変更を処理します。
+   * @param {string} itemId テキストアイテムのID
+   * @param {string} content 新しいコンテンツ
+   */
   const handleTextChange = (itemId: string, content: string) => {
     const validation = contentSchema.safeParse(content);
     if (!validation.success) {
@@ -166,9 +184,21 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       delete newErrors[itemId];
       setValidationErrors(newErrors);
     }
-    handleLayoutItemChange(itemId, { content });
+    updateLayoutItem(itemId, (item) => {
+      if (item.type === 'text') {
+        return { ...item, content };
+      }
+      return item;
+    });
   };
 
+  /**
+   * テーブルセルのコンテンツの変更を処理します。
+   * @param {string} itemId テーブルアイテムのID
+   * @param {number} rowIndex セルの行インデックス
+   * @param {number} cellIndex セルの列インデックス
+   * @param {string} content 新しいコンテンツ
+   */
   const handleTableCellChange = (
     itemId: string,
     rowIndex: number,
@@ -188,14 +218,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       setValidationErrors(newErrors);
     }
 
-    const item = invoiceData.layout.find((it) => it.id === itemId);
-    if (item && item.type === "table") {
-      const newTableData = [...item.data];
-      const newRow = [...newTableData[rowIndex]];
-      newRow[cellIndex] = content;
-      newTableData[rowIndex] = newRow;
-      handleLayoutItemChange(itemId, { data: newTableData });
-    }
+    updateLayoutItem(itemId, (item) => {
+      if (item.type === "table") {
+        const newTableData = [...item.data];
+        const newRow = [...newTableData[rowIndex]];
+        newRow[cellIndex] = content;
+        newTableData[rowIndex] = newRow;
+        return { ...item, data: newTableData };
+      }
+      return item;
+    });
   };
 
   const displayScale =
@@ -263,10 +295,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
               key={item.id}
               className="cursor-grab"
               style={{
-                border:
-                  selectedObjectId === item.id
-                    ? "1px solid blue"
-                    : "1px dashed transparent",
+                border: selectedObjectId === item.id ? "1px solid blue" : "1px dashed transparent",
                 zIndex: 10,
               }}
               size={{
@@ -282,18 +311,20 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 setSelectedObjectId(item.id);
               }}
               onDragStop={(_e, d) => {
-                handleLayoutItemChange(item.id, {
+                updateLayoutItem(item.id, (item) => ({
+                  ...item,
                   x: d.x / displayScale,
                   y: d.y / displayScale,
-                });
+                }));
               }}
               onResizeStop={(_e, _direction, ref, _delta, position) => {
-                handleLayoutItemChange(item.id, {
+                updateLayoutItem(item.id, (item) => ({
+                  ...item,
                   x: position.x / displayScale,
                   y: position.y / displayScale,
                   width: parseFloat(ref.style.width) / displayScale,
                   height: parseFloat(ref.style.height) / displayScale,
-                });
+                }));
               }}
             >
               {item.type === "text" &&
