@@ -470,12 +470,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                                       }}
                                     />
                                     {validationErrors[errorKey] && (
-                                      <span
-                                        style={{
-                                          color: "red",
-                                          fontSize: "10px",
-                                        }}
-                                      >
+                                      <span className="text-red-500 text-xs">
                                         {validationErrors[errorKey]}
                                       </span>
                                     )}
