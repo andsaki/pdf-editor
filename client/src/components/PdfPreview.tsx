@@ -36,6 +36,13 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     content: string;
   } | null>(null);
 
+  const [editingCell, setEditingCell] = useState<{
+    tableIndex: number;
+    rowIndex: number;
+    cellIndex: number;
+    content: string;
+  } | null>(null);
+
   // 表示用のPDFバイトを生成
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
@@ -185,6 +192,26 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       height: parseFloat(size.height.toString()),
     };
     setInvoiceData((prev) => ({ ...prev, tables: newTables }));
+  };
+
+  const handleTableCellChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (editingCell) {
+      const newTables = [...(invoiceData.tables || [])];
+      const newTable = { ...newTables[editingCell.tableIndex] };
+      const newTableData = [...newTable.data];
+      const newRow = [...newTableData[editingCell.rowIndex]];
+      newRow[editingCell.cellIndex] = event.target.value;
+      newTableData[editingCell.rowIndex] = newRow;
+      newTable.data = newTableData;
+      newTables[editingCell.tableIndex] = newTable;
+
+      setInvoiceData({ ...invoiceData, tables: newTables });
+      setEditingCell({ ...editingCell, content: event.target.value });
+    }
+  };
+
+  const handleTableCellBlur = () => {
+    setEditingCell(null);
   };
 
   const displayScale =
@@ -380,11 +407,40 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   <tbody>
                     {table.data.map((row, rowIndex) => (
                       <tr key={rowIndex}>
-                        {row.map((cell, cellIndex) => (
-                          <td key={cellIndex} style={{ border: "1px solid #ccc", padding: "5px", fontSize: `${12 * displayScale}px` }}>
-                            {cell}
-                          </td>
-                        ))}
+                        {row.map((cell, cellIndex) => {
+                          const isEditing = editingCell &&
+                            editingCell.tableIndex === index &&
+                            editingCell.rowIndex === rowIndex &&
+                            editingCell.cellIndex === cellIndex;
+
+                          return (
+                            <td
+                              key={cellIndex}
+                              style={{ border: "1px solid #ccc", padding: "5px", fontSize: `${12 * displayScale}px` }}
+                              onClick={() => {
+                                setEditingCell({
+                                  tableIndex: index,
+                                  rowIndex,
+                                  cellIndex,
+                                  content: cell,
+                                });
+                              }}
+                            >
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={editingCell.content}
+                                  onChange={handleTableCellChange}
+                                  onBlur={handleTableCellBlur}
+                                  autoFocus
+                                  style={{ width: "100%", border: "none", background: "transparent", outline: "none" }}
+                                />
+                              ) : (
+                                cell
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
