@@ -11,27 +11,7 @@ interface InvoiceFormProps {
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, activeTool, setActiveTool }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleItemChange = (index: number, field: 'description' | 'amount', value: string) => {
-    const newItems = [...invoiceData.items];
-    if (field === 'amount') {
-      newItems[index][field] = parseFloat(value) || 0;
-    } else {
-      newItems[index][field] = value;
-    }
-    setInvoiceData({ ...invoiceData, items: newItems });
-  };
 
-  const addItem = () => {
-    setInvoiceData({
-      ...invoiceData,
-      items: [...invoiceData.items, { description: '', amount: 0 }],
-    });
-  };
-
-  const removeItem = (index: number) => {
-    const newItems = invoiceData.items.filter((_, i) => i !== index);
-    setInvoiceData({ ...invoiceData, items: newItems });
-  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -117,42 +97,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
 
       </div>
 
-      <div>
-        <h3 className="text-xl font-bold mb-4 text-gray-800">Items</h3>
-        <div className="space-y-4">
-          {invoiceData.items.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2 group">
-              <div className="grid grid-cols-2 gap-2 w-full">
-                <input
-                  type="text"
-                  placeholder="Description"
-                  className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={item.description}
-                  onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                />
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={item.amount}
-                  onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
-                />
-              </div>
-              <button onClick={() => removeItem(index)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-        <button onClick={addItem} className="mt-4 flex items-center space-x-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          <span>Add Item</span>
-        </button>
-      </div>
+
     </div>
   );
 };

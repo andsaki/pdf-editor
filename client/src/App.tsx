@@ -8,7 +8,7 @@ import { StatePreview } from "./components/StatePreview";
 
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    items: [{ description: "Sample Item", amount: 100 }],
+
     customTexts: [{ id: crypto.randomUUID(), content: "Sample Text", x: 100, y: 100 }],
     images: [],
     tables: [
