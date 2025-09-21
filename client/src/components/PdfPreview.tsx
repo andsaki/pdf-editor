@@ -110,19 +110,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       page.drawText("Invoice", { x: 50, y, size: 24, font: boldFont });
       y -= 60;
 
-      page.drawText(`To: ${invoiceData.to || ""}`, {
-        x: 50,
-        y,
-        size: fontSize,
-        font,
-      });
-      page.drawText(`From: ${invoiceData.from || ""}`, {
-        x: width - 250,
-        y,
-        size: fontSize,
-        font,
-      });
-      y -= 50;
+
 
       // テーブル描画ロジック
       const tableTop = y;
@@ -320,7 +308,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
       const newCustomTexts = [
         ...(invoiceData.customTexts || []),
-        { x, y, content: "新しいテキスト" },
+        { id: crypto.randomUUID(), x, y, content: "新しいテキスト" },
       ];
       setInvoiceData({ ...invoiceData, customTexts: newCustomTexts });
       setActiveTool("select"); // 選択ツールに戻す
@@ -389,7 +377,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         {pdfFile &&
           invoiceData.customTexts?.map((textBlock, index) => (
             <Rnd
-              key={`text-${index}`}
+              key={textBlock.id}
               className={activeTool === "select" ? "cursor-grab" : ""}
               style={{
                 border:
@@ -457,7 +445,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         {pdfFile &&
           invoiceData.images?.map((image, index) => (
             <Rnd
-              key={`image-${index}`}
+              key={image.id}
               className={activeTool === "select" ? "cursor-grab" : ""}
               style={{ border: "1px dashed gray", zIndex: 15 }}
               size={{
@@ -496,7 +484,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           containerWidth > 0 && (
             <div
               className="absolute inset-0 cursor-text"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                 console.log("add text overlay clicked");
                 handleAddTextObject(e);
               }}

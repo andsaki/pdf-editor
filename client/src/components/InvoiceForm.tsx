@@ -105,26 +105,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
 
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Invoice Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">To:</label>
-            <input
-              type="text"
-              className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={invoiceData.to}
-              onChange={(e) => setInvoiceData({ ...invoiceData, to: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">From:</label>
-            <input
-              type="text"
-              className="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={invoiceData.from}
-              onChange={(e) => setInvoiceData({ ...invoiceData, from: e.target.value })}
-            />
-          </div>
-        </div>
+
       </div>
 
       <div>

@@ -91,10 +91,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   <Document>
     <Page size="A4" style={styles.page}>
       <Text style={styles.title}>Invoice</Text>
-      <View style={styles.header}>
-        <Text>To: {invoiceData.to}</Text>
-        <Text>From: {invoiceData.from}</Text>
-      </View>
+
 
       <View style={styles.table}>
         <View style={styles.tableRow}>
