@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { InvoiceForm } from "./components/InvoiceForm";
 import { PdfPreview } from "./components/PdfPreview";
-import type { InvoiceData } from "./types";
+import type { InvoiceData, LayoutItem } from "./types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
 import { StatePreview } from "./components/StatePreview";
 import { LayoutPalette } from "./components/LayoutPalette";
+import { useHistoryState } from "./hooks/useHistoryState";
 
 function App() {
-  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+  const { state: invoiceData, setState: setInvoiceData, undo, redo, canUndo, canRedo } = useHistoryState<InvoiceData>({
     layout: [
       {
         id: crypto.randomUUID(),
@@ -34,6 +35,34 @@ function App() {
     ],
   });
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [clipboard, setClipboard] = useState<LayoutItem | null>(null);
+
+  const cut = () => {
+    if (!selectedObjectId) return;
+    const objectToCut = invoiceData.layout.find(item => item.id === selectedObjectId);
+    if (objectToCut) {
+      setClipboard(objectToCut);
+      setInvoiceData(prev => ({
+        ...prev,
+        layout: prev.layout.filter(item => item.id !== selectedObjectId),
+      }));
+      setSelectedObjectId(null);
+    }
+  };
+
+  const paste = () => {
+    if (!clipboard) return;
+    const newObject = {
+      ...clipboard,
+      id: crypto.randomUUID(),
+      x: clipboard.x + 10,
+      y: clipboard.y + 10,
+    };
+    setInvoiceData(prev => ({
+      ...prev,
+      layout: [...prev.layout, newObject],
+    }));
+  };
 
   const downloadPdf = async () => {
     const blob = await pdf(
@@ -80,6 +109,15 @@ function App() {
         <div className="col-span-1">
           <InvoiceForm
             setInvoiceData={setInvoiceData}
+            selectedObjectId={selectedObjectId}
+            setSelectedObjectId={setSelectedObjectId}
+            undo={undo}
+            redo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            cut={cut}
+            paste={paste}
+            clipboard={clipboard}
           />
           {selectedObject && (
             <div className="mt-8">
