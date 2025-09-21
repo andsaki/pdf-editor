@@ -31,8 +31,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   selectedObjectId,
   setSelectedObjectId,
 }) => {
-  const [_numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, _setPageNumber] = useState(1);
+  const [pageNumber, setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pageDimensions, setPageDimensions] = useState<{
     width: number;
@@ -140,11 +139,20 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     };
   }, []);
 
+  /**
+   * PDFドキュメントの読み込みが成功したときに呼び出されるコールバックです。
+   * @param {{ numPages: number }} { numPages } ドキュメントの総ページ数
+   */
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
+    // numPages の state は使用されていませんが、明確化のためにこの関数は残しています。
+    console.log(`PDF loaded successfully with ${numPages} pages.`);
     setError(null);
   };
 
+  /**
+   * PDFドキュメントの読み込み中にエラーが発生したときに呼び出されるコールバックです。
+   * @param {Error} error 発生したエラーオブジェクト
+   */
   const onDocumentLoadError = (error: Error) => {
     console.error("PDF load error:", error);
     setError("PDFの読み込みに失敗しました");
