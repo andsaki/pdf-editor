@@ -31,7 +31,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   selectedObjectId,
   setSelectedObjectId,
 }) => {
-  const [pageNumber, setPageNumber] = useState(1);
+  const [pageNumber, _setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [pageDimensions, setPageDimensions] = useState<{
     width: number;
@@ -193,7 +193,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       setValidationErrors(newErrors);
     }
     updateLayoutItem(itemId, (item) => {
-      if (item.type === 'text') {
+      if (item.type === "text") {
         return { ...item, content };
       }
       return item;
@@ -303,7 +303,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
               key={item.id}
               className="cursor-grab"
               style={{
-                border: selectedObjectId === item.id ? "1px solid blue" : "1px dashed transparent",
+                border:
+                  selectedObjectId === item.id
+                    ? "1px solid blue"
+                    : "1px dashed transparent",
                 zIndex: 10,
               }}
               size={{
@@ -351,8 +354,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         color: "black",
                         border: "none",
                         padding: 0,
-                        fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
-                        fontFamily: item.style?.fontFamily || 'Helvetica',
+                        fontSize: `${
+                          (item.style?.fontSize || 16) * displayScale
+                        }px`,
+                        fontFamily: item.style?.fontFamily || "Helvetica",
                       }}
                       className="cursor-text"
                     />
@@ -366,16 +371,23 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   <span
                     style={{
                       color: item.style?.color || "black",
-                      fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
-                      fontWeight: item.style?.bold ? 'bold' : 'normal',
-                      fontStyle: item.style?.italic ? 'italic' : 'normal',
-                      textAlign: item.style?.textAlign || 'left',
+                      fontSize: `${
+                        (item.style?.fontSize || 16) * displayScale
+                      }px`,
+                      fontWeight: item.style?.bold ? "bold" : "normal",
+                      fontStyle: item.style?.italic ? "italic" : "normal",
+                      textAlign: item.style?.textAlign || "left",
                       lineHeight: item.style?.lineHeight || 1,
-                      whiteSpace: item.style?.wordWrap ? 'pre-wrap' : 'nowrap',
-                      display: 'flex',
-                      alignItems: item.style?.verticalAlign === 'center' ? 'center' : item.style?.verticalAlign === 'bottom' ? 'flex-end' : 'flex-start',
-                      height: '100%',
-                      fontFamily: item.style?.fontFamily || 'Helvetica',
+                      whiteSpace: item.style?.wordWrap ? "pre-wrap" : "nowrap",
+                      display: "flex",
+                      alignItems:
+                        item.style?.verticalAlign === "center"
+                          ? "center"
+                          : item.style?.verticalAlign === "bottom"
+                          ? "flex-end"
+                          : "flex-start",
+                      height: "100%",
+                      fontFamily: item.style?.fontFamily || "Helvetica",
                     }}
                     className="cursor-text"
                     onDoubleClick={() => setEditingText(item.id)}

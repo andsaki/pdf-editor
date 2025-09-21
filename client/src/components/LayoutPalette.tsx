@@ -10,14 +10,51 @@ interface LayoutPaletteProps {
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
 }
 
+/**
+ * 選択されたオブジェクトのプロパティを表示・編集するためのパレットコンポーネントです。
+ * @param {LayoutPaletteProps} props コンポーネントのプロパティ
+ * @returns {JSX.Element | null} 選択されたオブジェクトがない場合はnullを返します。
+ */
 export const LayoutPalette: React.FC<LayoutPaletteProps> = ({ selectedObject, setInvoiceData }) => {
 
+  /**
+   * テキストオブジェクトのスタイルプロパティの変更を処理します。
+   * @param {Partial<TextItem['style']>} newStyle 新しいスタイルプロパティ
+   */
   const handleStyleChange = (newStyle: Partial<TextItem['style']>) => {
     setInvoiceData(prev => ({
       ...prev,
       layout: prev.layout.map(item => {
         if (item.id === selectedObject.id && item.type === 'text') {
           return { ...item, style: { ...item.style, ...newStyle } };
+        }
+        return item;
+      })
+    }));
+  };
+
+  /**
+   * テーブルの行数・列数の変更を処理し、テーブルデータをリサイズします。
+   * @param {number} rows 新しい行数
+   * @param {number} cols 新しい列数
+   */
+  const handleTableDataChange = (rows: number, cols: number) => {
+    if (selectedObject.type !== 'table') return;
+
+    const newRows = Math.max(2, rows);
+    const newCols = Math.max(2, cols);
+
+    const newData = Array.from({ length: newRows }, (_, r) =>
+      Array.from({ length: newCols }, (_, c) =>
+        selectedObject.data[r]?.[c] || ''
+      )
+    );
+
+    setInvoiceData(prev => ({
+      ...prev,
+      layout: prev.layout.map(item => {
+        if (item.id === selectedObject.id && item.type === 'table') {
+          return { ...item, data: newData };
         }
         return item;
       })
@@ -110,6 +147,29 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({ selectedObject, se
               <input type="checkbox" checked={selectedObject.style?.wordWrap || false} onChange={e => handleStyleChange({ wordWrap: e.target.checked })} />
               <span className="ml-2">Word Wrap</span>
             </label>
+          </div>
+        </>
+      )}
+
+      {selectedObject.type === 'table' && (
+        <>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Rows:</label>
+            <input
+              type="number"
+              min="2"
+              value={selectedObject.data.length}
+              onChange={e => handleTableDataChange(parseInt(e.target.value), selectedObject.data[0]?.length || 1)}
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Columns:</label>
+            <input
+              type="number"
+              min="2"
+              value={selectedObject.data[0]?.length || 1}
+              onChange={e => handleTableDataChange(selectedObject.data.length, parseInt(e.target.value))}
+            />
           </div>
         </>
       )}
