@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import type { InvoiceData, LayoutItem } from '../types';
 
+import { pdfjs } from 'react-pdf';
+
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
@@ -17,6 +19,7 @@ interface InvoiceFormProps {
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, selectedObjectId, setSelectedObjectId, undo, redo, canUndo, canRedo, cut, paste, clipboard }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const handleFormChange = (field: keyof InvoiceData['form'], value: any) => {
     setInvoiceData(prev => ({
@@ -102,6 +105,47 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
     reader.readAsDataURL(file);
   };
 
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = e.target?.result as ArrayBuffer;
+      if (data) {
+        const pdf = await pdfjs.getDocument({ data }).promise;
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          if (context) {
+            await page.render({ canvasContext: context, viewport }).promise;
+            const imageDataUrl = canvas.toDataURL('image/png');
+            const newImage = {
+              id: crypto.randomUUID(),
+              type: "image" as const,
+              data: imageDataUrl,
+              x: 50,
+              y: 50 + (i - 1) * (viewport.height + 20),
+              width: viewport.width,
+              height: viewport.height,
+            };
+            setInvoiceData((prev) => ({
+              ...prev,
+              layout: [...(prev.layout || []), newImage],
+            }));
+          }
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
       <div>
@@ -125,6 +169,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
               <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
             </svg>
             <span>画像追加</span>
+          </button>
+          <button
+            onClick={() => pdfInputRef.current?.click()}
+            className="flex items-center space-x-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-2"
+          >
+            <span>PDF追加</span>
           </button>
           <button
             onClick={deleteSelectedObject}
@@ -169,6 +219,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             accept="image/*"
             ref={imageInputRef}
             onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
+            accept="application/pdf"
+            ref={pdfInputRef}
+            onChange={handlePdfUpload}
             style={{ display: 'none' }}
           />
         </div>
