@@ -149,7 +149,7 @@ function App() {
             onClick={saveInvoice}
             className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
           >
-            Save
+            保存
           </button>
           <button
             onClick={() =>
@@ -160,24 +160,24 @@ function App() {
             className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
           >
             {variableDisplayMode === "name"
-              ? "Show Example Data"
-              : "Show Variable Names"}
+              ? "データ例表示"
+              : "変数名表示"}
           </button>
           <button
             onClick={openPdfInNewTab}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
           >
-            Open in New Tab
+            新規タブで開く
           </button>
           <button
             onClick={downloadPdf}
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            Download PDF
+            PDFダウンロード
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-4 gap-8 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-4 gap-12 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
             invoiceData={invoiceData}
