@@ -17,7 +17,14 @@ const SAVE_INVOICE_MUTATION = gql`
 `;
 
 function App() {
-  const { state: invoiceData, setState: setInvoiceData, undo, redo, canUndo, canRedo } = useHistoryState<InvoiceData>({
+  const {
+    state: invoiceData,
+    setState: setInvoiceData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistoryState<InvoiceData>({
     layout: [
       {
         id: crypto.randomUUID(),
@@ -159,9 +166,7 @@ function App() {
             }
             className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
           >
-            {variableDisplayMode === "name"
-              ? "データ例表示"
-              : "変数名表示"}
+            {variableDisplayMode === "name" ? "データ例表示" : "変数名表示"}
           </button>
           <button
             onClick={openPdfInNewTab}
@@ -177,7 +182,7 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-4 gap-12 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-4 gap-12 grid-flow-col h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
             invoiceData={invoiceData}
