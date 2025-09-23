@@ -177,7 +177,7 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-3 gap-8 h-[calc(100vh-120px)] px-8">
+      <main className="grid grid-cols-4 gap-8 h-[calc(100vh-120px)] px-8">
         <div className="col-span-1">
           <InvoiceForm
             invoiceData={invoiceData}
@@ -192,14 +192,6 @@ function App() {
             paste={paste}
             clipboard={clipboard}
           />
-          {selectedObject && (
-            <div className="mt-8">
-              <LayoutPalette
-                selectedObject={selectedObject}
-                setInvoiceData={setInvoiceData}
-              />
-            </div>
-          )}
           <div className="mt-8">
             <LayerPalette
               invoiceData={invoiceData}
@@ -223,6 +215,14 @@ function App() {
             setSelectedObjectId={setSelectedObjectId}
             variableDisplayMode={variableDisplayMode}
           />
+        </div>
+        <div className="col-span-1">
+          {selectedObject && (
+            <LayoutPalette
+              selectedObject={selectedObject}
+              setInvoiceData={setInvoiceData}
+            />
+          )}
         </div>
       </main>
     </div>
