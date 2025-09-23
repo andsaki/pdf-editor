@@ -6,6 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
 import { StatePreview } from "./components/StatePreview";
 import { LayoutPalette } from "./components/LayoutPalette";
+import { LayerPalette } from "./components/LayerPalette";
 import { useHistoryState } from "./hooks/useHistoryState";
 import { useMutation, gql } from "@apollo/client";
 
@@ -16,14 +17,7 @@ const SAVE_INVOICE_MUTATION = gql`
 `;
 
 function App() {
-  const {
-    state: invoiceData,
-    setState: setInvoiceData,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  } = useHistoryState<InvoiceData>({
+  const { state: invoiceData, setState: setInvoiceData, undo, redo, canUndo, canRedo } = useHistoryState<InvoiceData>({
     layout: [
       {
         id: crypto.randomUUID(),
@@ -34,6 +28,7 @@ function App() {
         y: 100,
         width: 100,
         height: 20,
+        zIndex: 1,
       },
       {
         id: crypto.randomUUID(),
@@ -46,6 +41,7 @@ function App() {
           ["Default Header 1", "Default Header 2"],
           ["Default Cell 1", "Default Cell 2"],
         ],
+        zIndex: 2,
       },
     ],
     form: {
@@ -204,6 +200,14 @@ function App() {
               />
             </div>
           )}
+          <div className="mt-8">
+            <LayerPalette
+              invoiceData={invoiceData}
+              setInvoiceData={setInvoiceData}
+              selectedObjectId={selectedObjectId}
+              setSelectedObjectId={setSelectedObjectId}
+            />
+          </div>
           <div className="mt-8">
             <details open>
               <summary>State Preview</summary>

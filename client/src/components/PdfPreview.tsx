@@ -333,7 +333,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   selectedObjectId === item.id
                     ? "1px solid blue"
                     : "1px dashed transparent",
-                zIndex: 10,
+                zIndex: item.zIndex,
               }}
               size={{
                 width: item.width * displayScale,

@@ -31,6 +31,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
     }));
   };
 
+  const getNewZIndex = () => {
+    const maxZIndex = invoiceData.layout.reduce((max, item) => Math.max(max, item.zIndex), 0);
+    return maxZIndex + 1;
+  };
+
   const addTextObject = () => {
     const newText = {
       id: crypto.randomUUID(),
@@ -40,6 +45,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
       y: 100,
       width: 100,
       height: 20,
+      zIndex: getNewZIndex(),
     };
     setInvoiceData((prev) => ({
       ...prev,
@@ -59,6 +65,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
         ["Header 1", "Header 2"],
         ["Cell 1", "Cell 2"],
       ],
+      zIndex: getNewZIndex(),
     };
     setInvoiceData((prev) => ({
       ...prev,
@@ -93,6 +100,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
             y: 50,
             width: img.width,
             height: img.height,
+            zIndex: getNewZIndex(),
           };
           setInvoiceData((prev) => ({
             ...prev,
@@ -134,6 +142,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoic
               y: 50 + (i - 1) * (viewport.height + 20),
               width: viewport.width,
               height: viewport.height,
+              zIndex: getNewZIndex(),
             };
             setInvoiceData((prev) => ({
               ...prev,
