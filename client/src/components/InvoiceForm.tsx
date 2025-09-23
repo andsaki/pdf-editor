@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import type { InvoiceData, LayoutItem } from '../types';
 
 interface InvoiceFormProps {
+  invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   selectedObjectId: string | null;
   setSelectedObjectId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -14,8 +15,18 @@ interface InvoiceFormProps {
   clipboard: LayoutItem | null;
 }
 
-export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData, selectedObjectId, setSelectedObjectId, undo, redo, canUndo, canRedo, cut, paste, clipboard }) => {
+export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoiceData, setInvoiceData, selectedObjectId, setSelectedObjectId, undo, redo, canUndo, canRedo, cut, paste, clipboard }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFormChange = (field: keyof InvoiceData['form'], value: any) => {
+    setInvoiceData(prev => ({
+      ...prev,
+      form: {
+        ...prev.form,
+        [field]: value,
+      },
+    }));
+  };
 
   const addTextObject = () => {
     const newText = {
@@ -94,17 +105,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData, select
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg space-y-8">
       <div>
-        <h3 className="text-xl font-bold mb-4 text-gray-800">Tools</h3>
+        <h3 className="text-xl font-bold mb-4 text-gray-800">ツール</h3>
         <div className="flex space-x-2 flex-wrap">
           <button
             onClick={addTextObject}
             className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2'}`}>
-            <span>Add Text</span>
+            <span>テキスト追加</span>
           </button>
           <button
             onClick={addTableObject}
             className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2'}`}>
-            <span>Add Table</span>
+            <span>テーブル追加</span>
           </button>
           <button
             onClick={() => imageInputRef.current?.click()}
@@ -113,7 +124,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData, select
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
             </svg>
-            <span>Add Image</span>
+            <span>画像追加</span>
           </button>
           <button
             onClick={deleteSelectedObject}
@@ -123,35 +134,35 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData, select
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
             </svg>
-            <span>Delete</span>
+            <span>削除</span>
           </button>
           <button
             onClick={undo}
             disabled={!canUndo}
             className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-gray-400 mb-2"
           >
-            <span>Undo</span>
+            <span>元に戻す</span>
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
             className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-gray-400 mb-2"
           >
-            <span>Redo</span>
+            <span>やり直し</span>
           </button>
           <button
             onClick={cut}
             disabled={!selectedObjectId}
             className="flex items-center space-x-2 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-gray-400 mb-2"
           >
-            <span>Cut</span>
+            <span>切り取り</span>
           </button>
           <button
             onClick={paste}
             disabled={!clipboard}
             className="flex items-center space-x-2 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-gray-400 mb-2"
           >
-            <span>Paste</span>
+            <span>貼り付け</span>
           </button>
           <input
             type="file"
@@ -164,8 +175,35 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ setInvoiceData, select
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Invoice Details</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">請求書詳細</h2>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">自社情報</h3>
+            <label className="block text-sm font-medium text-gray-700">名称</label>
+            <input type="text" value={invoiceData.form.company_name} onChange={e => handleFormChange('company_name', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <label className="block text-sm font-medium text-gray-700">住所</label>
+            <input type="text" value={invoiceData.form.company_address} onChange={e => handleFormChange('company_address', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-2">宛先</h3>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input type="text" value={invoiceData.form.recipient_name} onChange={e => handleFormChange('recipient_name', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <label className="block text-sm font-medium text-gray-700">Address</label>
+            <input type="text" value={invoiceData.form.recipient_address} onChange={e => handleFormChange('recipient_address', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-2">請求書情報</h3>
+            <label className="block text-sm font-medium text-gray-700">請求書番号</label>
+            <input type="text" value={invoiceData.form.invoice_number} onChange={e => handleFormChange('invoice_number', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <label className="block text-sm font-medium text-gray-700">発行日</label>
+            <input type="text" value={invoiceData.form.issue_date} onChange={e => handleFormChange('issue_date', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            <label className="block text-sm font-medium text-gray-700">支払期日</label>
+            <input type="text" value={invoiceData.form.due_date} onChange={e => handleFormChange('due_date', e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+          </div>
+        </div>
       </div>
 
 

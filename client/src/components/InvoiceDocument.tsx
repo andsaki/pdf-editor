@@ -38,9 +38,34 @@ const styles = StyleSheet.create({
 
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
+  variableDisplayMode: 'name' | 'example';
 }
 
-export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData }) => (
+const getProcessedContent = (item: any, invoiceData: InvoiceData, variableDisplayMode: 'name' | 'example') => {
+  const { contentType, content, label } = item;
+  const { form } = invoiceData;
+
+  if (variableDisplayMode === 'name') {
+    return content;
+  }
+
+  if (contentType === "labeled-variable") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && variableName in form) {
+      // @ts-ignore
+      return `${label}${form[variableName]}`;
+    }
+  } else if (contentType === "variable") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && variableName in form) {
+      // @ts-ignore
+      return form[variableName];
+    }
+  }
+  return content;
+};
+
+export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData, variableDisplayMode }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <Text style={styles.title}>Invoice</Text>
@@ -72,7 +97,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData })
                 key={item.id}
                 style={style}
               >
-                {item.content}
+                {getProcessedContent(item, invoiceData, variableDisplayMode)}
               </Text>
             );
           }

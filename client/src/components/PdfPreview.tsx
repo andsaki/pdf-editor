@@ -18,7 +18,32 @@ interface PdfPreviewProps {
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   selectedObjectId: string | null;
   setSelectedObjectId: React.Dispatch<React.SetStateAction<string | null>>;
+  variableDisplayMode: 'name' | 'example';
 }
+
+const getProcessedContent = (item: any, invoiceData: InvoiceData, variableDisplayMode: 'name' | 'example') => {
+  const { contentType, content, label } = item;
+  const { form } = invoiceData;
+
+  if (variableDisplayMode === 'name') {
+    return content;
+  }
+
+  if (contentType === "labeled-variable") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && variableName in form) {
+      // @ts-ignore
+      return `${label}${form[variableName]}`;
+    }
+  } else if (contentType === "variable") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && variableName in form) {
+      // @ts-ignore
+      return form[variableName];
+    }
+  }
+  return content;
+};
 
 /**
  * 請求書のプレビューを表示し、レイアウト編集のユーザー操作を処理します。
@@ -30,6 +55,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   setInvoiceData,
   selectedObjectId,
   setSelectedObjectId,
+  variableDisplayMode,
 }) => {
   const [pageNumber, _setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
@@ -392,7 +418,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     className="cursor-text"
                     onDoubleClick={() => setEditingText(item.id)}
                   >
-                    {item.content}
+                    {getProcessedContent(item, invoiceData, variableDisplayMode)}
                   </span>
                 ))}
               {item.type === "image" && (
