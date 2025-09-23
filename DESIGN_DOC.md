@@ -17,54 +17,76 @@
 
 ## 2. アーキテクチャ
 
-本アプリケーションは、クライアントサイドで完結するシングルページアプリケーション（SPA）として構築されます。
+本アプリケーションは、ReactベースのクライアントとNode.js/Expressベースのサーバーで構成されるクライアントサーバーアーキテクチャを採用します。
 
 ```mermaid
 graph TD
-    subgraph "ユーザー操作"
-        UI_ClickAdd["オブジェクト追加ボタンをクリック"]
-        UI_Drag["オブジェクトをドラッグ＆リサイズ"]
-        UI_Select["オブジェクトを選択"]
-        UI_Edit["コンテンツを編集"]
+    subgraph "Client (Browser)"
+        subgraph "ユーザー操作"
+            UI_ClickAdd["オブジェクト追加ボタンをクリック"]
+            UI_Drag["オブジェクトをドラッグ＆リサイズ"]
+            UI_Select["オブジェクトを選択"]
+            UI_Edit["コンテンツを編集"]
+            UI_Save["保存ボタンをクリック"]
+        end
+
+        subgraph "Reactコンポーネント"
+            App["App.tsx<br/>(State: invoiceData, selectedObjectId)"]
+            InvoiceForm["InvoiceForm.tsx<br/>(ツール群, 詳細フォーム)"]
+            PdfPreview["PdfPreview.tsx<br/>(キャンバス)"]
+            LayoutPalette["LayoutPalette.tsx<br/>(プロパティ)"]
+            LayerPalette["LayerPalette.tsx<br/>(レイヤー)"]
+            InvoiceDocument["InvoiceDocument.tsx<br/>(PDF定義)"]
+        end
+
+        subgraph "データフロー"
+            State["useHistoryState (invoiceData)"]
+            Apollo["Apollo Client"]
+        end
+
+        App -- "invoiceData, setInvoiceData" --> InvoiceForm
+        App -- "..." --> PdfPreview
+        App -- "selectedObject, ..." --> LayoutPalette
+        App -- "..." --> LayerPalette
+        App -- "invoiceData" --> InvoiceDocument
+
+        UI_ClickAdd --> InvoiceForm
+        InvoiceForm -- "setInvoiceData" --> App
+        
+        UI_Drag --> PdfPreview
+        UI_Select --> PdfPreview
+        UI_Edit --> PdfPreview
+        PdfPreview -- "setInvoiceData, setSelectedObjectId" --> App
+
+        LayoutPalette -- "setInvoiceData" --> App
+        LayerPalette -- "setInvoiceData" --> App
+
+        UI_Save --> App
+        App -- "saveInvoice Mutation" --> Apollo
+        Apollo -- "GraphQL Request" --> Server
+
+        App --> State
+        State --> App
     end
 
-    subgraph "Reactコンポーネント"
-        App["App.tsx<br/>(State: invoiceData, selectedObjectId)"]
-        InvoiceForm["InvoiceForm.tsx<br/>(ツール群)"]
-        PdfPreview["PdfPreview.tsx<br/>(キャンバス)"]
-        LayoutPalette["LayoutPalette.tsx<br/>(プロパティ)"]
-        InvoiceDocument["InvoiceDocument.tsx<br/>(PDF定義)"]
-        StatePreview["StatePreview.tsx<br/>(デバッグ用)"]
+    subgraph "Server (Node.js)"
+        Server["Express Server<br/>(index.ts)"]
+        GraphQL["Apollo Server<br/>(GraphQL Endpoint)"]
+        Server -- "/graphql" --> GraphQL
     end
-
-    subgraph "データフロー"
-        State["useState (invoiceData, selectedObjectId)"]
-    end
-
-    App -- "invoiceData, setInvoiceData" --> InvoiceForm
-    App -- "invoiceData, setInvoiceData, selectedObjectId, setSelectedObjectId" --> PdfPreview
-    App -- "selectedObject, setInvoiceData" --> LayoutPalette
-    App -- "invoiceData" --> InvoiceDocument
-    App -- "invoiceData" --> StatePreview
-
-    UI_ClickAdd --> InvoiceForm
-    InvoiceForm -- "setInvoiceData" --> App
-    
-    UI_Drag --> PdfPreview
-    UI_Select --> PdfPreview
-    UI_Edit --> PdfPreview
-    PdfPreview -- "setInvoiceData, setSelectedObjectId" --> App
-
-    LayoutPalette -- "setInvoiceData" --> App
-
-    App --> State
-    State --> App
 ```
 
-- **フレームワーク:** [React](https://reactjs.org/) (v18) を使用し、UIの構築と状態管理を行います。
-- **ビルドツール:** [Vite](https://vitejs.dev/) を採用し、高速な開発サーバーと最適化されたビルドを実現します。
-- **言語:** [TypeScript](https://www.typescriptlang.org/) を全面的に採用し、型安全性を確保します。
-- **スタイリング:** [Tailwind CSS](https://tailwindcss.com/) を使用し、ユーティリティファーストのアプローチで効率的にUIを構築します。
+- **クライアント:**
+  - **フレームワーク:** [React](https://reactjs.org/) (v18) を使用し、UIの構築と状態管理を行います。
+  - **GraphQLクライアント:** [Apollo Client](https://www.apollographql.com/docs/react/) を使用し、サーバーとのデータ通信を管理します。
+  - **ビルドツール:** [Vite](https://vitejs.dev/) を採用し、高速な開発サーバーと最適化されたビルドを実現します。
+  - **言語:** [TypeScript](https://www.typescriptlang.org/) を全面的に採用し、型安全性を確保します。
+  - **スタイリング:** [Tailwind CSS](https://tailwindcss.com/) を使用し、ユーティリティファーストのアプローチで効率的にUIを構築します。
+
+- **サーバー:**
+  - **フレームワーク:** [Express](https://expressjs.com/) を使用し、堅牢なAPIサーバーを構築します。
+  - **GraphQLサーバー:** [Apollo Server](https://www.apollographql.com/docs/apollo-server/) をExpressに統合し、GraphQL APIを提供します。
+
 - **パッケージ管理:** [pnpm](https://pnpm.io/) を使用し、高速で効率的な依存関係管理を行います。
 
 ## 3. コンポーネント設計
@@ -73,27 +95,36 @@ graph TD
 
 - **`App.tsx`**
   - アプリケーションのルートコンポーネント。
-  - 請求書データ (`invoiceData`) や選択中のオブジェクトID (`selectedObjectId`) など、アプリケーション全体の状態を `useState` で一元管理します。
-  - 主要なコンポーネント（`InvoiceForm`, `PdfPreview`, `LayoutPalette`など）のレイアウトと配置を担当します。
+  - 請求書データ (`invoiceData`) や選択中のオブジェクトID (`selectedObjectId`) など、アプリケーション全体の状態を `useHistoryState` カスタムフックで一元管理します。
+  - 主要なコンポーネントのレイアウトと配置を担当し、状態とセッター関数を各コンポーネントにpropsとして渡します。
 
 - **`InvoiceForm.tsx`**
-  - 新しいレイアウトオブジェクト（テキスト、画像、テーブル）をキャンバスに追加するためのツールボタンを提供します。
-  - ユーザーのアクションに応じて、`App.tsx` から受け取った `setInvoiceData` を呼び出し、状態を更新します。
+  - 新しいレイアウトオブジェクト（テキスト、画像、テーブル）を追加するためのツールボタンを提供します。
+  - PDFファイルを画像としてアップロードする機能を提供します。
+  - 請求書の詳細情報（自社情報、宛先、請求書番号など）を入力するためのフォームを提供します。
 
 - **`PdfPreview.tsx`**
   - 請求書のライブプレビューを表示する中心的なコンポーネント。
   - `react-rnd` を利用して、キャンバス上のオブジェクトのドラッグ＆ドロップ、リサイズを可能にします。
-  - オブジェクトの選択状態を管理し、`setSelectedObjectId` を通じて `App.tsx` の状態を更新します。
-  - テキストやテーブルセルのインライン編集機能を提供します。
-  - `pdf-lib` を使用して、プレビュー用のPDFを動的に生成します。
+  - オブジェクトの選択状態と`zIndex`に基づいたスタッキング順序を管理します。
 
 - **`LayoutPalette.tsx`**
   - オブジェクトが選択された際に表示されるプロパティ編集パネル。
-  - 選択されたオブジェクトのプロパティ（座標、サイズ、内容など）を表示し、ユーザーがこれらの値を編集できるようにします。（※本ドキュメント作成時点では表示のみ）
+  - 選択されたオブジェクトの共通プロパティ（座標、サイズ）と、オブジェクト種別ごとの固有プロパティを編集するUIを提供します。
+
+- **`TextObjectPalette.tsx`**
+  - テキストオブジェクトが選択された際の詳細なプロパティ編集パネル。
+  - コンテンツの種類（固定文言、変数、ラベル付き変数）の選択機能を提供します。
+  - フォントスタイル（フォント、サイズ、色、配置など）の編集機能を提供します。
+
+- **`LayerPalette.tsx`**
+  - キャンバス上の全オブジェクトをレイヤーとして一覧表示し、管理するためのパネル。
+  - レイヤーのスタッキング順序（`zIndex`）を上下に移動させる機能を提供します。
+  - レイヤー（オブジェクト）の削除機能を提供します。
 
 - **`InvoiceDocument.tsx`**
   - `@react-pdf/renderer` を使用して、ダウンロード用のPDFドキュメントの構造を定義します。
-  - `invoiceData` を受け取り、レイアウトオブジェクトをPDFの要素としてマッピングします。
+  - `invoiceData` を受け取り、レイアウトオブジェクトを`zIndex`でソートしてからPDFの要素としてマッピングします。
 
 - **`StatePreview.tsx`**
   - 開発およびデバッグ用のユーティリティコンポーネント。
@@ -106,19 +137,32 @@ graph TD
 - **`LayoutItem` (判別共用体)**
   - キャンバス上のすべてのオブジェクトを表すための中心的な型です。
   - `type` プロパティ（`'text'`, `'image'`, `'table'`）によって、オブジェクトの種類を判別します。
-  - 各オブジェクトは、共通のプロパティ（`id`, `x`, `y`, `width`, `height`）を持ちます。
-  - `type` ごとに固有のプロパティを持ちます（例：`TextItem` は `content`、`ImageItem` は `data`）。
+  - 各オブジェクトは、共通のプロパティ（`id`, `x`, `y`, `width`, `height`, `zIndex`）を持ちます。
+  - `TextItem` はさらに `contentType` (`'fixed'`, `'variable'`, `'labeled-variable'`) と `label` を持ち、動的なコンテンツ表現を可能にします。
 
 - **`InvoiceData`**
   - アプリケーションのルートとなるデータ構造です。
-  - `layout` プロパティを持ち、`LayoutItem` の配列としてすべてのオブジェクトを管理します。
+  - `layout` プロパティは、`LayoutItem` の配列としてすべてのオブジェクトを管理します。
+  - `form` プロパティは、請求書自体のデータ（請求書番号、会社情報、宛先情報など）を保持するオブジェクトです。
 
 ```typescript
 // client/src/schemas.ts の例
 
-export const TextItemSchema = z.object({
+const BaseLayoutItemSchema = z.object({
+  id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+  zIndex: z.number(),
+});
+
+export const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal('text'),
-  // ... other properties
+  content: z.string(),
+  contentType: z.enum(["fixed", "variable", "labeled-variable"]).default("fixed"),
+  label: z.string().optional(),
+  // ... style properties
 });
 
 export const LayoutItemSchema = z.discriminatedUnion("type", [
@@ -129,14 +173,19 @@ export const LayoutItemSchema = z.discriminatedUnion("type", [
 
 export const InvoiceDataSchema = z.object({
   layout: z.array(LayoutItemSchema),
+  form: z.object({
+    issue_date: z.string().optional(),
+    invoice_number: z.string().optional(),
+    // ... other form fields
+  }),
 });
 ```
 
 ## 5. 状態管理
 
-アプリケーションの状態は、Reactの `useState` フックを用いて `App.tsx` コンポーネント内で集中的に管理されます。このシンプルなアプローチは、現在のアプリケーションの規模に適しています。
+アプリケーションの状態は、Reactのカスタムフック `useHistoryState` を用いて `App.tsx` コンポーネント内で集中的に管理されます。これにより、Undo/Redo機能を持ちながら、状態管理のロジックをコンポーネントから分離しています。
 
-- **`invoiceData`**: `InvoiceData` 型のオブジェクトで、請求書のすべてのレイアウト情報を含みます。
+- **`invoiceData`**: `InvoiceData` 型のオブジェクトで、請求書のすべてのレイアウト情報とフォームデータの両方を含みます。
 - **`selectedObjectId`**: 現在ユーザーが選択しているオブジェクトの `id`（文字列）、または何も選択されていない場合は `null`。
 
 状態の更新は、各コンポーネントが `App.tsx` から受け取った `setInvoiceData` や `setSelectedObjectId` などのセッター関数を呼び出すことで行われます。これにより、データフローが単一方向（トップダウン）に保たれ、予測可能な状態遷移が実現されます。
@@ -163,27 +212,38 @@ Undo/Redo機能は、カスタムフック `useHistoryState` を使用して実�
 ### 6.1. インタラクティブなキャンバス
 
 - **オブジェクトの操作:** `react-rnd` ライブラリを各レイアウトオブジェクトのラッパーとして使用します。`onDragStop` と `onResizeStop` イベントをリッスンし、オブジェクトの `x`, `y`, `width`, `height` プロパティを更新します。
+- **スタッキング:** 各オブジェクトの `zIndex` プロパティを `react-rnd` の `style` に渡すことで、キャンバス上での重なり順を制御します。
 - **インライン編集:** テキストやテーブルセルは、通常は `<span>` や `<td>` で表示されます。ユーザーがこれらをダブルクリックすると、`editingText` や `editingCell` といったローカルステートが更新され、要素が `<input>` に切り替わります。`onBlur` イベントで編集モードを終了します。
 
-#### 6.1.1. テキストオブジェクトの操作
+#### 6.1.1. レイヤー管理
 
-- **追加:** `InvoiceForm.tsx` の「テキストを追加」ボタンを介して新しいテキストオブジェクトが追加されます。これにより、デフォルトのコンテンツと位置を持つ新しい `TextItem` オブジェクトが作成され、`invoiceData` の `layout` 配列に追加されます。
-- **編集:**
-    - ユーザーは `PdfPreview` でテキストオブジェクトをダブルクリックすることで編集モードに入ることができます。
-    - このアクションにより、`editingText` 状態が選択されたテキストアイテムのIDに設定されます。
-    - `editingText` がアイテムのIDと一致すると、`<span>` 要素が `<input>` フィールドに置き換えられます。
-    - inputの `onChange` ハンドラは `handleTextChange` を呼び出し、`zod` を使用して新しいコンテンツを検証し、`updateLayoutItem` 関数を介して `invoiceData` の状態を更新します。
-    - `onBlur` イベントで編集モードを終了します。
-- **移動とリサイズ:** `Rnd` コンポーネントの汎用的な `onDragStop` および `onResizeStop` ハンドラが、テキストアイテムの `x`、`y`、`width`、`height` プロパティを更新します。
+- **`zIndex`の採番:** 新しいオブジェクトが追加される際、既存のオブジェクトが持つ最大の `zIndex` に1を加えた値が新しい `zIndex` として採番されます。
+- **UI:** `LayerPalette` コンポーネントは、全オブジェクトを `zIndex` の降順でリスト表示します。
+- **順序変更:** ユーザーが「▲」または「▼」ボタンをクリックすると、`moveLayer` 関数が呼び出されます。この関数は、対象のオブジェクトと、その `zIndex` 上で隣接するオブジェクトの `zIndex` 値を交換することで、スタッキング順序を変更します。
 
-#### 6.1.2. テキストのスタイリング
+#### 6.1.2. テキストオブジェクトの操作
 
-- **データモデル:** `TextItem` スキーマに、`fontFamily`, `fontSize`, `lineHeight`, `textAlign`, `verticalAlign`, `color`, `bold`, `italic`, `wordWrap` のプロパティを含むオプションの `style` オブジェクトが追加されました。
-- **レイアウトパレット:** テキストオブジェクトが選択されると、`LayoutPalette` に利用可能なすべてのスタイルプロパティの入力フィールドが表示されます。
-- **ライブプレビュー:** `PdfPreview` コンポーネントは、これらのスタイルをレンダリングされたテキストオブジェクトにリアルタイムで適用します。
-- **PDF出力:** `InvoiceDocument` コンポーネントは、これらのスタイルプロパティを `@react-pdf/renderer` の対応するスタイルにマッピングし、最終的なPDFが選択したスタイルを反映するようにします。
+- **コンテンツ種別:** `TextObjectPalette` を通じて、テキストの `contentType` を以下の3種類から選択できます。
+  - **`fixed` (固定文言):** 静的なテキストを表示します。
+  - **`variable` (変数):** `{{variable_name}}` の形式で変数を埋め込みます。この変数は、`invoiceData.form` の値に置き換えられて表示されます。
+  - **`labeled-variable` (ラベル付き変数):** `label` プロパティと変数を組み合わせて、「請求書番号: 12345」のように表示します。
+- **表示モード:** `App.tsx` のトグルボタンにより、変数表示を「変数名 (`{{...}}`)」と「実際のデータ」で切り替えることができ、レイアウト調整とプレビューを容易にします。
 
-### 6.2. PDF生成
+#### 6.1.3. PDFアップロード
+
+- **ファイル処理:** ユーザーがPDFを選択すると、`handlePdfUpload` 関数が `FileReader` を使ってファイルを `ArrayBuffer` として読み込みます。
+- **ページ変換:** `react-pdf` からインポートされた `pdfjs` ライブラリを使い、PDFドキュメントをロードします。その後、各ページをループ処理します。
+- **画像化:** 各ページについて、`page.render()` を使って非表示の `<canvas>` 要素にページ内容を描画します。描画後、`canvas.toDataURL('image/png')` を呼び出して、ページをPNG画像のデータURLに変換します。
+- **レイアウト追加:** 生成された画像データURLを持つ新しい `ImageItem` オブジェクトが作成され、`invoiceData.layout` に追加されます。各ページは個別の画像オブジェクトとして扱われます。
+
+### 6.2. データ永続化 (GraphQL)
+
+- **スキーマ:** サーバーサイドの `ApolloServer` に、請求書データを丸ごと受け取るための `saveInvoice` Mutationと、それに対応する `InvoiceDataInput` 型が定義されています。
+- **クライアント:** `App.tsx` では、`@apollo/client` の `useMutation` フックを使って `saveInvoice` Mutationを呼び出します。
+- **通信:** ユーザーが「Save」ボタンをクリックすると、現在の `invoiceData` が `variables` としてMutationに渡され、GraphQLリクエストとしてサーバーに送信されます。
+- **サーバー処理:** サーバーは受け取ったデータをコンソールに出力します。（将来的にはデータベースへの保存処理を想定）
+
+### 6.3. PDF生成
 
 本アプリケーションでは、目的別に2つのライブラリを使い分けてPDFを生成します。
 
