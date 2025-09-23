@@ -419,6 +419,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                           : "flex-start",
                       height: "100%",
                       fontFamily: item.style?.fontFamily || "Helvetica",
+                      backgroundColor: item.style?.backgroundColor || "transparent",
+                      textShadow: item.style?.textShadow || "none",
                     }}
                     className="cursor-text"
                     onDoubleClick={() => setEditingText(item.id)}

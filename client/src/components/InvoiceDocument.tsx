@@ -84,6 +84,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData, v
               lineHeight: item.style?.lineHeight || 1,
               textAlign: item.style?.textAlign || 'left',
               fontFamily: item.style?.fontFamily || 'Helvetica',
+              backgroundColor: item.style?.backgroundColor || 'transparent',
             };
             if (item.style?.bold) {
               style.fontWeight = 'bold';

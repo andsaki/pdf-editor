@@ -11,6 +11,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   setInvoiceData,
 }) => {
   const handleStyleChange = (newStyle: Partial<TextItem["style"]>) => {
+    console.log("Updating style with:", newStyle); // Debug log
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {
@@ -208,6 +209,27 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           type="color"
           value={selectedObject.style?.color || "#000000"}
           onChange={(e) => handleStyleChange({ color: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          背景色:
+        </label>
+        <input
+          type="color"
+          value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+          onChange={(e) => handleStyleChange({ backgroundColor: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          テキスト影:
+        </label>
+        <input
+          type="text"
+          value={selectedObject.style?.textShadow || ""}
+          onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
+          placeholder="e.g., 2px 2px 4px #000000"
         />
       </div>
       <div className="flex items-center space-x-4">

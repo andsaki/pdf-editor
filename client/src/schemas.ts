@@ -29,6 +29,8 @@ export const TextItemSchema = BaseLayoutItemSchema.extend({
       bold: z.boolean().optional(),
       italic: z.boolean().optional(),
       wordWrap: z.boolean().optional(),
+      backgroundColor: z.string().optional(),
+      textShadow: z.string().optional(),
     })
     .optional(),
 });
