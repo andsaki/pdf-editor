@@ -71,7 +71,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData, v
       <Text style={styles.title}>Invoice</Text>
 
       {
-        invoiceData.layout.sort((a, b) => a.zIndex - b.zIndex).map(item => {
+        invoiceData.layout.filter(item => item.visible !== false).sort((a, b) => a.zIndex - b.zIndex).map(item => {
           if (item.type === 'text') {
             const style: any = {
               position: "absolute",

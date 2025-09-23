@@ -46,10 +46,20 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
     setInvoiceData((prev) => ({ ...prev, layout: newLayout }));
   };
 
+  const toggleProperty = (itemId: string, property: 'locked' | 'visible') => {
+    const newLayout = invoiceData.layout.map(item => {
+      if (item.id === itemId) {
+        return { ...item, [property]: !item[property] };
+      }
+      return item;
+    });
+    setInvoiceData(prev => ({ ...prev, layout: newLayout }));
+  };
+
   const deleteLayer = (itemId: string) => {
-    setInvoiceData((prev) => ({
+    setInvoiceData(prev => ({
       ...prev,
-      layout: prev.layout.filter((item) => item.id !== itemId),
+      layout: prev.layout.filter(item => item.id !== itemId),
     }));
     if (selectedObjectId === itemId) {
       setSelectedObjectId(null);
@@ -73,17 +83,16 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
                 {item.type} - {item.id.substring(0, 8)}
               </span>
               <div>
-                <button
-                  onClick={() => moveLayer(item.id, "up")}
-                  className="px-2 py-1 text-sm"
-                >
-                  ▲
+                <button onClick={() => toggleProperty(item.id, 'visible')} className="px-2 py-1 text-sm text-gray-700">
+                  {item.visible !== false ? "非表示" : "表示"}
                 </button>
-                <button
-                  onClick={() => moveLayer(item.id, "down")}
-                  className="px-2 py-1 text-sm"
-                >
-                  ▼
+                <button onClick={() => toggleProperty(item.id, 'locked')} className="px-2 py-1 text-sm text-gray-700">
+                  {item.locked ? "解除" : "ロック"}
+                </button>
+                <button onClick={() => moveLayer(item.id, 'up')} className="px-2 py-1 text-sm">▲</button>
+                <button onClick={() => moveLayer(item.id, 'down')} className="px-2 py-1 text-sm">▼</button>
+                <button onClick={() => deleteLayer(item.id)} className="px-2 py-1 text-sm text-red-500">
+                  削除
                 </button>
               </div>
             </div>

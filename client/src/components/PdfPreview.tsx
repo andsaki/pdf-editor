@@ -324,7 +324,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         </div>
 
         {pdfFile &&
-          invoiceData.layout.map((item) => (
+          invoiceData.layout.filter(item => item.visible !== false).map((item) => (
             <Rnd
               key={item.id}
               className="cursor-grab"
@@ -344,10 +344,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 y: item.y * displayScale,
               }}
               onClick={(e: React.MouseEvent) => {
+                if (item.locked) return;
                 e.stopPropagation();
                 setSelectedObjectId(item.id);
               }}
               onDragStop={(_e, d) => {
+                if (item.locked) return;
                 updateLayoutItem(item.id, (item) => ({
                   ...item,
                   x: d.x / displayScale,
@@ -355,6 +357,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 }));
               }}
               onResizeStop={(_e, _direction, ref, _delta, position) => {
+                if (item.locked) return;
                 updateLayoutItem(item.id, (item) => ({
                   ...item,
                   x: position.x / displayScale,
@@ -363,6 +366,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   height: parseFloat(ref.style.height) / displayScale,
                 }));
               }}
+              disableDragging={item.locked}
+              enableResizing={!item.locked}
             >
               {item.type === "text" &&
                 (editingText === item.id ? (

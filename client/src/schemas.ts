@@ -7,6 +7,8 @@ const BaseLayoutItemSchema = z.object({
   width: z.number(),
   height: z.number(),
   zIndex: z.number(),
+  locked: z.boolean().optional(),
+  visible: z.boolean().optional(),
 });
 
 export const TextItemSchema = BaseLayoutItemSchema.extend({
