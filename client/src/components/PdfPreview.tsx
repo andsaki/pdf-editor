@@ -484,7 +484,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     style={{
                       width: "100%",
                       height: "100%",
-                      backgroundColor: "rgba(0, 255, 0, 0.1)",
+                      backgroundColor: item.style?.backgroundColor || "transparent",
                       overflow: "hidden",
                     }}
                   >

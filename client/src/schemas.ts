@@ -44,6 +44,11 @@ export const ImageItemSchema = BaseLayoutItemSchema.extend({
 export const TableItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal('table'),
   data: z.array(z.array(z.string()).min(2, "テーブルには少なくとも2つの列が必要です")).min(2, "テーブルには少なくとも2つの行が必要です"),
+  style: z
+    .object({
+      backgroundColor: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const LayoutItemSchema = z.discriminatedUnion("type", [
