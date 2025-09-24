@@ -6,7 +6,6 @@ import {
   Typography,
   TextField,
   Divider,
-  Grid,
   InputLabel,
 } from "@mui/material";
 
@@ -78,8 +77,8 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
       <Typography variant="subtitle1" gutterBottom>
         テーブルオブジェクト
       </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", mx: -1 }}>
+        <Box sx={{ width: "100%", px: 1, mb: 2 }}>
           <InputLabel>背景色</InputLabel>
           <input
             type="color"
@@ -89,8 +88,8 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
             }
             style={{ width: "100%", height: "40px" }}
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <TextField
             label="行数"
             type="number"
@@ -106,8 +105,8 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
             error={!!tableErrors.rows}
             helperText={tableErrors.rows}
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <TextField
             label="列数"
             type="number"
@@ -123,8 +122,8 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
             error={!!tableErrors.cols}
             helperText={tableErrors.cols}
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

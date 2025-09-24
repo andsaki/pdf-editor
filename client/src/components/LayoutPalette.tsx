@@ -47,48 +47,13 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="subtitle1" gutterBottom>
-        配置
-      </Typography>
-      <Grid container spacing={1}>
-        <Grid item xs={6}>
-          <Button
-            variant="outlined"
-            size="small"
-            fullWidth
-            onClick={() => onMoveLayer("up")}
-          >
-            一つ前面へ
-          </Button>
-        </Grid>
-        <Grid item xs={6}>
-          <Button
-            variant="outlined"
-            size="small"
-            fullWidth
-            onClick={() => onMoveLayer("down")}
-          >
-            一つ背面へ
-          </Button>
-        </Grid>
-      </Grid>
-      <Button
-        variant="contained"
-        color="error"
-        fullWidth
-        onClick={onDelete}
-        sx={{ mt: 1 }}
-      >
-        削除
-      </Button>
 
-      <Divider sx={{ my: 2 }} />
 
       <Typography variant="subtitle1" gutterBottom>
         共通
       </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={6}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
+        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
           <TextField
             label="X"
             type="number"
@@ -97,8 +62,8 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
             onChange={(e) => handleNumericChange("x", e.target.value)}
             fullWidth
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
           <TextField
             label="Y"
             type="number"
@@ -107,8 +72,8 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
             onChange={(e) => handleNumericChange("y", e.target.value)}
             fullWidth
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
           <TextField
             label="幅"
             type="number"
@@ -117,8 +82,8 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
             onChange={(e) => handleNumericChange("width", e.target.value)}
             fullWidth
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
           <TextField
             label="高さ"
             type="number"
@@ -127,8 +92,8 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
             onChange={(e) => handleNumericChange("height", e.target.value)}
             fullWidth
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {selectedObject.type === "text" && (
         <TextObjectPalette

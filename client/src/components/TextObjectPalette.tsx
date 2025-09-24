@@ -11,7 +11,6 @@ import {
   Checkbox,
   FormControlLabel,
   Divider,
-  Grid,
 } from "@mui/material";
 
 interface TextObjectPaletteProps {
@@ -146,8 +145,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
         </>
       )}
 
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid item xs={6}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", mx: -1, mt: 1 }}>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <FormControl fullWidth>
             <InputLabel>フォント</InputLabel>
             <Select
@@ -161,8 +160,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               <MenuItem value="BIZ UDPGothic">BIZ UDPGothic</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <TextField
             label="フォントサイズ"
             type="number"
@@ -172,8 +171,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               handleStyleChange({ fontSize: parseFloat(e.target.value) })
             }
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <TextField
             label="行の高さ"
             type="number"
@@ -183,8 +182,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               handleStyleChange({ lineHeight: parseFloat(e.target.value) })
             }
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <FormControl fullWidth>
             <InputLabel>水平方向の配置</InputLabel>
             <Select
@@ -199,8 +198,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               <MenuItem value="right">右揃え</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <FormControl fullWidth>
             <InputLabel>垂直方向の配置</InputLabel>
             <Select
@@ -215,8 +214,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               <MenuItem value="bottom">下揃え</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
           <TextField
             label="テキスト影"
             fullWidth
@@ -224,8 +223,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
             placeholder="e.g., 2px 2px 4px #000000"
           />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
             <InputLabel>色</InputLabel>
             <input
               type="color"
@@ -233,8 +232,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               onChange={(e) => handleStyleChange({ color: e.target.value })}
               style={{ width: "100%", height: "40px" }}
             />
-        </Grid>
-        <Grid item xs={6}>
+        </Box>
+        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
             <InputLabel>背景色</InputLabel>
             <input
               type="color"
@@ -244,8 +243,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               }
               style={{ width: "100%", height: "40px" }}
             />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       <Box sx={{ mt: 2 }}>
         <FormControlLabel
