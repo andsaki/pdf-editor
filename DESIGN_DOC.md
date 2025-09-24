@@ -181,6 +181,10 @@ export const InvoiceDataSchema = z.object({
 });
 ```
 
+### 4.1. オブジェクト生成時の注意 (Note on Object Creation)
+
+新しいレイアウトオブジェクトを生成し、`invoiceData` の `layout` 配列に追加する際は、TypeScriptの型推論の問題を回避するため、オブジェクトを `LayoutItem` 型として明示的に型付けすることが推奨されます。これにより、特に判別共用体（discriminated union）を扱う際に、より堅牢でエラーの少ない状態更新が保証されます。
+
 ## 5. 状態管理
 
 アプリケーションの状態は、Reactのカスタムフック `useHistoryState` を用いて `App.tsx` コンポーネント内で集中的に管理されます。これにより、Undo/Redo機能を持ちながら、状態管理のロジックをコンポーネントから分離しています。
