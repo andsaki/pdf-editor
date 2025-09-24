@@ -1,5 +1,18 @@
 import React from "react";
 import type { InvoiceData, TextItem } from "../types";
+import {
+  Box,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  Grid,
+} from "@mui/material";
 
 interface TextObjectPaletteProps {
   selectedObject: TextItem;
@@ -11,7 +24,6 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   setInvoiceData,
 }) => {
   const handleStyleChange = (newStyle: Partial<TextItem["style"]>) => {
-    console.log("Updating style with:", newStyle); // Debug log
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {
@@ -56,13 +68,16 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   ];
 
   return (
-    <>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          コンテントタイプ:
-        </label>
-        <select
+    <Box sx={{ mt: 2 }}>
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="subtitle1" gutterBottom>
+        テキストオブジェクト
+      </Typography>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>コンテントタイプ</InputLabel>
+        <Select
           value={selectedObject.contentType}
+          label="コンテントタイプ"
           onChange={(e) =>
             handleContentChange(
               "contentType",
@@ -70,232 +85,227 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             )
           }
         >
-          <option value="fixed">固定文言</option>
-          <option value="variable">変数</option>
-          <option value="labeled-variable">ラベル付き変数</option>
-        </select>
-      </div>
+          <MenuItem value="fixed">固定文言</MenuItem>
+          <MenuItem value="variable">変数</MenuItem>
+          <MenuItem value="labeled-variable">ラベル付き変数</MenuItem>
+        </Select>
+      </FormControl>
 
       {selectedObject.contentType === "fixed" && (
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            内容:
-          </label>
-          <textarea
-            value={selectedObject.content}
-            onChange={(e) => handleContentChange("content", e.target.value)}
-          />
-        </div>
+        <TextField
+          label="内容"
+          multiline
+          rows={4}
+          fullWidth
+          margin="normal"
+          value={selectedObject.content}
+          onChange={(e) => handleContentChange("content", e.target.value)}
+        />
       )}
 
       {selectedObject.contentType === "variable" && (
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            変数:
-          </label>
-          <select
+        <FormControl fullWidth margin="normal">
+          <InputLabel>変数</InputLabel>
+          <Select
             value={selectedObject.content}
+            label="変数"
             onChange={(e) => handleContentChange("content", e.target.value)}
           >
             {variables.map((v) => (
-              <option key={v} value={`{{${v}}}`}>
+              <MenuItem key={v} value={`{{${v}}}`}>
                 {v}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormControl>
       )}
 
       {selectedObject.contentType === "labeled-variable" && (
         <>
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              ラベル:
-            </label>
-            <input
-              type="text"
-              value={selectedObject.label || ""}
-              onChange={(e) => handleContentChange("label", e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Variable:
-            </label>
-            <select
+          <TextField
+            label="ラベル"
+            fullWidth
+            margin="normal"
+            value={selectedObject.label || ""}
+            onChange={(e) => handleContentChange("label", e.target.value)}
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>変数</InputLabel>
+            <Select
               value={selectedObject.content}
+              label="変数"
               onChange={(e) => handleContentChange("content", e.target.value)}
             >
               {variables.map((v) => (
-                <option key={v} value={`{{${v}}}`}>
+                <MenuItem key={v} value={`{{${v}}}`}>
                   {v}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormControl>
         </>
       )}
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          フォント:
-        </label>
-        <select
-          value={selectedObject.style?.fontFamily || "Helvetica"}
-          onChange={(e) =>
-            handleStyleChange({ fontFamily: e.target.value as any })
-          }
-        >
-          <option value="Helvetica">Helvetica</option>
-          <option value="BIZ UDPGothic">BIZ UDPGothic</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          フォントサイズ:
-        </label>
-        <input
-          type="number"
-          value={selectedObject.style?.fontSize || 12}
-          onChange={(e) =>
-            handleStyleChange({ fontSize: parseFloat(e.target.value) })
-          }
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          行の高さ:
-        </label>
-        <input
-          type="number"
-          value={selectedObject.style?.lineHeight || 1}
-          onChange={(e) =>
-            handleStyleChange({ lineHeight: parseFloat(e.target.value) })
-          }
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          水平方向の配置:
-        </label>
-        <select
-          value={selectedObject.style?.textAlign || "left"}
-          onChange={(e) =>
-            handleStyleChange({ textAlign: e.target.value as any })
-          }
-        >
-          <option value="left">左揃え</option>
-          <option value="center">中央揃え</option>
-          <option value="right">右揃え</option>{" "}
-        </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          垂直方向の配置:
-        </label>
-        <select
-          value={selectedObject.style?.verticalAlign || "top"}
-          onChange={(e) =>
-            handleStyleChange({ verticalAlign: e.target.value as any })
-          }
-        >
-          <option value="top">上揃え</option>
-          <option value="center">中央揃え</option>
-          <option value="bottom">下揃え</option>{" "}
-        </select>
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          色:
-        </label>
-        <input
-          type="color"
-          value={selectedObject.style?.color || "#000000"}
-          onChange={(e) => handleStyleChange({ color: e.target.value })}
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          背景色:
-        </label>
-        <input
-          type="color"
-          value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-          onChange={(e) =>
-            handleStyleChange({ backgroundColor: e.target.value })
-          }
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          テキスト影:
-        </label>
-        <input
-          type="text"
-          value={selectedObject.style?.textShadow || ""}
-          onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
-          placeholder="e.g., 2px 2px 4px #000000"
-        />
-      </div>
-      <div className="flex items-center space-x-4">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={selectedObject.style?.bold || false}
-            onChange={(e) => handleStyleChange({ bold: e.target.checked })}
+
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid item xs={6}>
+          <FormControl fullWidth>
+            <InputLabel>フォント</InputLabel>
+            <Select
+              value={selectedObject.style?.fontFamily || "Helvetica"}
+              label="フォント"
+              onChange={(e) =>
+                handleStyleChange({ fontFamily: e.target.value as any })
+              }
+            >
+              <MenuItem value="Helvetica">Helvetica</MenuItem>
+              <MenuItem value="BIZ UDPGothic">BIZ UDPGothic</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="フォントサイズ"
+            type="number"
+            fullWidth
+            value={selectedObject.style?.fontSize || 12}
+            onChange={(e) =>
+              handleStyleChange({ fontSize: parseFloat(e.target.value) })
+            }
           />
-          <span className="ml-2">太字</span>{" "}
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={selectedObject.style?.italic || false}
-            onChange={(e) => handleStyleChange({ italic: e.target.checked })}
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="行の高さ"
+            type="number"
+            fullWidth
+            value={selectedObject.style?.lineHeight || 1}
+            onChange={(e) =>
+              handleStyleChange({ lineHeight: parseFloat(e.target.value) })
+            }
           />
-          <span className="ml-2">斜体</span>{" "}
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={selectedObject.style?.wordWrap || false}
-            onChange={(e) => handleStyleChange({ wordWrap: e.target.checked })}
+        </Grid>
+        <Grid item xs={6}>
+          <FormControl fullWidth>
+            <InputLabel>水平方向の配置</InputLabel>
+            <Select
+              value={selectedObject.style?.textAlign || "left"}
+              label="水平方向の配置"
+              onChange={(e) =>
+                handleStyleChange({ textAlign: e.target.value as any })
+              }
+            >
+              <MenuItem value="left">左揃え</MenuItem>
+              <MenuItem value="center">中央揃え</MenuItem>
+              <MenuItem value="right">右揃え</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={6}>
+          <FormControl fullWidth>
+            <InputLabel>垂直方向の配置</InputLabel>
+            <Select
+              value={selectedObject.style?.verticalAlign || "top"}
+              label="垂直方向の配置"
+              onChange={(e) =>
+                handleStyleChange({ verticalAlign: e.target.value as any })
+              }
+            >
+              <MenuItem value="top">上揃え</MenuItem>
+              <MenuItem value="center">中央揃え</MenuItem>
+              <MenuItem value="bottom">下揃え</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="テキスト影"
+            fullWidth
+            value={selectedObject.style?.textShadow || ""}
+            onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
+            placeholder="e.g., 2px 2px 4px #000000"
           />
-          <span className="ml-2">折り返し</span>
-        </label>
-      </div>
+        </Grid>
+        <Grid item xs={6}>
+            <InputLabel>色</InputLabel>
+            <input
+              type="color"
+              value={selectedObject.style?.color || "#000000"}
+              onChange={(e) => handleStyleChange({ color: e.target.value })}
+              style={{ width: "100%", height: "40px" }}
+            />
+        </Grid>
+        <Grid item xs={6}>
+            <InputLabel>背景色</InputLabel>
+            <input
+              type="color"
+              value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+              onChange={(e) =>
+                handleStyleChange({ backgroundColor: e.target.value })
+              }
+              style={{ width: "100%", height: "40px" }}
+            />
+        </Grid>
+      </Grid>
+
+      <Box sx={{ mt: 2 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selectedObject.style?.bold || false}
+              onChange={(e) => handleStyleChange({ bold: e.target.checked })}
+            />
+          }
+          label="太字"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selectedObject.style?.italic || false}
+              onChange={(e) => handleStyleChange({ italic: e.target.checked })}
+            />
+          }
+          label="斜体"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selectedObject.style?.wordWrap || false}
+              onChange={(e) => handleStyleChange({ wordWrap: e.target.checked })}
+            />
+          }
+          label="折り返し"
+        />
+      </Box>
 
       {selectedObject.style?.isBullet && (
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            箇条書きの数:
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={selectedObject.content.split("\n").length}
-            onChange={(e) => {
-              const newCount = parseInt(e.target.value);
-              if (isNaN(newCount) || newCount < 1) return;
+        <TextField
+          label="箇条書きの数"
+          type="number"
+          fullWidth
+          margin="normal"
+          InputProps={{ inputProps: { min: 1 } }}
+          value={selectedObject.content.split("\n").length}
+          onChange={(e) => {
+            const newCount = parseInt(e.target.value);
+            if (isNaN(newCount) || newCount < 1) return;
 
-              const lines = selectedObject.content.split("\n");
-              let newContent = "";
+            const lines = selectedObject.content.split("\n");
+            let newContent = "";
 
-              if (newCount > lines.length) {
-                // Add new lines
-                newContent = lines.join("\n");
-                for (let i = lines.length; i < newCount; i++) {
-                  newContent += `\n項目${i + 1}`;
-                }
-              } else if (newCount < lines.length) {
-                // Remove lines
-                newContent = lines.slice(0, newCount).join("\n");
-              } else {
-                newContent = selectedObject.content;
+            if (newCount > lines.length) {
+              newContent = lines.join("\n");
+              for (let i = lines.length; i < newCount; i++) {
+                newContent += `\n項目${i + 1}`;
               }
-              handleContentChange("content", newContent);
-            }}
-          />
-        </div>
+            } else if (newCount < lines.length) {
+              newContent = lines.slice(0, newCount).join("\n");
+            } else {
+              newContent = selectedObject.content;
+            }
+            handleContentChange("content", newContent);
+          }}
+        />
       )}
-    </>
+    </Box>
   );
 };

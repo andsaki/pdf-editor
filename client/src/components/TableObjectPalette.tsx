@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import type { InvoiceData, TableItem } from "../types";
 import { TableItemSchema } from "../schemas";
+import {
+  Box,
+  Typography,
+  TextField,
+  Divider,
+  Grid,
+  InputLabel,
+} from "@mui/material";
 
 interface TableObjectPaletteProps {
   selectedObject: TableItem;
@@ -65,57 +73,58 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
   };
 
   return (
-    <>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          背景色:
-        </label>
-        <input
-          type="color"
-          value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-          onChange={(e) =>
-            handleStyleChange({ backgroundColor: e.target.value })
-          }
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          行数:
-        </label>
-        <input
-          type="number"
-          min="2"
-          value={selectedObject.data.length}
-          onChange={(e) =>
-            handleTableDataChange(
-              parseInt(e.target.value),
-              selectedObject.data[0]?.length || 1
-            )
-          }
-        />
-        {tableErrors.rows && (
-          <span className="text-red-500 text-xs">{tableErrors.rows}</span>
-        )}
-      </div>
-      <div>
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          列数:
-        </label>
-        <input
-          type="number"
-          min="2"
-          value={selectedObject.data[0]?.length || 1}
-          onChange={(e) =>
-            handleTableDataChange(
-              selectedObject.data.length,
-              parseInt(e.target.value)
-            )
-          }
-        />
-        {tableErrors.cols && (
-          <span className="text-red-500 text-xs">{tableErrors.cols}</span>
-        )}
-      </div>
-    </>
+    <Box sx={{ mt: 2 }}>
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="subtitle1" gutterBottom>
+        テーブルオブジェクト
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <InputLabel>背景色</InputLabel>
+          <input
+            type="color"
+            value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+            onChange={(e) =>
+              handleStyleChange({ backgroundColor: e.target.value })
+            }
+            style={{ width: "100%", height: "40px" }}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="行数"
+            type="number"
+            fullWidth
+            InputProps={{ inputProps: { min: 2 } }}
+            value={selectedObject.data.length}
+            onChange={(e) =>
+              handleTableDataChange(
+                parseInt(e.target.value),
+                selectedObject.data[0]?.length || 1
+              )
+            }
+            error={!!tableErrors.rows}
+            helperText={tableErrors.rows}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="列数"
+            type="number"
+            fullWidth
+            InputProps={{ inputProps: { min: 2 } }}
+            value={selectedObject.data[0]?.length || 1}
+            onChange={(e) =>
+              handleTableDataChange(
+                selectedObject.data.length,
+                parseInt(e.target.value)
+              )
+            }
+            error={!!tableErrors.cols}
+            helperText={tableErrors.cols}
+          />
+        </Grid>
+      </Grid>
+    </Box>
   );
 };

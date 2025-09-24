@@ -1,4 +1,15 @@
 import { useState, useRef } from "react";
+import {
+  CssBaseline,
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  createTheme,
+  ThemeProvider,
+  Divider,
+} from "@mui/material";
 import { InvoiceForm } from "./components/InvoiceForm";
 import { PdfPreview } from "./components/PdfPreview";
 import type { InvoiceData, LayoutItem } from "./types";
@@ -17,6 +28,17 @@ const SAVE_INVOICE_MUTATION = gql`
     saveInvoice(invoiceData: $invoiceData)
   }
 `;
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+    secondary: {
+      main: "#dc004e",
+    },
+  },
+});
 
 function App() {
   const {
@@ -303,134 +325,172 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
-      <header className="flex justify-between items-center p-4 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-900">Invoice Editor</h1>
-          <div className="flex items-center space-x-2 border-l border-gray-300 pl-4">
-            <button onClick={undo} disabled={!canUndo} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+        <AppBar position="static" color="default" elevation={1}>
+          <Toolbar>
+            <Typography variant="h6" sx={{ fontWeight: "bold", mr: 2 }}>
+              Invoice Editor
+            </Typography>
+            <Button onClick={undo} disabled={!canUndo} size="small">
               元に戻す
-            </button>
-            <button onClick={redo} disabled={!canRedo} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+            </Button>
+            <Button onClick={redo} disabled={!canRedo} size="small">
               やり直し
-            </button>
-            <button onClick={cut} disabled={!selectedObjectId} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+            </Button>
+            <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+            <Button
+              onClick={cut}
+              disabled={!selectedObjectId}
+              size="small"
+            >
               切り取り
-            </button>
-            <button onClick={paste} disabled={!clipboard} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+            </Button>
+            <Button onClick={paste} disabled={!clipboard} size="small">
               貼り付け
-            </button>
-            <button onClick={deleteSelectedObject} disabled={!selectedObjectId} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200 text-red-600">
+            </Button>
+            <Button
+              onClick={deleteSelectedObject}
+              disabled={!selectedObjectId}
+              size="small"
+              color="error"
+            >
               削除
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() =>
-              setVariableDisplayMode((prev) =>
-                prev === "name" ? "example" : "name"
-              )
-            }
-            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
+            </Button>
+            <Box sx={{ flexGrow: 1 }} />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() =>
+                setVariableDisplayMode((prev) =>
+                  prev === "name" ? "example" : "name"
+                )
+              }
+            >
+              {variableDisplayMode === "name"
+                ? "データ例で表示"
+                : "変数で表示"}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={openPdfInNewTab}
+              sx={{ ml: 1 }}
+            >
+              プレビュー
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => alert("PDFトレース機能は未実装です")}
+              sx={{ ml: 1 }}
+            >
+              PDFをトレース
+            </Button>
+            <Box sx={{ flexGrow: 1 }} />
+            <Button>キャンセル</Button>
+            <Button variant="contained" onClick={saveInvoice} sx={{ ml: 1 }}>
+              保存
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          <Box
+            component="aside"
+            sx={{
+              width: 64,
+              bgcolor: "background.paper",
+              p: 1,
+              borderRight: "1px solid",
+              borderColor: "divider",
+            }}
           >
-            {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
-          </button>
-          <button
-            onClick={openPdfInNewTab}
-            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
+            <LeftToolbar
+              onAddText={addTextObject}
+              onAddBullet={addBulletObject}
+              onAddTable={addTableObject}
+              onAddImage={() => imageInputRef.current?.click()}
+              onAddPdf={() => pdfInputRef.current?.click()}
+              onToggleLayers={toggleLayersPanel}
+            />
+          </Box>
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              p: 3,
+              bgcolor: "grey.50",
+              overflow: "auto",
+            }}
           >
-            プレビュー
-          </button>
-          <button
-            onClick={() => alert("PDFトレース機能は未実装です")}
-            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
+            <PdfPreview
+              invoiceData={invoiceData}
+              setInvoiceData={setInvoiceData}
+              selectedObjectId={selectedObjectId}
+              onSelectObject={handleSelectObject}
+              variableDisplayMode={variableDisplayMode}
+            />
+          </Box>
+          <Box
+            component="aside"
+            sx={{
+              width: 320,
+              bgcolor: "background.paper",
+              p: 2,
+              borderLeft: "1px solid",
+              borderColor: "divider",
+              overflowY: "auto",
+            }}
           >
-            PDFをトレース
-          </button>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => {}}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            キャンセル
-          </button>
-          <button
-            onClick={saveInvoice}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            保存
-          </button>
-        </div>
-      </header>
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-16 bg-white p-2 border-r border-gray-200">
-          <LeftToolbar
-            onAddText={addTextObject}
-            onAddBullet={addBulletObject}
-            onAddTable={addTableObject}
-            onAddImage={() => imageInputRef.current?.click()}
-            onAddPdf={() => pdfInputRef.current?.click()}
-            onToggleLayers={toggleLayersPanel}
-          />
-        </aside>
-        <main className="flex-1 p-8 bg-gray-50 overflow-auto">
-          <PdfPreview
-            invoiceData={invoiceData}
-            setInvoiceData={setInvoiceData}
-            selectedObjectId={selectedObjectId}
-            onSelectObject={handleSelectObject}
-            variableDisplayMode={variableDisplayMode}
-          />
-        </main>
-        <aside className="w-80 bg-white p-4 border-l border-gray-200 overflow-y-auto">
-          {(() => {
-            if (activeRightPanel === 'layers') {
+            {(() => {
+              if (activeRightPanel === 'layers') {
+                return (
+                  <LayerPalette
+                    invoiceData={invoiceData}
+                    setInvoiceData={setInvoiceData}
+                    selectedObjectId={selectedObjectId}
+                    onSelectObject={handleSelectObject}
+                  />
+                );
+              }
+              if (selectedObject) {
+                return (
+                  <LayoutPalette
+                    selectedObject={selectedObject}
+                    setInvoiceData={setInvoiceData}
+                    onMoveLayer={moveLayer}
+                    onDelete={deleteSelectedObject}
+                  />
+                );
+              }
               return (
-                <LayerPalette
+                <InvoiceForm
                   invoiceData={invoiceData}
                   setInvoiceData={setInvoiceData}
-                  selectedObjectId={selectedObjectId}
-                  onSelectObject={handleSelectObject}
                 />
               );
-            }
-            if (selectedObject) {
-              return (
-                <LayoutPalette
-                  selectedObject={selectedObject}
-                  setInvoiceData={setInvoiceData}
-                  onMoveLayer={moveLayer}
-                  onDelete={deleteSelectedObject}
-                />
-              );
-            }
-            return (
-              <InvoiceForm
-                invoiceData={invoiceData}
-                setInvoiceData={setInvoiceData}
-              />
-            );
-          })()}
-        </aside>
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        ref={imageInputRef}
-        onChange={handleImageUpload}
-        style={{ display: "none" }}
-      />
-      <input
-        type="file"
-        accept="application/pdf"
-        ref={pdfInputRef}
-        onChange={handlePdfUpload}
-        style={{ display: "none" }}
-      />
-    </div>
+            })()}
+          </Box>
+        </Box>
+        <input
+          type="file"
+          accept="image/*"
+          ref={imageInputRef}
+          onChange={handleImageUpload}
+          style={{ display: "none" }}
+        />
+        <input
+          type="file"
+          accept="application/pdf"
+          ref={pdfInputRef}
+          onChange={handlePdfUpload}
+          style={{ display: "none" }}
+        />
+      </Box>
+    </ThemeProvider>
   );
 }
 
 export default App;
+

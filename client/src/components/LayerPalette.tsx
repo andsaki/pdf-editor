@@ -1,5 +1,19 @@
 import React from "react";
 import type { InvoiceData } from "../types";
+import {
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import Lock from "@mui/icons-material/Lock";
+import LockOpen from "@mui/icons-material/LockOpen";
 
 interface LayerPaletteProps {
   invoiceData: InvoiceData;
@@ -18,44 +32,70 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
     (a, b) => b.zIndex - a.zIndex
   );
 
-  const toggleProperty = (itemId: string, property: 'locked' | 'visible') => {
-    const newLayout = invoiceData.layout.map(item => {
+  const toggleProperty = (itemId: string, property: "locked" | "visible") => {
+    const newLayout = invoiceData.layout.map((item) => {
       if (item.id === itemId) {
         return { ...item, [property]: !item[property] };
       }
       return item;
     });
-    setInvoiceData(prev => ({ ...prev, layout: newLayout }));
+    setInvoiceData((prev) => ({ ...prev, layout: newLayout }));
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg space-y-4">
-      <h3 className="text-xl font-bold mb-4 text-gray-800">レイヤー</h3>
-      <ul>
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        レイヤー
+      </Typography>
+      <List dense>
         {sortedLayout.map((item) => (
-          <li
+          <ListItem
             key={item.id}
-            onClick={() => onSelectObject(item.id)}
-            className={`p-2 rounded-md cursor-pointer ${
-              selectedObjectId === item.id ? "bg-blue-100" : "hover:bg-gray-100"
-            }`}
+            disablePadding
+            secondaryAction={
+              <>
+                <Tooltip title={item.visible !== false ? "非表示" : "表示"}>
+                  <IconButton
+                    edge="end"
+                    aria-label="toggle visibility"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleProperty(item.id, "visible");
+                    }}
+                  >
+                    {item.visible !== false ? (
+                      <Visibility />
+                    ) : (
+                      <VisibilityOff />
+                    )}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={item.locked ? "ロック解除" : "ロック"}>
+                  <IconButton
+                    edge="end"
+                    aria-label="toggle locked"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleProperty(item.id, "locked");
+                    }}
+                  >
+                    {item.locked ? <Lock /> : <LockOpen />}
+                  </IconButton>
+                </Tooltip>
+              </>
+            }
           >
-            <div className="flex justify-between items-center">
-              <span>
-                {item.type} - {item.id.substring(0, 8)}
-              </span>
-              <div>
-                <button onClick={(e) => {e.stopPropagation(); toggleProperty(item.id, 'visible')}} className="px-2 py-1 text-sm text-gray-700">
-                  {item.visible !== false ? "非表示" : "表示"}
-                </button>
-                <button onClick={(e) => {e.stopPropagation(); toggleProperty(item.id, 'locked')}} className="px-2 py-1 text-sm text-gray-700">
-                  {item.locked ? "解除" : "ロック"}
-                </button>
-              </div>
-            </div>
-          </li>
+            <ListItemButton
+              selected={selectedObjectId === item.id}
+              onClick={() => onSelectObject(item.id)}
+            >
+              <ListItemText
+                primary={`${item.type} - ${item.id.substring(0, 8)}`}
+              />
+            </ListItemButton>
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Box>
   );
 };

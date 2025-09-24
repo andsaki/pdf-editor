@@ -2,6 +2,14 @@ import React from "react";
 import type { InvoiceData, LayoutItem } from "../types";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Divider,
+  Grid,
+} from "@mui/material";
 
 interface LayoutPaletteProps {
   selectedObject: LayoutItem;
@@ -20,92 +28,107 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
     return null;
   }
 
-  return (
-    <div className="p-6 bg-white rounded-lg shadow-lg space-y-4">
-      <h3 className="text-xl font-bold mb-4 text-gray-800">プロパティ</h3>
-      
-      <div className="border-t pt-4">
-        <h4 className="text-lg font-semibold mb-2">配置</h4>
-        <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => onMoveLayer("up")} className="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300">一つ前面へ</button>
-            <button onClick={() => onMoveLayer("down")} className="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300">一つ背面へ</button>
-        </div>
-        <div className="mt-4">
-            <button onClick={onDelete} className="w-full px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600 text-white">削除</button>
-        </div>
-      </div>
+  const handleNumericChange = (field: keyof LayoutItem, value: string) => {
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: prev.layout.map((item) =>
+        item.id === selectedObject.id
+          ? { ...item, [field]: parseFloat(value) }
+          : item
+      ),
+    }));
+  };
 
-      <div className="border-t pt-4">
-        <h4 className="text-lg font-semibold mb-2">共通</h4>
-        <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">X:</label>
-            <input
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        プロパティ
+      </Typography>
+
+      <Divider sx={{ my: 2 }} />
+
+      <Typography variant="subtitle1" gutterBottom>
+        配置
+      </Typography>
+      <Grid container spacing={1}>
+        <Grid item xs={6}>
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            onClick={() => onMoveLayer("up")}
+          >
+            一つ前面へ
+          </Button>
+        </Grid>
+        <Grid item xs={6}>
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            onClick={() => onMoveLayer("down")}
+          >
+            一つ背面へ
+          </Button>
+        </Grid>
+      </Grid>
+      <Button
+        variant="contained"
+        color="error"
+        fullWidth
+        onClick={onDelete}
+        sx={{ mt: 1 }}
+      >
+        削除
+      </Button>
+
+      <Divider sx={{ my: 2 }} />
+
+      <Typography variant="subtitle1" gutterBottom>
+        共通
+      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={6}>
+          <TextField
+            label="X"
             type="number"
+            size="small"
             value={selectedObject.x}
-            onChange={(e) =>
-                setInvoiceData((prev) => ({
-                ...prev,
-                layout: prev.layout.map((item) =>
-                    item.id === selectedObject.id
-                    ? { ...item, x: parseFloat(e.target.value) }
-                    : item
-                ),
-                }))
-            }
-            />
-        </div>
-        <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">Y:</label>
-            <input
+            onChange={(e) => handleNumericChange("x", e.target.value)}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="Y"
             type="number"
+            size="small"
             value={selectedObject.y}
-            onChange={(e) =>
-                setInvoiceData((prev) => ({
-                ...prev,
-                layout: prev.layout.map((item) =>
-                    item.id === selectedObject.id
-                    ? { ...item, y: parseFloat(e.target.value) }
-                    : item
-                ),
-                }))
-            }
-            />
-        </div>
-        <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">幅:</label>
-            <input
+            onChange={(e) => handleNumericChange("y", e.target.value)}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="幅"
             type="number"
+            size="small"
             value={selectedObject.width}
-            onChange={(e) =>
-                setInvoiceData((prev) => ({
-                ...prev,
-                layout: prev.layout.map((item) =>
-                    item.id === selectedObject.id
-                    ? { ...item, width: parseFloat(e.target.value) }
-                    : item
-                ),
-                }))
-            }
-            />
-        </div>
-        <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">高さ:</label>
-            <input
+            onChange={(e) => handleNumericChange("width", e.target.value)}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <TextField
+            label="高さ"
             type="number"
+            size="small"
             value={selectedObject.height}
-            onChange={(e) =>
-                setInvoiceData((prev) => ({
-                ...prev,
-                layout: prev.layout.map((item) =>
-                    item.id === selectedObject.id
-                    ? { ...item, height: parseFloat(e.target.value) }
-                    : item
-                ),
-                }))
-            }
-            />
-        </div>
-      </div>
+            onChange={(e) => handleNumericChange("height", e.target.value)}
+            fullWidth
+          />
+        </Grid>
+      </Grid>
 
       {selectedObject.type === "text" && (
         <TextObjectPalette
@@ -120,6 +143,6 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
           setInvoiceData={setInvoiceData}
         />
       )}
-    </div>
+    </Box>
   );
 };

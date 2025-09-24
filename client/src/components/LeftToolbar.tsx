@@ -1,4 +1,18 @@
-import React from 'react';
+import React from "react";
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Divider,
+  List,
+  ListItem,
+} from "@mui/material";
+import TextFieldsIcon from "@mui/icons-material/TextFields";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import ImageIcon from "@mui/icons-material/Image";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import LayersIcon from "@mui/icons-material/Layers";
 
 interface LeftToolbarProps {
   onAddText: () => void;
@@ -17,31 +31,60 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onAddPdf,
   onToggleLayers,
 }) => {
-  const buttonStyle = "w-full text-sm py-2 px-1 rounded hover:bg-gray-200 focus:outline-none focus:shadow-outline text-gray-700";
-
   return (
-    <div className="flex flex-col items-center space-y-2 p-2 bg-white rounded-lg shadow-lg h-full">
-      <button onClick={onAddText} title="テキスト追加" className={buttonStyle}>
-        テキスト
-      </button>
-      <button onClick={onAddBullet} title="箇条書き追加" className={buttonStyle}>
-        箇条書き
-      </button>
-      <button onClick={onAddTable} title="テーブル追加" className={buttonStyle}>
-        テーブル
-      </button>
-      <button onClick={onAddImage} title="画像追加" className={buttonStyle}>
-        画像
-      </button>
-      <button onClick={onAddPdf} title="PDF追加" className={buttonStyle}>
-        PDF
-      </button>
-
-      <div className="w-full border-t border-gray-300 my-2"></div>
-
-      <button onClick={onToggleLayers} title="レイヤー表示切替" className={buttonStyle}>
-        レイヤー
-      </button>
-    </div>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        p: 1,
+      }}
+    >
+      <List>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="テキスト追加" placement="right">
+            <IconButton onClick={onAddText}>
+              <TextFieldsIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="箇条書き追加" placement="right">
+            <IconButton onClick={onAddBullet}>
+              <FormatListBulletedIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="テーブル追加" placement="right">
+            <IconButton onClick={onAddTable}>
+              <TableChartIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="画像追加" placement="right">
+            <IconButton onClick={onAddImage}>
+              <ImageIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="PDF追加" placement="right">
+            <IconButton onClick={onAddPdf}>
+              <PictureAsPdfIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <Divider sx={{ my: 1 }} />
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="レイヤー表示切替" placement="right">
+            <IconButton onClick={onToggleLayers}>
+              <LayersIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+      </List>
+    </Box>
   );
 };
