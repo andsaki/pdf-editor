@@ -113,7 +113,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
 
               return (
                 <View key={item.id} style={style}>
-                  {lines.map((line, index) => (
+                  {lines.map((line: string, index: number) => (
                     <Text key={index}>• {line}</Text>
                   ))}
                 </View>
