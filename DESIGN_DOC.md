@@ -132,7 +132,13 @@ graph TD
 
 ## 4. データモデル
 
-データ構造の定義とバリデーションには `zod` を使用し、型安全とデータの一貫性を保証します。TypeScriptの型は、Zodスキーマから `z.infer` を使って自動的に生成されます。
+データ構造の定義とバリデーションには `zod` を使用します。これにより、以下の利点が得られます。
+
+- **ランタイムの型安全性:** APIレスポンスやフォーム入力など、外部からのデータを実行時に検証し、予期せぬエラーを防ぎます。
+- **単一の情報源 (Single Source of Truth):** Zodスキーマを定義するだけで、TypeScriptの型を `z.infer` を使って自動生成できるため、型定義の二重管理を防ぎます。
+- **ドキュメントとしての役割:** スキーマ自体が、期待されるデータ構造の明確なドキュメントとして機能します。
+
+TypeScriptの型は、このZodスキーマから `z.infer` を使って自動的に生成されます。
 
 - **`LayoutItem` (判別共用体)**
   - キャンバス上のすべてのオブジェクトを表すための中心的な型です。
@@ -240,12 +246,95 @@ Undo/Redo機能は、カスタムフック `useHistoryState` を使用して実�
 - **画像化:** 各ページについて、`page.render()` を使って非表示の `<canvas>` 要素にページ内容を描画します。描画後、`canvas.toDataURL('image/png')` を呼び出して、ページをPNG画像のデータURLに変換します。
 - **レイアウト追加:** 生成された画像データURLを持つ新しい `ImageItem` オブジェクトが作成され、`invoiceData.layout` に追加されます。各ページは個別の画像オブジェクトとして扱われます。
 
-### 6.2. データ永続化 (GraphQL)
+### 6.2. Service Interface
 
-- **スキーマ:** サーバーサイドの `ApolloServer` に、請求書データを丸ごと受け取るための `saveInvoice` Mutationと、それに対応する `InvoiceDataInput` 型が定義されています。
-- **クライアント:** `App.tsx` では、`@apollo/client` の `useMutation` フックを使って `saveInvoice` Mutationを呼び出します。
-- **通信:** ユーザーが「Save」ボタンをクリックすると、現在の `invoiceData` が `variables` としてMutationに渡され、GraphQLリクエストとしてサーバーに送信されます。
-- **サーバー処理:** サーバーは受け取ったデータをコンソールに出力します。（将来的にはデータベースへの保存処理を想定）
+クライアントとサーバー間の通信は、明確に定義されたインターフェースを介して行われます。
+
+#### 6.2.1. フロントエンド APIクライアント
+
+コンポーネントの関心を分離するため、サーバー通信の詳細はAPIサービスクライアントにカプセル化します。コンポーネントは、具体的な通信プロトコル（GraphQL）を意識することなく、このクライアントを利用します。
+
+**インターフェース定義 (TypeScript):**
+```typescript
+// client/src/services/api.ts (仮)
+import { InvoiceData } from "../types";
+
+export interface IInvoiceApiService {
+  saveInvoice(invoiceData: InvoiceData): Promise<boolean>;
+}
+```
+
+**実装:**
+- このインターフェースの実装は、Apollo Clientを利用して行われます。
+- `saveInvoice` メソッドは、内部で `saveInvoice` GraphQLミューテーションを呼び出します。
+- その際、クライアントの `InvoiceData` 型から、GraphQLの `InvoiceDataInput` 型へのデータ変換も担当します。
+
+#### 6.2.2. バックエンド API (GraphQL)
+
+バックエンドは、データ永続化のためのGraphQLミューテーションを公開します。
+
+**スキーマ定義 (SDL):**
+```graphql
+# 請求書データ全体を表現する入力型
+input InvoiceDataInput {
+  layout: [LayoutItemInput!]!
+  form: FormInput!
+}
+
+# フォームデータを表現する入力型
+input FormInput {
+  issue_date: String
+  invoice_number: String
+  # ... other form fields
+}
+
+# 各レイアウトオブジェクトを表現する入力型。
+# GraphQLのInput Unionの制約のため、各タイプのプロパティを
+# オプショナルなフィールドとして一つの型にまとめています。
+input LayoutItemInput {
+  id: ID!
+  type: String! # 'text', 'image', 'table'
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  zIndex: Int!
+
+  # TextItem properties
+  content: String
+  contentType: String
+  label: String
+  fontFamily: String
+  fontSize: Int
+  color: String
+  align: String
+
+  # ImageItem properties
+  src: String
+
+  # TableItem properties
+  data: [[String]]
+  backgroundColor: String
+}
+
+type Mutation {
+  # 請求書データを保存するミューテーション
+  saveInvoice(invoiceData: InvoiceDataInput!): Boolean
+}
+
+type Query {
+  # (将来的に) 請求書データを取得するためのクエリ
+  getInvoice(id: ID!): String # 返り値は仮
+}
+```
+
+#### 6.2.3. データ永続化フロー
+
+1.  **ユーザー操作:** ユーザーがUI上で保存ボタンをクリックします。
+2.  **コンポーネント:** `App.tsx` が、現在の `invoiceData` 状態を引数に `IInvoiceApiService` の `saveInvoice` メソッドを呼び出します。
+3.  **APIクライアント:** `saveInvoice` メソッドが、`invoiceData` を `InvoiceDataInput` 型に変換し、Apollo Clientを用いて `saveInvoice` ミューテーションを実行します。
+4.  **サーバー:** GraphQLリクエストを受け取り、データを処理（現在はコンソール出力）し、結果を返します。
+5.  **UI更新:** APIクライアントは結果を `Promise<boolean>` として返し、コンポーネントはそれに応じてUI（例: 保存成功の通知）を更新します。
 
 ### 6.3. PDF生成
 
