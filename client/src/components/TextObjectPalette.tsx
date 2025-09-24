@@ -183,9 +183,10 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             handleStyleChange({ textAlign: e.target.value as any })
           }
         >
-                        <option value="left">左揃え</option>
-                        <option value="center">中央揃え</option>
-                        <option value="right">右揃え</option>        </select>
+          <option value="left">左揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="right">右揃え</option>{" "}
+        </select>
       </div>
       <div>
         <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -197,9 +198,10 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             handleStyleChange({ verticalAlign: e.target.value as any })
           }
         >
-                        <option value="top">上揃え</option>
-                        <option value="center">中央揃え</option>
-                        <option value="bottom">下揃え</option>        </select>
+          <option value="top">上揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="bottom">下揃え</option>{" "}
+        </select>
       </div>
       <div>
         <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -218,7 +220,9 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
         <input
           type="color"
           value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-          onChange={(e) => handleStyleChange({ backgroundColor: e.target.value })}
+          onChange={(e) =>
+            handleStyleChange({ backgroundColor: e.target.value })
+          }
         />
       </div>
       <div>
@@ -239,26 +243,59 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             checked={selectedObject.style?.bold || false}
             onChange={(e) => handleStyleChange({ bold: e.target.checked })}
           />
-                        <span className="ml-2">太字</span>        </label>
+          <span className="ml-2">太字</span>{" "}
+        </label>
         <label className="flex items-center">
           <input
             type="checkbox"
             checked={selectedObject.style?.italic || false}
-            onChange={(e) =>
-              handleStyleChange({ italic: e.target.checked })
-            }
+            onChange={(e) => handleStyleChange({ italic: e.target.checked })}
           />
-                        <span className="ml-2">斜体</span>        </label>
+          <span className="ml-2">斜体</span>{" "}
+        </label>
         <label className="flex items-center">
           <input
             type="checkbox"
             checked={selectedObject.style?.wordWrap || false}
-            onChange={(e) =>
-              handleStyleChange({ wordWrap: e.target.checked })
-            }
+            onChange={(e) => handleStyleChange({ wordWrap: e.target.checked })}
           />
-                        <span className="ml-2">折り返し</span>        </label>
+          <span className="ml-2">折り返し</span>
+        </label>
       </div>
+
+      {selectedObject.style?.isBullet && (
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            箇条書きの数:
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={selectedObject.content.split("\n").length}
+            onChange={(e) => {
+              const newCount = parseInt(e.target.value);
+              if (isNaN(newCount) || newCount < 1) return;
+
+              const lines = selectedObject.content.split("\n");
+              let newContent = "";
+
+              if (newCount > lines.length) {
+                // Add new lines
+                newContent = lines.join("\n");
+                for (let i = lines.length; i < newCount; i++) {
+                  newContent += `\n項目${i + 1}`;
+                }
+              } else if (newCount < lines.length) {
+                // Remove lines
+                newContent = lines.slice(0, newCount).join("\n");
+              } else {
+                newContent = selectedObject.content;
+              }
+              handleContentChange("content", newContent);
+            }}
+          />
+        </div>
+      )}
     </>
   );
 };

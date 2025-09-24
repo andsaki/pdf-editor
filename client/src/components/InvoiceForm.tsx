@@ -55,19 +55,39 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     const newText = {
       id: crypto.randomUUID(),
       type: "text" as const,
-      content: "Sample Text",
+      content: "テキスト",
       x: 100,
       y: 100,
-      width: 100,
+      width: 150,
       height: 20,
       zIndex: getNewZIndex(),
+      style: { isBullet: false, lineHeight: 1.2 },
     };
     setInvoiceData((prev) => ({
       ...prev,
       layout: [...(prev.layout || []), newText],
     }));
+    setSelectedObjectId(newText.id);
   };
 
+  const addBulletObject = () => {
+    const newBullet = {
+      id: crypto.randomUUID(),
+      type: "text" as const,
+      content: "項目1\n項目2\n項目3",
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 60,
+      zIndex: getNewZIndex(),
+      style: { isBullet: true, lineHeight: 1.5 },
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: [...(prev.layout || []), newBullet],
+    }));
+    setSelectedObjectId(newBullet.id);
+  };
   const addTableObject = () => {
     const newTable = {
       id: crypto.randomUUID(),
@@ -179,13 +199,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         <div className="flex space-x-2 flex-wrap">
           <button
             onClick={addTextObject}
-            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2`}>
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2`}
+          >
             <span>テキスト追加</span>
           </button>
           <button
             onClick={addTableObject}
-            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2`}>
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2`}
+          >
             <span>テーブル追加</span>
+          </button>
+          <button
+            onClick={addBulletObject}
+            className={`flex items-center space-x-2 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline bg-gray-200 text-gray-800 mb-2`}
+          >
+            <span>箇条書き追加</span>
           </button>
           <button
             onClick={() => imageInputRef.current?.click()}

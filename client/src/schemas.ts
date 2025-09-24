@@ -31,6 +31,7 @@ export const TextItemSchema = BaseLayoutItemSchema.extend({
       wordWrap: z.boolean().optional(),
       backgroundColor: z.string().optional(),
       textShadow: z.string().optional(),
+      isBullet: z.boolean().optional(),
     })
     .optional(),
 });

@@ -13,10 +13,10 @@ import type { InvoiceData } from "../types";
 // 重要: フォントファイルを /public/fonts ディレクトリに追加してください。
 // BIZ UDPGothic は Google Fonts からダウンロードできます。
 Font.register({
-  family: 'BIZ UDPGothic',
+  family: "BIZ UDPGothic",
   fonts: [
-    { src: '/fonts/BIZUDPGothic-Regular.ttf' }, // font-style: normal, font-weight: normal
-    { src: '/fonts/BIZUDPGothic-Bold.ttf', fontWeight: 'bold' },
+    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // font-style: normal, font-weight: normal
+    { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
   ],
 });
 
@@ -38,14 +38,18 @@ const styles = StyleSheet.create({
 
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
-  variableDisplayMode: 'name' | 'example';
+  variableDisplayMode: "name" | "example";
 }
 
-const getProcessedContent = (item: any, invoiceData: InvoiceData, variableDisplayMode: 'name' | 'example') => {
+const getProcessedContent = (
+  item: any,
+  invoiceData: InvoiceData,
+  variableDisplayMode: "name" | "example"
+) => {
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
-  if (variableDisplayMode === 'name') {
+  if (variableDisplayMode === "name") {
     return content;
   }
 
@@ -65,44 +69,64 @@ const getProcessedContent = (item: any, invoiceData: InvoiceData, variableDispla
   return content;
 };
 
-export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData, variableDisplayMode }) => (
+export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
+  invoiceData,
+  variableDisplayMode,
+}) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <Text style={styles.title}>Invoice</Text>
 
-      {
-        invoiceData.layout.filter(item => item.visible !== false).sort((a, b) => a.zIndex - b.zIndex).map(item => {
-          if (item.type === 'text') {
+      {invoiceData.layout
+        .filter((item) => item.visible !== false)
+        .sort((a, b) => a.zIndex - b.zIndex)
+        .map((item) => {
+          if (item.type === "text") {
             const style: any = {
               position: "absolute",
               left: item.x,
               top: item.y,
               width: item.width,
               height: item.height,
-              color: item.style?.color || 'black',
+              color: item.style?.color || "black",
               fontSize: item.style?.fontSize || 12,
               lineHeight: item.style?.lineHeight || 1,
-              textAlign: item.style?.textAlign || 'left',
-              fontFamily: item.style?.fontFamily || 'Helvetica',
-              backgroundColor: item.style?.backgroundColor || 'transparent',
+              textAlign: item.style?.textAlign || "left",
+              fontFamily: item.style?.fontFamily || "Helvetica",
+              backgroundColor: item.style?.backgroundColor || "transparent",
             };
             if (item.style?.bold) {
-              style.fontWeight = 'bold';
+              style.fontWeight = "bold";
             }
             if (item.style?.italic) {
-              style.fontStyle = 'italic';
+              style.fontStyle = "italic";
+            }
+
+            if (item.style?.isBullet) {
+              const lines = getProcessedContent(
+                item,
+                invoiceData,
+                variableDisplayMode
+              )
+                .replace(/・/g, "")
+                .split("\n");
+
+              return (
+                <View key={item.id} style={style}>
+                  {lines.map((line, index) => (
+                    <Text key={index}>• {line}</Text>
+                  ))}
+                </View>
+              );
             }
 
             return (
-              <Text
-                key={item.id}
-                style={style}
-              >
+              <Text key={item.id} style={style}>
                 {getProcessedContent(item, invoiceData, variableDisplayMode)}
               </Text>
             );
           }
-          if (item.type === 'image') {
+          if (item.type === "image") {
             return (
               <Image
                 key={item.id}
@@ -117,23 +141,30 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({ invoiceData, v
               />
             );
           }
-          if (item.type === 'table') {
+          if (item.type === "table") {
             // PDF table rendering can be complex, for now, we just render the data as text
             return (
-              <View key={item.id} style={{ position: 'absolute', left: item.x, top: item.y }}>
+              <View
+                key={item.id}
+                style={{ position: "absolute", left: item.x, top: item.y }}
+              >
                 {item.data.map((row, rowIndex) => (
-                  <View key={rowIndex} style={{ flexDirection: 'row' }}>
+                  <View key={rowIndex} style={{ flexDirection: "row" }}>
                     {row.map((cell, cellIndex) => (
-                      <Text key={cellIndex} style={{ border: '1px solid #ccc', padding: 5 }}>{cell}</Text>
+                      <Text
+                        key={cellIndex}
+                        style={{ border: "1px solid #ccc", padding: 5 }}
+                      >
+                        {cell}
+                      </Text>
                     ))}
                   </View>
                 ))}
               </View>
-            )
+            );
           }
           return null;
-        })
-      }
+        })}
     </Page>
   </Document>
 );
