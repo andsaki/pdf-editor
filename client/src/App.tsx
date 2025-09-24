@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { InvoiceForm } from "./components/InvoiceForm";
 import { PdfPreview } from "./components/PdfPreview";
 import type { InvoiceData, LayoutItem } from "./types";
@@ -9,6 +9,8 @@ import { LayoutPalette } from "./components/LayoutPalette";
 import { LayerPalette } from "./components/LayerPalette";
 import { useHistoryState } from "./hooks/useHistoryState";
 import { useMutation, gql } from "@apollo/client";
+import { LeftToolbar } from "./components/LeftToolbar";
+import { pdfjs } from "react-pdf";
 
 const SAVE_INVOICE_MUTATION = gql`
   mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
@@ -25,45 +27,12 @@ function App() {
     canUndo,
     canRedo,
   } = useHistoryState<InvoiceData>({
-    layout: [
-      {
-        id: crypto.randomUUID(),
-        type: "text",
-        contentType: "fixed",
-        content: "Sample Text",
-        x: 100,
-        y: 100,
-        width: 100,
-        height: 20,
-        zIndex: 1,
-      },
-      {
-        id: crypto.randomUUID(),
-        type: "table",
-        x: 150,
-        y: 150,
-        width: 300,
-        height: 100,
-        data: [
-          ["Default Header 1", "Default Header 2"],
-          ["Default Cell 1", "Default Cell 2"],
-        ],
-        zIndex: 2,
-      },
-    ],
+    layout: [],
     form: {
       issue_date: new Date().toLocaleDateString(),
       due_date: new Date(
         new Date().setDate(new Date().getDate() + 30)
       ).toLocaleDateString(),
-      invoice_number: "12345",
-      company_name: "My Company",
-      company_address: "123 Main St, Anytown, USA",
-      recipient_name: "Your Company",
-      recipient_address: "456 Oak Ave, Othertown, USA",
-      subtotal: 100,
-      tax: 10,
-      total: 110,
     },
   });
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
@@ -72,7 +41,88 @@ function App() {
     "name" | "example"
   >("example");
 
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
   const [saveInvoiceMutation] = useMutation(SAVE_INVOICE_MUTATION);
+
+  const getNewZIndex = () => {
+    if (invoiceData.layout.length === 0) return 1;
+    const maxZIndex = invoiceData.layout.reduce(
+      (max, item) => Math.max(max, item.zIndex),
+      0
+    );
+    return maxZIndex + 1;
+  };
+
+  const addTextObject = () => {
+    const newText: LayoutItem = {
+      id: crypto.randomUUID(),
+      type: "text",
+      contentType: "fixed",
+      content: "テキスト",
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 20,
+      zIndex: getNewZIndex(),
+      style: { isBullet: false, lineHeight: 1.2 },
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: [...(prev.layout || []), newText],
+    }));
+    setSelectedObjectId(newText.id);
+  };
+
+  const addTableObject = () => {
+    const newTable: LayoutItem = {
+      id: crypto.randomUUID(),
+      type: "table",
+      x: 100,
+      y: 200,
+      width: 300,
+      height: 100,
+      data: [
+        ["Header 1", "Header 2"],
+        ["Cell 1", "Cell 2"],
+      ],
+      zIndex: getNewZIndex(),
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: [...(prev.layout || []), newTable],
+    }));
+  };
+
+  const addBulletObject = () => {
+    const newBullet: LayoutItem = {
+      id: crypto.randomUUID(),
+      type: "text",
+      contentType: "fixed",
+      content: "項目1\n項目2\n項目3",
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 60,
+      zIndex: getNewZIndex(),
+      style: { isBullet: true, lineHeight: 1.5 },
+    };
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: [...(prev.layout || []), newBullet],
+    }));
+    setSelectedObjectId(newBullet.id);
+  };
+
+  const deleteSelectedObject = () => {
+    if (!selectedObjectId) return;
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: prev.layout.filter((item) => item.id !== selectedObjectId),
+    }));
+    setSelectedObjectId(null);
+  };
 
   const cut = () => {
     if (!selectedObjectId) return;
@@ -91,7 +141,7 @@ function App() {
 
   const paste = () => {
     if (!clipboard) return;
-    const newObject = {
+    const newObject: LayoutItem = {
       ...clipboard,
       id: crypto.randomUUID(),
       x: clipboard.x + 10,
@@ -101,6 +151,37 @@ function App() {
       ...prev,
       layout: [...prev.layout, newObject],
     }));
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result as string;
+      if (data) {
+        const img = new Image();
+        img.onload = () => {
+          const newImage: LayoutItem = {
+            id: crypto.randomUUID(),
+            type: "image",
+            data,
+            x: 50,
+            y: 50,
+            width: img.width,
+            height: img.height,
+            zIndex: getNewZIndex(),
+          };
+          setInvoiceData((prev) => ({
+            ...prev,
+            layout: [...(prev.layout || []), newImage],
+          }));
+        };
+        img.src = data;
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const saveInvoice = async () => {
@@ -148,55 +229,91 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 py-8">
-      <header className="flex justify-between items-center mb-8 px-8">
-        <h1 className="text-4xl font-bold text-gray-900">Invoice Editor</h1>
-        <div>
-          <button
-            onClick={saveInvoice}
-            className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
-          >
-            保存
-          </button>
+    <div className="min-h-screen bg-gray-100 text-gray-800 flex flex-col">
+      <header className="flex justify-between items-center p-4 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-gray-900">Invoice Editor</h1>
+          <div className="flex items-center space-x-2 border-l border-gray-300 pl-4">
+            <button onClick={undo} disabled={!canUndo} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+              元に戻す
+            </button>
+            <button onClick={redo} disabled={!canRedo} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+              やり直し
+            </button>
+            <button onClick={cut} disabled={!selectedObjectId} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+              切り取り
+            </button>
+            <button onClick={paste} disabled={!clipboard} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200">
+              貼り付け
+            </button>
+            <button onClick={deleteSelectedObject} disabled={!selectedObjectId} className="px-3 py-1 rounded text-sm disabled:opacity-50 hover:bg-gray-200 text-red-600">
+              削除
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
           <button
             onClick={() =>
               setVariableDisplayMode((prev) =>
                 prev === "name" ? "example" : "name"
               )
             }
-            className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
+            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
           >
-            {variableDisplayMode === "name" ? "データ例表示" : "変数名表示"}
+            {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
           </button>
           <button
             onClick={openPdfInNewTab}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-4"
+            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
           >
-            新規タブで開く
+            プレビュー
+          </button>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => {}}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            キャンセル
           </button>
           <button
-            onClick={downloadPdf}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={saveInvoice}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
-            PDFダウンロード
+            保存
           </button>
         </div>
       </header>
-      <main className="grid grid-cols-4 gap-12 grid-flow-col h-[calc(100vh-120px)] px-8">
-        <div className="col-span-1">
-          <InvoiceForm
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-16 bg-white p-2 border-r border-gray-200">
+          <LeftToolbar
+            onAddText={addTextObject}
+            onAddBullet={addBulletObject}
+            onAddTable={addTableObject}
+            onAddImage={() => imageInputRef.current?.click()}
+          />
+        </aside>
+        <main className="flex-1 p-8 bg-gray-50 overflow-auto">
+          <PdfPreview
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
             selectedObjectId={selectedObjectId}
             setSelectedObjectId={setSelectedObjectId}
-            undo={undo}
-            redo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            cut={cut}
-            paste={paste}
-            clipboard={clipboard}
+            variableDisplayMode={variableDisplayMode}
           />
+        </main>
+        <aside className="w-80 bg-white p-4 border-l border-gray-200 overflow-y-auto">
+          {selectedObject ? (
+            <LayoutPalette
+              selectedObject={selectedObject}
+              setInvoiceData={setInvoiceData}
+            />
+          ) : (
+            <InvoiceForm
+              invoiceData={invoiceData}
+              setInvoiceData={setInvoiceData}
+            />
+          )}
           <div className="mt-8">
             <LayerPalette
               invoiceData={invoiceData}
@@ -205,31 +322,15 @@ function App() {
               setSelectedObjectId={setSelectedObjectId}
             />
           </div>
-          <div className="mt-8">
-            <details open>
-              <summary>State Preview</summary>
-              <StatePreview data={invoiceData} />
-            </details>
-          </div>
-        </div>
-        <div className="col-span-2">
-          <PdfPreview
-            invoiceData={invoiceData}
-            setInvoiceData={setInvoiceData}
-            selectedObjectId={selectedObjectId}
-            setSelectedObjectId={setSelectedObjectId}
-            variableDisplayMode={variableDisplayMode}
-          />
-        </div>
-        <div className="col-span-1">
-          {selectedObject && (
-            <LayoutPalette
-              selectedObject={selectedObject}
-              setInvoiceData={setInvoiceData}
-            />
-          )}
-        </div>
-      </main>
+        </aside>
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={imageInputRef}
+        onChange={handleImageUpload}
+        style={{ display: "none" }}
+      />
     </div>
   );
 }
