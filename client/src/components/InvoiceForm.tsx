@@ -52,9 +52,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   };
 
   const addTextObject = () => {
-    const newText = {
+    const newText: LayoutItem = {
       id: crypto.randomUUID(),
-      type: "text" as const,
+      type: "text",
+      contentType: "fixed",
       content: "テキスト",
       x: 100,
       y: 100,
@@ -71,9 +72,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   };
 
   const addBulletObject = () => {
-    const newBullet = {
+    const newBullet: LayoutItem = {
       id: crypto.randomUUID(),
-      type: "text" as const,
+      type: "text",
+      contentType: "fixed",
       content: "項目1\n項目2\n項目3",
       x: 100,
       y: 100,
@@ -89,9 +91,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     setSelectedObjectId(newBullet.id);
   };
   const addTableObject = () => {
-    const newTable = {
+    const newTable: LayoutItem = {
       id: crypto.randomUUID(),
-      type: "table" as const,
+      type: "table",
       x: 100,
       y: 200,
       width: 300,

@@ -450,7 +450,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             )
                               .replace(/・/g, "")
                               .split("\n")
-                              .map((line, index) => (
+                              .map((line: string, index: number) => (
                                 <li key={index}>{line || "\u00A0"}</li>
                               ))}
                           </ul>
@@ -461,7 +461,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             variableDisplayMode
                           )
                             .split("\n")
-                            .map((line, index) => (
+                            .map((line: string, index: number) => (
                               <div key={index}>{line || "\u00A0"}</div>
                             ))
                         )}
