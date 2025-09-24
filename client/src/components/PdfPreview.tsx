@@ -17,7 +17,7 @@ interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   selectedObjectId: string | null;
-  setSelectedObjectId: React.Dispatch<React.SetStateAction<string | null>>;
+  onSelectObject: (id: string | null) => void;
   variableDisplayMode: "name" | "example";
 }
 
@@ -58,7 +58,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setInvoiceData,
   selectedObjectId,
-  setSelectedObjectId,
+  onSelectObject,
   variableDisplayMode,
 }) => {
   const [pageNumber, _setPageNumber] = useState(1);
@@ -308,7 +308,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           width: pageDimensions ? pageDimensions.width * displayScale : 0,
           height: pageDimensions ? pageDimensions.height * displayScale : 0,
         }}
-        onClick={() => setSelectedObjectId(null)}
+        onClick={() => onSelectObject(null)}
       >
         <div style={{ position: "absolute", zIndex: 1 }}>
           {pdfFile && containerWidth > 0 ? (
@@ -352,7 +352,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                 onClick={(e: React.MouseEvent) => {
                   if (item.locked) return;
                   e.stopPropagation();
-                  setSelectedObjectId(item.id);
+                  onSelectObject(item.id);
                 }}
                 onDragStop={(_e, d) => {
                   if (item.locked) return;

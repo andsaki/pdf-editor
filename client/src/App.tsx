@@ -40,6 +40,7 @@ function App() {
   const [variableDisplayMode, setVariableDisplayMode] = useState<
     "name" | "example"
   >("example");
+  const [activeRightPanel, setActiveRightPanel] = useState<'properties' | 'layers'>('properties');
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +54,17 @@ function App() {
       0
     );
     return maxZIndex + 1;
+  };
+
+  const toggleLayersPanel = () => {
+    setActiveRightPanel(prev => prev === 'layers' ? 'properties' : 'layers');
+  };
+
+  const handleSelectObject = (objectId: string | null) => {
+    setSelectedObjectId(objectId);
+    if (objectId) {
+      setActiveRightPanel('properties');
+    }
   };
 
   const addTextObject = () => {
@@ -72,7 +84,7 @@ function App() {
       ...prev,
       layout: [...(prev.layout || []), newText],
     }));
-    setSelectedObjectId(newText.id);
+    handleSelectObject(newText.id);
   };
 
   const addTableObject = () => {
@@ -93,6 +105,7 @@ function App() {
       ...prev,
       layout: [...(prev.layout || []), newTable],
     }));
+    handleSelectObject(newTable.id);
   };
 
   const addBulletObject = () => {
@@ -112,7 +125,7 @@ function App() {
       ...prev,
       layout: [...(prev.layout || []), newBullet],
     }));
-    setSelectedObjectId(newBullet.id);
+    handleSelectObject(newBullet.id);
   };
 
   const deleteSelectedObject = () => {
@@ -121,7 +134,7 @@ function App() {
       ...prev,
       layout: prev.layout.filter((item) => item.id !== selectedObjectId),
     }));
-    setSelectedObjectId(null);
+    handleSelectObject(null);
   };
 
   const cut = () => {
@@ -135,7 +148,7 @@ function App() {
         ...prev,
         layout: prev.layout.filter((item) => item.id !== selectedObjectId),
       }));
-      setSelectedObjectId(null);
+      handleSelectObject(null);
     }
   };
 
@@ -151,6 +164,38 @@ function App() {
       ...prev,
       layout: [...prev.layout, newObject],
     }));
+  };
+
+  const moveLayer = (direction: "up" | "down") => {
+    if (!selectedObjectId) return;
+
+    const sortedLayout = [...invoiceData.layout].sort(
+      (a, b) => a.zIndex - b.zIndex
+    );
+    const currentIndex = sortedLayout.findIndex(
+      (item) => item.id === selectedObjectId
+    );
+
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex + 1 : currentIndex - 1;
+
+    if (targetIndex < 0 || targetIndex >= sortedLayout.length) return;
+
+    const currentItem = sortedLayout[currentIndex];
+    const targetItem = sortedLayout[targetIndex];
+
+    const newLayout = invoiceData.layout.map((item) => {
+      if (item.id === currentItem.id) {
+        return { ...item, zIndex: targetItem.zIndex };
+      }
+      if (item.id === targetItem.id) {
+        return { ...item, zIndex: currentItem.zIndex };
+      }
+      return item;
+    });
+
+    setInvoiceData((prev) => ({ ...prev, layout: newLayout }));
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,6 +229,50 @@ function App() {
     reader.readAsDataURL(file);
   };
 
+  const handlePdfUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = e.target?.result as ArrayBuffer;
+      if (data) {
+        const pdf = await pdfjs.getDocument({ data }).promise;
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          if (context) {
+            await page.render({ canvasContext: context, viewport }).promise;
+            const imageDataUrl = canvas.toDataURL("image/png");
+            const newImage: LayoutItem = {
+              id: crypto.randomUUID(),
+              type: "image" as const,
+              data: imageDataUrl,
+              x: 50,
+              y: 50 + (i - 1) * (viewport.height + 20),
+              width: viewport.width,
+              height: viewport.height,
+              zIndex: getNewZIndex(),
+            };
+            setInvoiceData((prev) => ({
+              ...prev,
+              layout: [...(prev.layout || []), newImage],
+            }));
+          }
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   const saveInvoice = async () => {
     try {
       await saveInvoiceMutation({
@@ -196,21 +285,6 @@ function App() {
       console.error("Error saving invoice:", e);
       alert("An error occurred while saving the invoice.");
     }
-  };
-
-  const downloadPdf = async () => {
-    const blob = await pdf(
-      <InvoiceDocument
-        invoiceData={invoiceData}
-        variableDisplayMode={variableDisplayMode}
-      />
-    ).toBlob();
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "invoice.pdf";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const openPdfInNewTab = async () => {
@@ -268,6 +342,12 @@ function App() {
           >
             プレビュー
           </button>
+          <button
+            onClick={() => alert("PDFトレース機能は未実装です")}
+            className="px-4 py-2 rounded text-sm font-medium border border-gray-300"
+          >
+            PDFをトレース
+          </button>
         </div>
         <div className="flex items-center space-x-4">
           <button
@@ -291,6 +371,8 @@ function App() {
             onAddBullet={addBulletObject}
             onAddTable={addTableObject}
             onAddImage={() => imageInputRef.current?.click()}
+            onAddPdf={() => pdfInputRef.current?.click()}
+            onToggleLayers={toggleLayersPanel}
           />
         </aside>
         <main className="flex-1 p-8 bg-gray-50 overflow-auto">
@@ -298,30 +380,39 @@ function App() {
             invoiceData={invoiceData}
             setInvoiceData={setInvoiceData}
             selectedObjectId={selectedObjectId}
-            setSelectedObjectId={setSelectedObjectId}
+            onSelectObject={handleSelectObject}
             variableDisplayMode={variableDisplayMode}
           />
         </main>
         <aside className="w-80 bg-white p-4 border-l border-gray-200 overflow-y-auto">
-          {selectedObject ? (
-            <LayoutPalette
-              selectedObject={selectedObject}
-              setInvoiceData={setInvoiceData}
-            />
-          ) : (
-            <InvoiceForm
-              invoiceData={invoiceData}
-              setInvoiceData={setInvoiceData}
-            />
-          )}
-          <div className="mt-8">
-            <LayerPalette
-              invoiceData={invoiceData}
-              setInvoiceData={setInvoiceData}
-              selectedObjectId={selectedObjectId}
-              setSelectedObjectId={setSelectedObjectId}
-            />
-          </div>
+          {(() => {
+            if (activeRightPanel === 'layers') {
+              return (
+                <LayerPalette
+                  invoiceData={invoiceData}
+                  setInvoiceData={setInvoiceData}
+                  selectedObjectId={selectedObjectId}
+                  onSelectObject={handleSelectObject}
+                />
+              );
+            }
+            if (selectedObject) {
+              return (
+                <LayoutPalette
+                  selectedObject={selectedObject}
+                  setInvoiceData={setInvoiceData}
+                  onMoveLayer={moveLayer}
+                  onDelete={deleteSelectedObject}
+                />
+              );
+            }
+            return (
+              <InvoiceForm
+                invoiceData={invoiceData}
+                setInvoiceData={setInvoiceData}
+              />
+            );
+          })()}
         </aside>
       </div>
       <input
@@ -329,6 +420,13 @@ function App() {
         accept="image/*"
         ref={imageInputRef}
         onChange={handleImageUpload}
+        style={{ display: "none" }}
+      />
+      <input
+        type="file"
+        accept="application/pdf"
+        ref={pdfInputRef}
+        onChange={handlePdfUpload}
         style={{ display: "none" }}
       />
     </div>

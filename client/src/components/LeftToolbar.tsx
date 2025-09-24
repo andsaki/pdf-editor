@@ -5,6 +5,8 @@ interface LeftToolbarProps {
   onAddTable: () => void;
   onAddImage: () => void;
   onAddBullet: () => void;
+  onAddPdf: () => void;
+  onToggleLayers: () => void;
 }
 
 export const LeftToolbar: React.FC<LeftToolbarProps> = ({
@@ -12,6 +14,8 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onAddTable,
   onAddImage,
   onAddBullet,
+  onAddPdf,
+  onToggleLayers,
 }) => {
   const buttonStyle = "w-full text-sm py-2 px-1 rounded hover:bg-gray-200 focus:outline-none focus:shadow-outline text-gray-700";
 
@@ -28,6 +32,15 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
       </button>
       <button onClick={onAddImage} title="画像追加" className={buttonStyle}>
         画像
+      </button>
+      <button onClick={onAddPdf} title="PDF追加" className={buttonStyle}>
+        PDF
+      </button>
+
+      <div className="w-full border-t border-gray-300 my-2"></div>
+
+      <button onClick={onToggleLayers} title="レイヤー表示切替" className={buttonStyle}>
+        レイヤー
       </button>
     </div>
   );
