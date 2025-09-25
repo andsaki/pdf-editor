@@ -63,6 +63,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 }) => {
   const [pageNumber, _setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
   const [pageDimensions, setPageDimensions] = useState<{
     width: number;
     height: number;
@@ -155,9 +156,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
     const resizeObserver = new ResizeObserver((entries) => {
       if (entries[0]) {
-        const newWidth = entries[0].contentRect.width;
-        if (newWidth > 0) {
-          setContainerWidth(newWidth);
+        const { width, height } = entries[0].contentRect;
+        if (width > 0) {
+          setContainerWidth(width);
+        }
+        if (height > 0) {
+          setContainerHeight(height);
         }
       }
     });
@@ -268,10 +272,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     });
   };
 
-  const displayScale =
-    pageDimensions && containerWidth > 0
-      ? containerWidth / pageDimensions.width
-      : 1;
+  const displayScale = useMemo(() => {
+    if (!pageDimensions || containerWidth === 0 || containerHeight === 0) {
+      return 1;
+    }
+
+    const scaleX = containerWidth / pageDimensions.width;
+    const scaleY = containerHeight / pageDimensions.height;
+
+    return Math.min(scaleX, scaleY);
+  }, [pageDimensions, containerWidth, containerHeight]);
 
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
@@ -311,14 +321,17 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         onClick={() => onSelectObject(null)}
       >
         <div style={{ position: "absolute", zIndex: 1 }}>
-          {pdfFile && containerWidth > 0 ? (
+          {pdfFile && containerWidth > 0 && pageDimensions ? (
             <Document
               file={pdfFile}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading="PDFを読み込んでいます..."
             >
-              <Page pageNumber={pageNumber} width={containerWidth} />
+              <Page
+                pageNumber={pageNumber}
+                width={pageDimensions.width * displayScale}
+              />
             </Document>
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -355,7 +368,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   onSelectObject(item.id);
                 }}
                 onDragStop={(_e, d) => {
-                  if (item.locked) return;
+                  if (item.locked) return; // useCallbackでメモ化可能
                   updateLayoutItem(item.id, (item) => ({
                     ...item,
                     x: d.x / displayScale,
@@ -363,7 +376,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }));
                 }}
                 onResizeStop={(_e, _direction, ref, _delta, position) => {
-                  if (item.locked) return;
+                  if (item.locked) return; // useCallbackでメモ化可能
                   updateLayoutItem(item.id, (item) => ({
                     ...item,
                     x: position.x / displayScale,
@@ -434,8 +447,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                       className="cursor-text"
                       onDoubleClick={() => setEditingText(item.id)}
                     >
-                      <div
-                      >
+                      <>
                         {item.style?.isBullet ? (
                           <ul style={{ margin: 0, paddingLeft: "1.5em" }}>
                             {getProcessedContent(
@@ -460,7 +472,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                               <div key={index}>{line || "\u00A0"}</div>
                             ))
                         )}
-                      </div>
+                      </>
                     </span>
                   ))}
                 {item.type === "image" && (
@@ -475,85 +487,88 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   />
                 )}
                 {item.type === "table" && (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: item.style?.backgroundColor || "transparent",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <table
+                  <>
+                    <div
                       style={{
                         width: "100%",
                         height: "100%",
-                        borderCollapse: "collapse",
+                        backgroundColor:
+                          item.style?.backgroundColor || "transparent",
+                        overflow: "hidden",
                       }}
                     >
-                      <tbody>
-                        {item.data.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {row.map((cell, cellIndex) => {
-                              const isEditing =
-                                editingCell?.itemId === item.id &&
-                                editingCell.rowIndex === rowIndex &&
-                                editingCell.cellIndex === cellIndex;
-                              const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
-                              return (
-                                <td
-                                  key={cellIndex}
-                                  style={{
-                                    border: "1px solid #ccc",
-                                    padding: "5px",
-                                    fontSize: `${12 * displayScale}px`,
-                                  }}
-                                  onDoubleClick={() => {
-                                    setEditingCell({
-                                      itemId: item.id,
-                                      rowIndex,
-                                      cellIndex,
-                                    });
-                                  }}
-                                >
-                                  {isEditing ? (
-                                    <div>
-                                      <input
-                                        type="text"
-                                        value={cell}
-                                        onChange={(e) =>
-                                          handleTableCellChange(
-                                            item.id,
-                                            rowIndex,
-                                            cellIndex,
-                                            e.target.value
-                                          )
-                                        }
-                                        onBlur={() => setEditingCell(null)}
-                                        autoFocus
-                                        style={{
-                                          width: "100%",
-                                          border: "none",
-                                          background: "transparent",
-                                          outline: "none",
-                                        }}
-                                      />
-                                      {validationErrors[errorKey] && (
-                                        <span className="text-red-500 text-xs">
-                                          {validationErrors[errorKey]}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    cell
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      <table
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderCollapse: "collapse",
+                        }}
+                      >
+                        <tbody>
+                          {item.data.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {row.map((cell, cellIndex) => {
+                                const isEditing =
+                                  editingCell?.itemId === item.id &&
+                                  editingCell.rowIndex === rowIndex &&
+                                  editingCell.cellIndex === cellIndex;
+                                const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
+                                return (
+                                  <td
+                                    key={cellIndex}
+                                    style={{
+                                      border: "1px solid #ccc",
+                                      padding: "5px",
+                                      fontSize: `${12 * displayScale}px`,
+                                    }}
+                                    onDoubleClick={() => {
+                                      setEditingCell({
+                                        itemId: item.id,
+                                        rowIndex,
+                                        cellIndex,
+                                      });
+                                    }}
+                                  >
+                                    {isEditing ? (
+                                      <div>
+                                        <input
+                                          type="text"
+                                          value={cell}
+                                          onChange={(e) =>
+                                            handleTableCellChange(
+                                              item.id,
+                                              rowIndex,
+                                              cellIndex,
+                                              e.target.value
+                                            )
+                                          }
+                                          onBlur={() => setEditingCell(null)}
+                                          autoFocus
+                                          style={{
+                                            width: "100%",
+                                            border: "none",
+                                            background: "transparent",
+                                            outline: "none",
+                                          }}
+                                        />
+                                        {validationErrors[errorKey] && (
+                                          <span className="text-red-500 text-xs">
+                                            {validationErrors[errorKey]}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      cell
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </Rnd>
             ))}
