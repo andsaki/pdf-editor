@@ -62,7 +62,9 @@ function App() {
   const [variableDisplayMode, setVariableDisplayMode] = useState<
     "name" | "example"
   >("example");
-  const [activeRightPanel, setActiveRightPanel] = useState<'properties' | 'layers'>('properties');
+  const [activeRightPanel, setActiveRightPanel] = useState<
+    "properties" | "layers"
+  >("properties");
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -79,13 +81,15 @@ function App() {
   };
 
   const toggleLayersPanel = () => {
-    setActiveRightPanel(prev => prev === 'layers' ? 'properties' : 'layers');
+    setActiveRightPanel((prev) =>
+      prev === "layers" ? "properties" : "layers"
+    );
   };
 
   const handleSelectObject = (objectId: string | null) => {
     setSelectedObjectId(objectId);
     if (objectId) {
-      setActiveRightPanel('properties');
+      setActiveRightPanel("properties");
     }
   };
 
@@ -200,7 +204,8 @@ function App() {
 
     if (currentIndex === -1) return;
 
-    const targetIndex = direction === "up" ? currentIndex + 1 : currentIndex - 1;
+    const targetIndex =
+      direction === "up" ? currentIndex + 1 : currentIndex - 1;
 
     if (targetIndex < 0 || targetIndex >= sortedLayout.length) return;
 
@@ -340,11 +345,7 @@ function App() {
               やり直し
             </Button>
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <Button
-              onClick={cut}
-              disabled={!selectedObjectId}
-              size="small"
-            >
+            <Button onClick={cut} disabled={!selectedObjectId} size="small">
               切り取り
             </Button>
             <Button onClick={paste} disabled={!clipboard} size="small">
@@ -368,9 +369,7 @@ function App() {
                 )
               }
             >
-              {variableDisplayMode === "name"
-                ? "データ例で表示"
-                : "変数で表示"}
+              {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
             </Button>
             <Button
               variant="outlined"
@@ -419,9 +418,10 @@ function App() {
             component="main"
             sx={{
               flex: 1,
-              p: 3,
               bgcolor: "grey.50",
-              overflow: "auto",
+              display: "flex", // Flexコンテナとして設定
+              flexDirection: "column", // 子要素を縦方向に配置
+              // height: "100%" と overflow: "auto" はPdfPreview側で管理するため削除
             }}
           >
             <PdfPreview
@@ -444,7 +444,7 @@ function App() {
             }}
           >
             {(() => {
-              if (activeRightPanel === 'layers') {
+              if (activeRightPanel === "layers") {
                 return (
                   <LayerPalette
                     invoiceData={invoiceData}
@@ -493,4 +493,3 @@ function App() {
 }
 
 export default App;
-
