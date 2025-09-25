@@ -435,11 +435,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                       onDoubleClick={() => setEditingText(item.id)}
                     >
                       <div
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          height: "100%",
-                        }}
                       >
                         {item.style?.isBullet ? (
                           <ul style={{ margin: 0, paddingLeft: "1.5em" }}>
