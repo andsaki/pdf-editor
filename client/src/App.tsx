@@ -419,9 +419,10 @@ function App() {
             sx={{
               flex: 1,
               bgcolor: "grey.50",
-              display: "flex", // Flexコンテナとして設定
-              flexDirection: "column", // 子要素を縦方向に配置
-              // height: "100%" と overflow: "auto" はPdfPreview側で管理するため削除
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              p: 3,
             }}
           >
             <PdfPreview
