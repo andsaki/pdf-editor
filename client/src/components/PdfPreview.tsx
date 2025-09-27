@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument, StandardFonts, ColorTypes } from "pdf-lib";
-import type { InvoiceData, LayoutItem } from "../types";
+import type { InvoiceData, LayoutItem, ShapeItem } from "../types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 
@@ -34,13 +34,13 @@ const getProcessedContent = (
   }
 
   if (contentType === "labeled-variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    const variableName = content.match(/{{(.*?)}}/)?. [1];
     if (variableName && variableName in form) {
       // @ts-ignore
       return `${label}${form[variableName]}`;
     }
   } else if (contentType === "variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    const variableName = content.match(/{{(.*?)}}/)?. [1];
     if (variableName && variableName in form) {
       // @ts-ignore
       return form[variableName];
@@ -80,8 +80,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const [validationErrors, setValidationErrors] = useState<any>({});
 
-  const [pdfBytesForDisplay, setPdfBytesForDisplay] =
-    useState<Uint8Array | null>(null);
+  const [pdfBytesForDisplay,
+    setPdfBytesForDisplay
+  ] = useState<Uint8Array | null>(null);
 
   useEffect(() => {
     const initializePageDimensions = async () => {
@@ -343,235 +344,262 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         {pdfFile &&
           invoiceData.layout
             .filter((item) => item.visible !== false)
-            .map((item) => (
-              <Rnd
-                key={item.id}
-                className="cursor-grab"
-                style={{
-                  border:
-                    selectedObjectId === item.id
-                      ? "1px solid blue"
-                      : "1px dashed transparent",
-                  zIndex: item.zIndex,
-                }}
-                size={{
-                  width: item.width * displayScale,
-                  height: item.height * displayScale,
-                }}
-                position={{
-                  x: item.x * displayScale,
-                  y: item.y * displayScale,
-                }}
-                onClick={(e: React.MouseEvent) => {
-                  if (item.locked) return;
-                  e.stopPropagation();
-                  onSelectObject(item.id);
-                }}
-                onDragStop={(_e, d) => {
-                  if (item.locked) return; // useCallbackでメモ化可能
-                  updateLayoutItem(item.id, (item) => ({
-                    ...item,
-                    x: d.x / displayScale,
-                    y: d.y / displayScale,
-                  }));
-                }}
-                onResizeStop={(_e, _direction, ref, _delta, position) => {
-                  if (item.locked) return; // useCallbackでメモ化可能
-                  updateLayoutItem(item.id, (item) => ({
-                    ...item,
-                    x: position.x / displayScale,
-                    y: position.y / displayScale,
-                    width: parseFloat(ref.style.width) / displayScale,
-                    height: parseFloat(ref.style.height) / displayScale,
-                  }));
-                }}
-                disableDragging={item.locked}
-                enableResizing={!item.locked}
-              >
-                {item.type === "text" &&
-                  (editingText === item.id ? (
-                    <div>
-                      <input
-                        type="text"
-                        value={item.content}
-                        onChange={(e) =>
-                          handleTextChange(item.id, e.target.value)
-                        }
-                        onBlur={() => setEditingText(null)}
-                        autoFocus
+            .map((item) => {
+              const isShape = item.type === "shape";
+              const shapeType = isShape ? (item as ShapeItem).shapeType : null;
+
+              const enableResizing = item.locked
+                ? false
+                : isShape
+                ? {
+                    top: shapeType !== "h-line",
+                    right: shapeType !== "v-line",
+                    bottom: shapeType !== "h-line",
+                    left: shapeType !== "v-line",
+                    topRight: shapeType === "rect",
+                    bottomRight: shapeType === "rect",
+                    bottomLeft: shapeType === "rect",
+                    topLeft: shapeType === "rect",
+                  }
+                : true;
+
+              return (
+                <Rnd
+                  key={item.id}
+                  className="cursor-grab"
+                  style={{
+                    border:
+                      selectedObjectId === item.id
+                        ? "1px solid blue"
+                        : "1px dashed transparent",
+                    zIndex: item.zIndex,
+                  }}
+                  size={{
+                    width: item.width * displayScale,
+                    height: item.height * displayScale,
+                  }}
+                  position={{
+                    x: item.x * displayScale,
+                    y: item.y * displayScale,
+                  }}
+                  onClick={(e: React.MouseEvent) => {
+                    if (item.locked) return;
+                    e.stopPropagation();
+                    onSelectObject(item.id);
+                  }}
+                  onDragStop={(_e, d) => {
+                    if (item.locked) return; // useCallbackでメモ化可能
+                    updateLayoutItem(item.id, (item) => ({
+                      ...item,
+                      x: d.x / displayScale,
+                      y: d.y / displayScale,
+                    }));
+                  }}
+                  onResizeStop={(_e, _direction, ref, _delta, position) => {
+                    if (item.locked) return; // useCallbackでメモ化可能
+                    updateLayoutItem(item.id, (item) => ({
+                      ...item,
+                      x: position.x / displayScale,
+                      y: position.y / displayScale,
+                      width: parseFloat(ref.style.width) / displayScale,
+                      height: parseFloat(ref.style.height) / displayScale,
+                    }));
+                  }}
+                  disableDragging={item.locked}
+                  enableResizing={enableResizing}
+                >
+                  {item.type === "text" &&
+                    (editingText === item.id ? (
+                      <div>
+                        <input
+                          type="text"
+                          value={item.content}
+                          onChange={(e) =>
+                            handleTextChange(item.id, e.target.value)
+                          }
+                          onBlur={() => setEditingText(null)}
+                          autoFocus
+                          style={{
+                            background: "rgba(255, 255, 255, 0.8)",
+                            color: "black",
+                            border: "none",
+                            padding: 0,
+                            fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                            fontFamily: item.style?.fontFamily || "Helvetica",
+                          }}
+                          className="cursor-text"
+                        />
+                        {validationErrors[item.id] && (
+                          <span style={{ color: "red", fontSize: "10px" }}>
+                            {validationErrors[item.id]}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span
                         style={{
-                          background: "rgba(255, 255, 255, 0.8)",
-                          color: "black",
-                          border: "none",
-                          padding: 0,
-                          fontSize: `${
-                            (item.style?.fontSize || 16) * displayScale
-                          }px`,
+                          color: item.style?.color || "black",
+                          fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                          fontWeight: item.style?.bold ? "bold" : "normal",
+                          fontStyle: item.style?.italic ? "italic" : "normal",
+                          textAlign: item.style?.textAlign || "left",
+                          lineHeight: item.style?.lineHeight || 1,
+                          whiteSpace: item.style?.wordWrap
+                            ? "pre-wrap"
+                            : "nowrap",
+                          display: "flex",
+                          alignItems:
+                            item.style?.verticalAlign === "center"
+                              ? "center"
+                              : item.style?.verticalAlign === "bottom"
+                              ? "flex-end"
+                              : "flex-start",
+                          height: "100%",
                           fontFamily: item.style?.fontFamily || "Helvetica",
+                          backgroundColor:
+                            item.style?.backgroundColor || "transparent",
+                          textShadow: item.style?.textShadow || "none",
                         }}
                         className="cursor-text"
-                      />
-                      {validationErrors[item.id] && (
-                        <span style={{ color: "red", fontSize: "10px" }}>
-                          {validationErrors[item.id]}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span
-                      style={{
-                        color: item.style?.color || "black",
-                        fontSize: `${
-                          (item.style?.fontSize || 16) * displayScale
-                        }px`,
-                        fontWeight: item.style?.bold ? "bold" : "normal",
-                        fontStyle: item.style?.italic ? "italic" : "normal",
-                        textAlign: item.style?.textAlign || "left",
-                        lineHeight: item.style?.lineHeight || 1,
-                        whiteSpace: item.style?.wordWrap
-                          ? "pre-wrap"
-                          : "nowrap",
-                        display: "flex",
-                        alignItems:
-                          item.style?.verticalAlign === "center"
-                            ? "center"
-                            : item.style?.verticalAlign === "bottom"
-                            ? "flex-end"
-                            : "flex-start",
-                        height: "100%",
-                        fontFamily: item.style?.fontFamily || "Helvetica",
-                        backgroundColor:
-                          item.style?.backgroundColor || "transparent",
-                        textShadow: item.style?.textShadow || "none",
-                      }}
-                      className="cursor-text"
-                      onDoubleClick={() => setEditingText(item.id)}
-                    >
-                      <>
-                        {item.style?.isBullet ? (
-                          <ul style={{ margin: 0, paddingLeft: "1.5em" }}>
-                            {getProcessedContent(
+                        onDoubleClick={() => setEditingText(item.id)}
+                      >
+                        <>
+                          {item.style?.isBullet ? (
+                            <ul style={{ margin: 0, paddingLeft: "1.5em" }}>
+                              {getProcessedContent(
+                                item,
+                                invoiceData,
+                                variableDisplayMode
+                              )
+                                .replace(/・/g, "")
+                                .split("\n")
+                                .map((line: string, index: number) => (
+                                  <li key={index}>{line || "\u00A0"}</li>
+                                ))}
+                            </ul>
+                          ) : (
+                            getProcessedContent(
                               item,
                               invoiceData,
                               variableDisplayMode
                             )
-                              .replace(/・/g, "")
                               .split("\n")
                               .map((line: string, index: number) => (
-                                <li key={index}>{line || "\u00A0"}</li>
-                              ))}
-                          </ul>
-                        ) : (
-                          getProcessedContent(
-                            item,
-                            invoiceData,
-                            variableDisplayMode
-                          )
-                            .split("\n")
-                            .map((line: string, index: number) => (
-                              <div key={index}>{line || "\u00A0"}</div>
-                            ))
-                        )}
-                      </>
-                    </span>
-                  ))}
-                {item.type === "image" && (
-                  <img
-                    src={item.data}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      pointerEvents: "none",
-                    }}
-                    alt={`invoice-image`}
-                  />
-                )}
-                {item.type === "table" && (
-                  <>
+                                <div key={index}>{line || "\u00A0"}</div>
+                              ))
+                          )}
+                        </>
+                      </span>
+                    ))}
+                  {item.type === "image" && (
+                    <img
+                      src={item.data}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
+                      }}
+                      alt={`invoice-image`}
+                    />
+                  )}
+                  {item.type === "table" && (
+                    <>
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor:
+                            item.style?.backgroundColor || "transparent",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <table
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderCollapse: "collapse",
+                          }}
+                        >
+                          <tbody>
+                            {item.data.map((row, rowIndex) => (
+                              <tr key={rowIndex}>
+                                {row.map((cell, cellIndex) => {
+                                  const isEditing = 
+                                    editingCell?.itemId === item.id &&
+                                    editingCell.rowIndex === rowIndex &&
+                                    editingCell.cellIndex === cellIndex;
+                                  const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
+                                  return (
+                                    <td
+                                      key={cellIndex}
+                                      style={{
+                                        border: "1px solid #ccc",
+                                        padding: "5px",
+                                        fontSize: `${12 * displayScale}px`,
+                                      }}
+                                      onDoubleClick={() => {
+                                        setEditingCell({
+                                          itemId: item.id,
+                                          rowIndex,
+                                          cellIndex,
+                                        });
+                                      }}
+                                    >
+                                      {isEditing ? (
+                                        <div>
+                                          <input
+                                            type="text"
+                                            value={cell}
+                                            onChange={(e) =>
+                                              handleTableCellChange(
+                                                item.id,
+                                                rowIndex,
+                                                cellIndex,
+                                                e.target.value
+                                              )
+                                            }
+                                            onBlur={() => setEditingCell(null)}
+                                            autoFocus
+                                            style={{
+                                              width: "100%",
+                                              border: "none",
+                                              background: "transparent",
+                                              outline: "none",
+                                            }}
+                                          />
+                                          {validationErrors[errorKey] && (
+                                            <span className="text-red-500 text-xs">
+                                              {validationErrors[errorKey]}
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        cell
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                  {item.type === "shape" && (
                     <div
                       style={{
                         width: "100%",
                         height: "100%",
                         backgroundColor:
-                          item.style?.backgroundColor || "transparent",
-                        overflow: "hidden",
+                          (item as ShapeItem).style?.backgroundColor ||
+                          "transparent",
                       }}
-                    >
-                      <table
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          borderCollapse: "collapse",
-                        }}
-                      >
-                        <tbody>
-                          {item.data.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                              {row.map((cell, cellIndex) => {
-                                const isEditing =
-                                  editingCell?.itemId === item.id &&
-                                  editingCell.rowIndex === rowIndex &&
-                                  editingCell.cellIndex === cellIndex;
-                                const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
-                                return (
-                                  <td
-                                    key={cellIndex}
-                                    style={{
-                                      border: "1px solid #ccc",
-                                      padding: "5px",
-                                      fontSize: `${12 * displayScale}px`,
-                                    }}
-                                    onDoubleClick={() => {
-                                      setEditingCell({
-                                        itemId: item.id,
-                                        rowIndex,
-                                        cellIndex,
-                                      });
-                                    }}
-                                  >
-                                    {isEditing ? (
-                                      <div>
-                                        <input
-                                          type="text"
-                                          value={cell}
-                                          onChange={(e) =>
-                                            handleTableCellChange(
-                                              item.id,
-                                              rowIndex,
-                                              cellIndex,
-                                              e.target.value
-                                            )
-                                          }
-                                          onBlur={() => setEditingCell(null)}
-                                          autoFocus
-                                          style={{
-                                            width: "100%",
-                                            border: "none",
-                                            background: "transparent",
-                                            outline: "none",
-                                          }}
-                                        />
-                                        {validationErrors[errorKey] && (
-                                          <span className="text-red-500 text-xs">
-                                            {validationErrors[errorKey]}
-                                          </span>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      cell
-                                    )}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </Rnd>
-            ))}
+                    />
+                  )}
+                </Rnd>
+              );
+            })}
       </div>
     </div>
   );

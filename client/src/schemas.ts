@@ -51,10 +51,21 @@ export const TableItemSchema = BaseLayoutItemSchema.extend({
     .optional(),
 });
 
+export const ShapeItemSchema = BaseLayoutItemSchema.extend({
+  type: z.literal('shape'),
+  shapeType: z.enum(['rect', 'h-line', 'v-line']),
+  style: z
+    .object({
+      backgroundColor: z.string().optional(),
+    })
+    .optional(),
+});
+
 export const LayoutItemSchema = z.discriminatedUnion("type", [
   TextItemSchema,
   ImageItemSchema,
   TableItemSchema,
+  ShapeItemSchema,
 ]);
 
 export const InvoiceDataSchema = z.object({

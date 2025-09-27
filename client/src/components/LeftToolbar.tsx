@@ -10,6 +10,7 @@ import {
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TableChartIcon from "@mui/icons-material/TableChart";
+import CategoryIcon from "@mui/icons-material/Category";
 import ImageIcon from "@mui/icons-material/Image";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import LayersIcon from "@mui/icons-material/Layers";
@@ -17,6 +18,7 @@ import LayersIcon from "@mui/icons-material/Layers";
 interface LeftToolbarProps {
   onAddText: () => void;
   onAddTable: () => void;
+  onAddShape: () => void;
   onAddImage: () => void;
   onAddBullet: () => void;
   onAddPdf: () => void;
@@ -26,6 +28,7 @@ interface LeftToolbarProps {
 export const LeftToolbar: React.FC<LeftToolbarProps> = ({
   onAddText,
   onAddTable,
+  onAddShape,
   onAddImage,
   onAddBullet,
   onAddPdf,
@@ -59,6 +62,13 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
           <Tooltip title="テーブル追加" placement="right">
             <IconButton onClick={onAddTable}>
               <TableChartIcon />
+            </IconButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem sx={{ justifyContent: "center" }}>
+          <Tooltip title="図形追加" placement="right">
+            <IconButton onClick={onAddShape}>
+              <CategoryIcon />
             </IconButton>
           </Tooltip>
         </ListItem>

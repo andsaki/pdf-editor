@@ -22,6 +22,7 @@ import { useHistoryState } from "./hooks/useHistoryState";
 import { useMutation, gql } from "@apollo/client";
 import { LeftToolbar } from "./components/LeftToolbar";
 import { pdfjs } from "react-pdf";
+import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
 
 const SAVE_INVOICE_MUTATION = gql`
   mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
@@ -65,6 +66,9 @@ function App() {
   const [activeRightPanel, setActiveRightPanel] = useState<
     "properties" | "layers"
   >("properties");
+  const [activeCreationPalette, setActiveCreationPalette] = useState<
+    "shape" | null
+  >(null);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -152,6 +156,48 @@ function App() {
       layout: [...(prev.layout || []), newBullet],
     }));
     handleSelectObject(newBullet.id);
+  };
+
+  const addShapeObject = (shapeType: "rect" | "h-line" | "v-line") => {
+    const baseShape = {
+      id: crypto.randomUUID(),
+      type: "shape" as const,
+      shapeType: shapeType,
+      x: 100,
+      y: 100,
+      zIndex: getNewZIndex(),
+    };
+
+    let newShape: LayoutItem;
+    if (shapeType === "h-line") {
+      newShape = {
+        ...baseShape,
+        width: 200,
+        height: 2,
+        style: { backgroundColor: "#000000" },
+      };
+    } else if (shapeType === "v-line") {
+      newShape = {
+        ...baseShape,
+        width: 2,
+        height: 100,
+        style: { backgroundColor: "#000000" },
+      };
+    } else { // rect
+      newShape = {
+        ...baseShape,
+        width: 150,
+        height: 100,
+        style: { backgroundColor: "#cccccc" },
+      };
+    }
+
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: [...(prev.layout || []), newShape],
+    }));
+    handleSelectObject(newShape.id);
+    setActiveCreationPalette(null);
   };
 
   const deleteSelectedObject = () => {
@@ -396,23 +442,41 @@ function App() {
         </AppBar>
         <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
           <Box
-            component="aside"
             sx={{
-              width: 64,
-              bgcolor: "background.paper",
-              p: 1,
-              borderRight: "1px solid",
-              borderColor: "divider",
+              position: "relative",
+              display: "flex",
             }}
           >
-            <LeftToolbar
-              onAddText={addTextObject}
-              onAddBullet={addBulletObject}
-              onAddTable={addTableObject}
-              onAddImage={() => imageInputRef.current?.click()}
-              onAddPdf={() => pdfInputRef.current?.click()}
-              onToggleLayers={toggleLayersPanel}
-            />
+            <Box
+              component="aside"
+              sx={{
+                width: 64,
+                bgcolor: "background.paper",
+                p: 1,
+                borderRight: "1px solid",
+                borderColor: "divider",
+                height: "100%",
+              }}
+            >
+              <LeftToolbar
+                onAddText={addTextObject}
+                onAddBullet={addBulletObject}
+                onAddTable={addTableObject}
+                onAddShape={() =>
+                  setActiveCreationPalette((prev) =>
+                    prev === "shape" ? null : "shape"
+                  )
+                }
+                onAddImage={() => imageInputRef.current?.click()}
+                onAddPdf={() => pdfInputRef.current?.click()}
+                onToggleLayers={toggleLayersPanel}
+              />
+            </Box>
+            {activeCreationPalette === "shape" && (
+              <Box sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
+                <ShapeCreationPalette onAddShape={addShapeObject} />
+              </Box>
+            )}
           </Box>
           <Box
             component="main"

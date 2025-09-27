@@ -2,6 +2,7 @@ import React from "react";
 import type { InvoiceData, LayoutItem } from "../types";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
+import { ShapeObjectPalette } from "./ShapeObjectPalette";
 import {
   Box,
   Typography,
@@ -104,6 +105,13 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
 
       {selectedObject.type === "table" && (
         <TableObjectPalette
+          selectedObject={selectedObject}
+          setInvoiceData={setInvoiceData}
+        />
+      )}
+
+      {selectedObject.type === "shape" && (
+        <ShapeObjectPalette
           selectedObject={selectedObject}
           setInvoiceData={setInvoiceData}
         />
