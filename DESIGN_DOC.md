@@ -346,6 +346,14 @@ type Query {
   - **フォントの最適化:** パフォーマンスを向上させるため、フォントは一度だけフェッチおよび埋め込みされ、`fontCache` (Map) にキャッシュされます。同じフォントが再度要求された場合は、キャッシュから返されます。
   - 生成されたバイナリデータは `react-pdf` に渡され、Canvasとしてプレビュー表示されます。これにより、高速な再描画が可能になります。
 
+```mermaid
+graph TD
+    A[User Edits Invoice] --> B[Invoice Data (State)]
+    B --> C[PdfPreview Component]
+    C -- Extracts Image Data --> D[pdf-lib: Manipulate PDF Data]
+    D -- Outputs PDF Bytes --> E[react-pdf: Display PDF]
+    E -- Displays PDF --> C
+```
 - **ダウンロード (`InvoiceDocument.tsx`):**
   - `@react-pdf/renderer` を使用します。このライブラリは、Reactコンポーネントの宣言的な構文でPDFドキュメントを定義できるため、最終的な出力用のレイアウトを構築するのに適しています。
   - `InvoiceDocument` コンポーネントは、`invoiceData.layout` 配列をマップし、各レイアウトオブジェクトを対応するPDF要素（`<Text>`, `<Image>`, `<View>`など）に変換します。
