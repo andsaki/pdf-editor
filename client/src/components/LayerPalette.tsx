@@ -14,12 +14,15 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Lock from "@mui/icons-material/Lock";
 import LockOpen from "@mui/icons-material/LockOpen";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
 
 interface LayerPaletteProps {
   invoiceData: InvoiceData;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
+  onMoveLayer: (direction: "up" | "down") => void;
 }
 
 export const LayerPalette: React.FC<LayerPaletteProps> = ({
@@ -27,6 +30,7 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
   setInvoiceData,
   selectedObjectId,
   onSelectObject,
+  onMoveLayer,
 }) => {
   const sortedLayout = [...invoiceData.layout].sort(
     (a, b) => b.zIndex - a.zIndex
@@ -54,6 +58,26 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
             disablePadding
             secondaryAction={
               <>
+                <Tooltip title="上に移動">
+                  <IconButton
+                    edge="end"
+                    aria-label="move up"
+                    onClick={() => onMoveLayer("up")}
+                    disabled={selectedObjectId !== item.id}
+                  >
+                    <ArrowUpward />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="下に移動">
+                  <IconButton
+                    edge="end"
+                    aria-label="move down"
+                    onClick={() => onMoveLayer("down")}
+                    disabled={selectedObjectId !== item.id}
+                  >
+                    <ArrowDownward />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={item.visible !== false ? "非表示" : "表示"}>
                   <IconButton
                     edge="end"

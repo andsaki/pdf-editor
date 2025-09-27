@@ -452,6 +452,7 @@ function App() {
                     setInvoiceData={setInvoiceData}
                     selectedObjectId={selectedObjectId}
                     onSelectObject={handleSelectObject}
+                    onMoveLayer={moveLayer}
                   />
                 );
               }
