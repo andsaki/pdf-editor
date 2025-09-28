@@ -37,14 +37,12 @@ const getProcessedContent = (
   if (contentType === "labeled-variable") {
     const variableName = content.match(/{{(.*?)}}/)?. [1];
     if (variableName && variableName in form) {
-      // @ts-ignore
-      return `${label}${form[variableName]}`;
+      return `${label}${(form as { [key: string]: any })[variableName]}`;
     }
   } else if (contentType === "variable") {
     const variableName = content.match(/{{(.*?)}}/)?. [1];
     if (variableName && variableName in form) {
-      // @ts-ignore
-      return label;
+      return `${label}: ${(form as { [key: string]: any })[variableName]}`;
     }
   }
   return content;
