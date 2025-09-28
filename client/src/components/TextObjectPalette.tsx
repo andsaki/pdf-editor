@@ -85,8 +85,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           }
         >
           <MenuItem value="fixed">固定文言</MenuItem>
-          <MenuItem value="variable">変数</MenuItem>
-          <MenuItem value="labeled-variable">ラベル付き変数</MenuItem>
+          <MenuItem value="variable">データ</MenuItem>
+          <MenuItem value="labeled-variable">カスタマイズ</MenuItem>
         </Select>
       </FormControl>
 
@@ -104,10 +104,10 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
 
       {selectedObject.contentType === "variable" && (
         <FormControl fullWidth margin="normal">
-          <InputLabel>変数</InputLabel>
+          <InputLabel>データ</InputLabel>
           <Select
             value={selectedObject.content}
-            label="変数"
+            label="データ"
             onChange={(e) => handleContentChange("content", e.target.value)}
           >
             {variables.map((v) => (
@@ -225,24 +225,24 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           />
         </Box>
         <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-            <InputLabel>色</InputLabel>
-            <input
-              type="color"
-              value={selectedObject.style?.color || "#000000"}
-              onChange={(e) => handleStyleChange({ color: e.target.value })}
-              style={{ width: "100%", height: "40px" }}
-            />
+          <InputLabel>色</InputLabel>
+          <input
+            type="color"
+            value={selectedObject.style?.color || "#000000"}
+            onChange={(e) => handleStyleChange({ color: e.target.value })}
+            style={{ width: "100%", height: "40px" }}
+          />
         </Box>
         <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-            <InputLabel>背景色</InputLabel>
-            <input
-              type="color"
-              value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-              onChange={(e) =>
-                handleStyleChange({ backgroundColor: e.target.value })
-              }
-              style={{ width: "100%", height: "40px" }}
-            />
+          <InputLabel>背景色</InputLabel>
+          <input
+            type="color"
+            value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+            onChange={(e) =>
+              handleStyleChange({ backgroundColor: e.target.value })
+            }
+            style={{ width: "100%", height: "40px" }}
+          />
         </Box>
       </Box>
 
@@ -269,7 +269,9 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           control={
             <Checkbox
               checked={selectedObject.style?.wordWrap || false}
-              onChange={(e) => handleStyleChange({ wordWrap: e.target.checked })}
+              onChange={(e) =>
+                handleStyleChange({ wordWrap: e.target.checked })
+              }
             />
           }
           label="折り返し"
