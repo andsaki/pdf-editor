@@ -22,10 +22,11 @@ interface PdfPreviewProps {
 }
 
 const getProcessedContent = (
-  item: any,
+  item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example"
 ) => {
+  if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
@@ -43,7 +44,7 @@ const getProcessedContent = (
     const variableName = content.match(/{{(.*?)}}/)?. [1];
     if (variableName && variableName in form) {
       // @ts-ignore
-      return form[variableName];
+      return label;
     }
   }
   return content;

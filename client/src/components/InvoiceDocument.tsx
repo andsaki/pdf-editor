@@ -8,7 +8,7 @@ import {
   Image,
   Font,
 } from "@react-pdf/renderer";
-import type { InvoiceData } from "../types";
+import type { InvoiceData, LayoutItem } from "../types";
 
 // 重要: フォントファイルを /public/fonts ディレクトリに追加してください。
 // BIZ UDPGothic は Google Fonts からダウンロードできます。
@@ -42,10 +42,11 @@ interface InvoiceDocumentProps {
 }
 
 const getProcessedContent = (
-  item: any,
+  item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example"
 ) => {
+  if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
@@ -56,14 +57,12 @@ const getProcessedContent = (
   if (contentType === "labeled-variable") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      // @ts-ignore
       return `${label}${form[variableName]}`;
     }
   } else if (contentType === "variable") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      // @ts-ignore
-      return form[variableName];
+      return label;
     }
   }
   return content;
