@@ -19,30 +19,39 @@ interface PdfPreviewProps {
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
   variableDisplayMode: "name" | "example";
+  companyInfo: any;
 }
 
 const getProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
-  variableDisplayMode: "name" | "example"
+  variableDisplayMode: "name" | "example",
+  companyInfo: any
 ) => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
   if (variableDisplayMode === "name") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && companyInfo) {
+      const key = variableName.replace("company_", "");
+      if (companyInfo[key]) {
+        return `{{${companyInfo[key].label}}}`;
+      }
+    }
     return content;
   }
 
   if (contentType === "labeled-variable") {
-    const variableName = content.match(/{{(.*?)}}/)?. [1];
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
       return `${label}${(form as { [key: string]: any })[variableName]}`;
     }
   } else if (contentType === "variable") {
-    const variableName = content.match(/{{(.*?)}}/)?. [1];
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      return `${label}: ${(form as { [key: string]: any })[variableName]}`;
+      return `${(form as { [key: string]: any })[variableName]}`;
     }
   }
   return content;
@@ -59,6 +68,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   selectedObjectId,
   onSelectObject,
   variableDisplayMode,
+  companyInfo,
 }) => {
   const [pageNumber, _setPageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
@@ -79,9 +89,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const [validationErrors, setValidationErrors] = useState<any>({});
 
-  const [pdfBytesForDisplay,
-    setPdfBytesForDisplay
-  ] = useState<Uint8Array | null>(null);
+  const [pdfBytesForDisplay, setPdfBytesForDisplay] =
+    useState<Uint8Array | null>(null);
 
   useEffect(() => {
     const initializePageDimensions = async () => {
@@ -423,7 +432,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             color: "black",
                             border: "none",
                             padding: 0,
-                            fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                            fontSize: `${
+                              (item.style?.fontSize || 16) * displayScale
+                            }px`,
                             fontFamily: item.style?.fontFamily || "Helvetica",
                           }}
                           className="cursor-text"
@@ -438,7 +449,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                       <span
                         style={{
                           color: item.style?.color || "black",
-                          fontSize: `${(item.style?.fontSize || 16) * displayScale}px`,
+                          fontSize: `${
+                            (item.style?.fontSize || 16) * displayScale
+                          }px`,
                           fontWeight: item.style?.bold ? "bold" : "normal",
                           fontStyle: item.style?.italic ? "italic" : "normal",
                           textAlign: item.style?.textAlign || "left",
@@ -468,7 +481,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                               {getProcessedContent(
                                 item,
                                 invoiceData,
-                                variableDisplayMode
+                                variableDisplayMode,
+                                companyInfo
                               )
                                 .replace(/・/g, "")
                                 .split("\n")
@@ -480,7 +494,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             getProcessedContent(
                               item,
                               invoiceData,
-                              variableDisplayMode
+                              variableDisplayMode,
+                              companyInfo
                             )
                               .split("\n")
                               .map((line: string, index: number) => (
@@ -523,7 +538,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             {item.data.map((row, rowIndex) => (
                               <tr key={rowIndex}>
                                 {row.map((cell, cellIndex) => {
-                                  const isEditing = 
+                                  const isEditing =
                                     editingCell?.itemId === item.id &&
                                     editingCell.rowIndex === rowIndex &&
                                     editingCell.cellIndex === cellIndex;

@@ -39,18 +39,27 @@ const styles = StyleSheet.create({
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
   variableDisplayMode: "name" | "example";
+  companyInfo: any;
 }
 
 const getProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
-  variableDisplayMode: "name" | "example"
+  variableDisplayMode: "name" | "example",
+  companyInfo: any
 ) => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
   if (variableDisplayMode === "name") {
+    const variableName = content.match(/{{(.*?)}}/)?.[1];
+    if (variableName && companyInfo) {
+      const key = variableName.replace("company_", "");
+      if (companyInfo[key]) {
+        return `{{${companyInfo[key].label}}}`;
+      }
+    }
     return content;
   }
 
@@ -62,7 +71,7 @@ const getProcessedContent = (
   } else if (contentType === "variable") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      return `${label}: ${(form as { [key: string]: any })[variableName]}`;
+      return `${(form as { [key: string]: any })[variableName]}`;
     }
   }
   return content;
@@ -71,6 +80,7 @@ const getProcessedContent = (
 export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   invoiceData,
   variableDisplayMode,
+  companyInfo,
 }) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -105,7 +115,8 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               const lines = getProcessedContent(
                 item,
                 invoiceData,
-                variableDisplayMode
+                variableDisplayMode,
+                companyInfo
               )
                 .replace(/・/g, "")
                 .split("\n");
@@ -121,7 +132,12 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
 
             return (
               <Text key={item.id} style={style}>
-                {getProcessedContent(item, invoiceData, variableDisplayMode)}
+                {getProcessedContent(
+                  item,
+                  invoiceData,
+                  variableDisplayMode,
+                  companyInfo
+                )}
               </Text>
             );
           }

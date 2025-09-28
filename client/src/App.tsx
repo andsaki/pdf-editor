@@ -19,7 +19,7 @@ import { StatePreview } from "./components/StatePreview";
 import { LayoutPalette } from "./components/LayoutPalette";
 import { LayerPalette } from "./components/LayerPalette";
 import { useHistoryState } from "./hooks/useHistoryState";
-import { useMutation, gql } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import { LeftToolbar } from "./components/LeftToolbar";
 import { pdfjs } from "react-pdf";
 import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
@@ -27,6 +27,26 @@ import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
 const SAVE_INVOICE_MUTATION = gql`
   mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
     saveInvoice(invoiceData: $invoiceData)
+  }
+`;
+
+const GET_COMPANY_INFO = gql`
+  query GetCompanyInfo {
+    companyInfo {
+      name { label }
+      zip { label }
+      prefecture { label }
+      city { label }
+      street { label }
+      building { label }
+      tel { label }
+      fax { label }
+      email { label }
+      contact_person { label }
+      registration_number { label }
+      payment_due_date { label }
+      bank_account { label }
+    }
   }
 `;
 
@@ -74,6 +94,7 @@ function App() {
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [saveInvoiceMutation] = useMutation(SAVE_INVOICE_MUTATION);
+  const { data: companyInfoData } = useQuery(GET_COMPANY_INFO);
 
   const getNewZIndex = () => {
     if (invoiceData.layout.length === 0) return 1;
@@ -365,6 +386,7 @@ function App() {
       <InvoiceDocument
         invoiceData={invoiceData}
         variableDisplayMode={variableDisplayMode}
+        companyInfo={companyInfoData?.companyInfo}
       />
     ).toBlob();
     const url = URL.createObjectURL(blob);
@@ -495,6 +517,7 @@ function App() {
               selectedObjectId={selectedObjectId}
               onSelectObject={handleSelectObject}
               variableDisplayMode={variableDisplayMode}
+              companyInfo={companyInfoData?.companyInfo}
             />
           </Box>
           <Box

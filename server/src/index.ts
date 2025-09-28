@@ -124,6 +124,8 @@ async function startServer() {
             value: "T1234567890123",
             label: "自社適格請求書発行番号",
           },
+          payment_due_date: { value: "末日", label: "支払期限" },
+          bank_account: { value: "みずほ銀行 渋谷支店 (普) 1234567", label: "振込先口座" },
         };
       },
     },
