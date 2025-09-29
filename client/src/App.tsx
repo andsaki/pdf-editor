@@ -11,7 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import { PdfPreview } from "./components/PdfPreview";
-import type { InvoiceData, LayoutItem } from "./types";
+import type { InvoiceData, LayoutItem } from "./utils/types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
 import { LayoutPalette } from "./components/LayoutPalette";

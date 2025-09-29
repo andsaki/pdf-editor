@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument } from "pdf-lib";
-import type { InvoiceData, LayoutItem, ShapeItem, CompanyInfo } from "../types";
+import type { InvoiceData, LayoutItem, ShapeItem, CompanyInfo } from "../utils/types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 

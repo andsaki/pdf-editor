@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import type { InvoiceData, TableItem } from "../types";
-import { TableItemSchema } from "../schemas";
+import type { InvoiceData, TableItem } from "../utils/types";
+import { TableItemSchema } from "../utils/schemas";
 import {
   Box,
   Typography,

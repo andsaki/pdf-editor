@@ -1,5 +1,5 @@
 import React from 'react';
-import type { InvoiceData } from '../types';
+import type { InvoiceData } from '../utils/types';
 
 interface StatePreviewProps {
   data: InvoiceData;

@@ -3,7 +3,7 @@ import type {
   InvoiceData,
   LayoutItem,
   CompanyInfoGql,
-} from "../types";
+} from "../utils/types";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
 import { ShapeObjectPalette } from "./ShapeObjectPalette";

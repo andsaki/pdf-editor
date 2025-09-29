@@ -8,7 +8,7 @@ import {
   Image,
   Font,
 } from "@react-pdf/renderer";
-import type { InvoiceData, LayoutItem, CompanyInfo } from "../types";
+import type { InvoiceData, LayoutItem, CompanyInfo } from "../utils/types";
 import type { Style } from "@react-pdf/types";
 
 // 重要: フォントファイルを /public/fonts ディレクトリに追加してください。

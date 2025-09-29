@@ -4,7 +4,7 @@ import type {
   TextItem,
   TextItemStyle,
   CompanyInfoGql,
-} from "../types";
+} from "../utils/types";
 import {
   Box,
   Typography,

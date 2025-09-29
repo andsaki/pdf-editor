@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App.tsx';
 import { ApolloProvider } from '@apollo/client';
-import { client } from './apollo';
+import { client } from './utils/apollo';
 import { pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';

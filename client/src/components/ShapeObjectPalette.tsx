@@ -1,5 +1,5 @@
 import React from "react";
-import type { InvoiceData, ShapeItem } from "../types";
+import type { InvoiceData, ShapeItem } from "../utils/types";
 import {
   Box,
   Typography,
