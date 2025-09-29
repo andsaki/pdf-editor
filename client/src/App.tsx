@@ -32,19 +32,19 @@ const SAVE_INVOICE_MUTATION = gql`
 const GET_COMPANY_INFO = gql`
   query GetCompanyInfo {
     companyInfo {
-      name { label }
-      zip { label }
-      prefecture { label }
-      city { label }
-      street { label }
-      building { label }
-      tel { label }
-      fax { label }
-      email { label }
-      contact_person { label }
-      registration_number { label }
-      payment_due_date { label }
-      bank_account { label }
+      name { label value }
+      zip { label value }
+      prefecture { label value }
+      city { label value }
+      street { label value }
+      building { label value }
+      tel { label value }
+      fax { label value }
+      email { label value }
+      contact_person { label value }
+      registration_number { label value }
+      payment_due_date { label value }
+      bank_account { label value }
     }
   }
 `;

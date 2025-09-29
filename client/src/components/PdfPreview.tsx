@@ -32,7 +32,7 @@ const getProcessedContent = (
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
-  if (variableDisplayMode === "name") {
+  if (variableDisplayMode === "example") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && companyInfo) {
       const key = variableName.replace("company_", "");
@@ -90,7 +90,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     cellIndex: number;
   } | null>(null);
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
