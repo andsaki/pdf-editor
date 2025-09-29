@@ -16,8 +16,13 @@ import type { Style } from "@react-pdf/types";
 Font.register({
   family: "BIZ UDPGothic",
   fonts: [
-    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // font-style: normal, font-weight: normal
-    { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
+    {
+      src: "https://github.com/googlefonts/morisawa-biz-ud-gothic/raw/main/fonts/ttf/BIZUDPGothic-Regular.ttf",
+    },
+    {
+      src: "https://github.com/googlefonts/morisawa-biz-ud-gothic/raw/main/fonts/ttf/BIZUDPGothic-Bold.ttf",
+      fontWeight: "bold",
+    },
   ],
 });
 
