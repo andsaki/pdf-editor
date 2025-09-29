@@ -39,14 +39,12 @@ const styles = StyleSheet.create({
 
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
-  variableDisplayMode: "name" | "example";
   companyInfo?: CompanyInfo;
 }
 
 const getProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
-  variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
 ): string => {
   if (item.type !== "text") return "";
@@ -59,27 +57,20 @@ const getProcessedContent = (
     return content;
   }
 
-  if (variableName.startsWith("company_")) {
-    const key = variableName.replace("company_", "");
-    if (companyInfo && companyInfo[key]) {
-      const companyInfoItem = companyInfo[key] as {
-        label: string;
-        value: string;
-      };
-      if (variableDisplayMode === "name") {
-        return `{{${companyInfoItem.label}}}`;
-      } else {
-        return companyInfoItem.value;
-      }
-    }
+  const [source, key] = variableName.split(".");
+
+  if (source === "companyInfo" && companyInfo && companyInfo[key]) {
+    return companyInfo[key].value;
   }
 
-  if (variableDisplayMode === "example" && variableName in form) {
-    const value = form[variableName as keyof typeof form] ?? "";
-    if (contentType === "labeled-variable") {
-      return `${label}${value}`;
-    }
-    return String(value);
+  if (source === "form" && form && form[key as keyof typeof form]) {
+    // @ts-ignore
+    return form[key as keyof typeof form].value;
+  }
+
+  if (contentType === "labeled-variable") {
+    const value = ""; // fallback for unresolved variables
+    return `${label}${value}`;
   }
 
   return content;
@@ -87,7 +78,6 @@ const getProcessedContent = (
 
 export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   invoiceData,
-  variableDisplayMode,
   companyInfo,
 }) => (
   <Document>
@@ -123,7 +113,6 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               const lines = getProcessedContent(
                 item,
                 invoiceData,
-                variableDisplayMode,
                 companyInfo
               )
                 .replace(/・/g, "")
@@ -143,7 +132,6 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
                 {getProcessedContent(
                   item,
                   invoiceData,
-                  variableDisplayMode,
                   companyInfo
                 )}
               </Text>

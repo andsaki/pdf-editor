@@ -572,7 +572,6 @@ function App() {
     const blob = await pdf(
       <InvoiceDocument
         invoiceData={invoiceData}
-        variableDisplayMode={variableDisplayMode}
         companyInfo={companyInfoData?.companyInfo}
       />
     ).toBlob();
