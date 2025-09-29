@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
-import type { TextItem, InvoiceData, CompanyInfo } from "../../../utils/types";
+import type { TextItem, InvoiceData, CompanyInfo } from "../../utils/types";
 import { getProcessedContent } from "../../utils/pdf";
 
 interface TextItemProps {
@@ -10,6 +10,12 @@ interface TextItemProps {
   companyInfo?: CompanyInfo;
 }
 
+/**
+ * PDFドキュメント内のテキストアイテムをレンダリングするコンポーネント。
+ *
+ * @param {TextItemProps} props
+ * @returns {JSX.Element}
+ */
 export const PdfTextItem: React.FC<TextItemProps> = ({ item, invoiceData, companyInfo }) => {
   const style: Style = {
     position: "absolute",

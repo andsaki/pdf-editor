@@ -41,6 +41,12 @@ interface InvoiceDocumentProps {
   companyInfo?: CompanyInfo;
 }
 
+/**
+ * PDFドキュメント全体をレンダリングするコンポーネント。
+ *
+ * @param {InvoiceDocumentProps} props
+ * @returns {JSX.Element}
+ */
 export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   invoiceData,
   companyInfo,

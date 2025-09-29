@@ -1,11 +1,17 @@
 import React from "react";
 import { Image } from "@react-pdf/renderer";
-import type { ImageItem } from "../../../utils/types";
+import type { ImageItem } from "../../utils/types";
 
 interface ImageItemProps {
   item: ImageItem;
 }
 
+/**
+ * PDFドキュメント内の画像アイテムをレンダリングするコンポーネント。
+ *
+ * @param {ImageItemProps} props
+ * @returns {JSX.Element}
+ */
 export const PdfImageItem: React.FC<ImageItemProps> = ({ item }) => {
   return (
     <Image

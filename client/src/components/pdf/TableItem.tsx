@@ -1,11 +1,17 @@
 import React from "react";
 import { View, Text } from "@react-pdf/renderer";
-import type { TableItem } from "../../../utils/types";
+import type { TableItem } from "../../utils/types";
 
 interface TableItemProps {
   item: TableItem;
 }
 
+/**
+ * PDFドキュメント内のテーブルアイテムをレンダリングするコンポーネント。
+ *
+ * @param {TableItemProps} props
+ * @returns {JSX.Element}
+ */
 export const PdfTableItem: React.FC<TableItemProps> = ({ item }) => {
   // PDF table rendering can be complex, for now, we just render the data as text
   return (

@@ -22,12 +22,24 @@ interface PdfPreviewProps {
   companyInfo?: CompanyInfo;
 }
 
+/**
+ * プレビュー用のテキストアイテムのコンテンツを処理し、表示文字列を返します。
+ * - `variableDisplayMode` が `example` の場合は、変数名をラベルに置き換えます。
+ * - それ以外の場合は、変数を実際の値に置き換えます。
+ *
+ * @param item レイアウトアイテム
+ * @param invoiceData 請求書データ
+ * @param variableDisplayMode 変数の表示モード
+ * @param companyInfo 会社情報
+ * @returns 処理済みのコンテンツ文字列
+ */
 const getPreviewProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
-): string => {
+):
+  string => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
