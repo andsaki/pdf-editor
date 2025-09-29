@@ -1,5 +1,10 @@
 import React from "react";
-import type { InvoiceData, TextItem, TextItemStyle } from "../types";
+import type {
+  InvoiceData,
+  TextItem,
+  TextItemStyle,
+  CompanyInfoGql,
+} from "../types";
 import {
   Box,
   Typography,
@@ -13,91 +18,18 @@ import {
   Divider,
   ListSubheader,
 } from "@mui/material";
-import { gql, useQuery } from "@apollo/client";
-
-const GET_COMPANY_INFO = gql`
-  query GetCompanyInfo {
-    companyInfo {
-      name {
-        value
-        label
-      }
-      zip {
-        value
-        label
-      }
-      prefecture {
-        value
-        label
-      }
-      city {
-        value
-        label
-      }
-      street {
-        value
-        label
-      }
-      building {
-        value
-        label
-      }
-      tel {
-        value
-        label
-      }
-      fax {
-        value
-        label
-      }
-      email {
-        value
-        label
-      }
-      contact_person {
-        value
-        label
-      }
-      registration_number {
-        value
-        label
-      }
-      payment_due_date {
-        value
-        label
-      }
-      bank_account {
-        value
-        label
-      }
-    }
-  }
-`;
-
-interface CompanyInfoData {
-  companyInfo: {
-    [key: string]: {
-      label: string;
-      value: string;
-    };
-  };
-}
 
 interface TextObjectPaletteProps {
   selectedObject: TextItem;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  companyInfoData: CompanyInfoGql | undefined;
 }
 
 export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   selectedObject,
   setInvoiceData,
+  companyInfoData,
 }) => {
-  const { data, loading, error } = useQuery<CompanyInfoData>(GET_COMPANY_INFO);
-
-  if (error) {
-    console.error("Error fetching company info:", error);
-  }
-
   const handleStyleChange = (newStyle: Partial<TextItemStyle>) => {
     setInvoiceData((prev) => ({
       ...prev,
@@ -123,30 +55,26 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   };
 
   const renderVariableOptions = () => {
-    if (loading) {
-      return <MenuItem disabled>Loading...</MenuItem>;
-    }
-    if (error) {
-      return <MenuItem disabled>Error loading variables</MenuItem>;
-    }
-    if (data && data.companyInfo) {
-      const companyVariables = Object.entries(data.companyInfo)
+    const options = [];
+
+    if (companyInfoData && companyInfoData.companyInfo) {
+      const companyVariables = Object.entries(companyInfoData.companyInfo)
         .filter(([key, entry]) => entry && key !== "__typename")
-        .map(([key, entry]) => ({
-          key: key,
+        .map(([key, entry]: [string, any]) => ({
+          key: `companyInfo.${key}`,
           label: entry.label,
         }));
-
-      return [
-        <ListSubheader key="company-info">自社情報</ListSubheader>,
+      options.push(<ListSubheader key="company-info">自社情報</ListSubheader>);
+      options.push(
         ...companyVariables.map((v) => (
-          <MenuItem key={v.key} value={`{{company_${v.key}}}`}>
+          <MenuItem key={v.key} value={`{{${v.key}}}`}>
             {v.label}
           </MenuItem>
-        )),
-      ];
+        ))
+      );
     }
-    return null;
+
+    return options;
   };
 
   return (

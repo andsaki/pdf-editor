@@ -1,5 +1,9 @@
 import React from "react";
-import type { InvoiceData, LayoutItem } from "../types";
+import type {
+  InvoiceData,
+  LayoutItem,
+  CompanyInfoGql,
+} from "../types";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
 import { ShapeObjectPalette } from "./ShapeObjectPalette";
@@ -16,6 +20,7 @@ interface LayoutPaletteProps {
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   onMoveLayer: (direction: "up" | "down") => void;
   onDelete: () => void;
+  companyInfoData: CompanyInfoGql | undefined;
 }
 
 export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
@@ -23,6 +28,7 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
   setInvoiceData,
   onMoveLayer,
   onDelete,
+  companyInfoData,
 }) => {
   if (!selectedObject) {
     return null;
@@ -106,6 +112,7 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
         <TextObjectPalette
           selectedObject={selectedObject}
           setInvoiceData={setInvoiceData}
+          companyInfoData={companyInfoData}
         />
       )}
 

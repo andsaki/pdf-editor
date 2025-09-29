@@ -8,6 +8,10 @@ export const CompanyInfoSchema = z.record(
   })
 );
 
+export const CompanyInfoGqlSchema = z.object({
+  companyInfo: CompanyInfoSchema,
+});
+
 const BaseLayoutItemSchema = z.object({
   id: z.string(),
   x: z.number(),
@@ -101,6 +105,10 @@ export const InvoiceDataSchema = z.object({
     tax: z.number().optional(),
     total: z.number().optional(),
   }),
+});
+
+export const InvoiceGqlSchema = z.object({
+  getInvoice: InvoiceDataSchema,
 });
 
 export type TextItemStyle = z.infer<typeof textItemStyleSchema>;

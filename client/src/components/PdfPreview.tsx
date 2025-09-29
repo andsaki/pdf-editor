@@ -32,31 +32,39 @@ const getProcessedContent = (
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
+  const variableName = content.match(/{{(.*?)}}/)?.[1];
+
+  if (!variableName) {
+    return content;
+  }
+
+  const [source, key] = variableName.split(".");
+
   if (variableDisplayMode === "example") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && companyInfo) {
-      const key = variableName.replace("company_", "");
-      if (companyInfo[key]) {
-        const companyInfoItem = companyInfo[key] as { label: string; value: string };
-        return `{{${companyInfoItem.label}}}`;
-      }
+    if (source === "companyInfo" && companyInfo && companyInfo[key]) {
+      return `{{${companyInfo[key].label}}}`;
+    }
+    if (source === "form" && form && form[key as keyof typeof form]) {
+      // @ts-ignore
+      return `{{${form[key as keyof typeof form].label}}}`;
     }
     return content;
   }
 
-  if (contentType === "labeled-variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && variableName in form) {
-      const value = form[variableName as keyof typeof form] ?? "";
-      return `${label}${value}`;
-    }
-  } else if (contentType === "variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && variableName in form) {
-      const value = form[variableName as keyof typeof form] ?? "";
-      return String(value);
-    }
+  let value: any = "";
+  if (source === "companyInfo" && companyInfo && companyInfo[key]) {
+    value = companyInfo[key].value;
+  } else if (source === "form" && form && form[key as keyof typeof form]) {
+    // @ts-ignore
+    value = form[key as keyof typeof form].value;
   }
+
+  if (contentType === "labeled-variable") {
+    return `${label}${value}`;
+  } else if (contentType === "variable") {
+    return String(value);
+  }
+
   return content;
 };
 

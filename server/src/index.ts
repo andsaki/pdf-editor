@@ -25,6 +25,11 @@ async function startServer() {
       label: String
     }
 
+    type FloatEntry {
+      value: Float
+      label: String
+    }
+
     type CompanyInfo {
       name: CompanyInfoEntry
       zip: CompanyInfoEntry
@@ -41,36 +46,57 @@ async function startServer() {
       bank_account: CompanyInfoEntry
     }
 
-    input FormInput {
-      issue_date: String
-      due_date: String
-      invoice_number: String
-      company_name: String
-      company_zip: String
-      company_address: String
-      company_tel: String
-      company_email: String
-      recipient_name: String
-      recipient_title: String
-      recipient_zip: String
-      recipient_address: String
-      recipient_tel: String
-      recipient_email: String
-      subtotal: Float
-      tax: Float
-      total: Float
+    input FormEntryInput {
+      value: String
+      label: String
     }
 
-    input StyleInput {
-      fontFamily: String
-      fontSize: Float
-      lineHeight: Float
-      textAlign: String
-      verticalAlign: String
-      color: String
-      bold: Boolean
-      italic: Boolean
-      wordWrap: Boolean
+    input FloatEntryInput {
+      value: Float
+      label: String
+    }
+
+    type LineItem {
+      name: CompanyInfoEntry
+      date: CompanyInfoEntry
+      quantity: FloatEntry
+      unit_price: FloatEntry
+      amount: FloatEntry
+    }
+
+    input LineItemInput {
+      name: FormEntryInput
+      date: FormEntryInput
+      quantity: FloatEntryInput
+      unit_price: FloatEntryInput
+      amount: FloatEntryInput
+    }
+
+    input FormInput {
+      issue_date: FormEntryInput
+      due_date: FormEntryInput
+      invoice_number: FormEntryInput
+      company_name: FormEntryInput
+      company_zip: FormEntryInput
+      company_prefecture: FormEntryInput
+      company_city: FormEntryInput
+      company_street: FormEntryInput
+      company_building: FormEntryInput
+      company_tel: FormEntryInput
+      company_email: FormEntryInput
+      recipient_name: FormEntryInput
+      recipient_title: FormEntryInput
+      recipient_zip: FormEntryInput
+      recipient_prefecture: FormEntryInput
+      recipient_city: FormEntryInput
+      recipient_street: FormEntryInput
+      recipient_building: FormEntryInput
+      recipient_tel: FormEntryInput
+      recipient_email: FormEntryInput
+      subtotal: FloatEntryInput
+      tax: FloatEntryInput
+      total: FloatEntryInput
+      line_items: [LineItemInput!]
     }
 
     input LayoutItemInput {
@@ -80,16 +106,114 @@ async function startServer() {
       y: Float!
       width: Float!
       height: Float!
+      zIndex: Int!
+      locked: Boolean
+      visible: Boolean
+
+      # TextItem
       content: String
       contentType: String
       label: String
+
+      # ImageItem
+      src: String
+
+      # TableItem
       data: [[String]]
-      style: StyleInput
+
+      # ShapeItem
+      shapeType: String
+
+      # Style properties (flattened)
+      fontFamily: String
+      fontSize: Float
+      lineHeight: Float
+      textAlign: String
+      verticalAlign: String
+      color: String
+      bold: Boolean
+      italic: Boolean
+      wordWrap: Boolean
+      backgroundColor: String
+      textShadow: String
+      isBullet: Boolean
     }
 
     input InvoiceDataInput {
       layout: [LayoutItemInput!]!
       form: FormInput!
+    }
+
+    type LayoutItem {
+      id: String!
+      type: String!
+      x: Float!
+      y: Float!
+      width: Float!
+      height: Float!
+      zIndex: Int!
+      locked: Boolean
+      visible: Boolean
+
+      # TextItem
+      content: String
+      contentType: String
+      label: String
+
+      # ImageItem
+      src: String
+
+      # TableItem
+      data: [[String]]
+
+      # ShapeItem
+      shapeType: String
+
+      # Style properties (flattened)
+      fontFamily: String
+      fontSize: Float
+      lineHeight: Float
+      textAlign: String
+      verticalAlign: String
+      color: String
+      bold: Boolean
+      italic: Boolean
+      wordWrap: Boolean
+      backgroundColor: String
+      textShadow: String
+      isBullet: Boolean
+    }
+
+    type Form {
+      issue_date: CompanyInfoEntry
+      due_date: CompanyInfoEntry
+      invoice_number: CompanyInfoEntry
+      company_name: CompanyInfoEntry
+      company_zip: CompanyInfoEntry
+      company_prefecture: CompanyInfoEntry
+      company_city: CompanyInfoEntry
+      company_street: CompanyInfoEntry
+      company_building: CompanyInfoEntry
+      company_tel: CompanyInfoEntry
+      company_email: CompanyInfoEntry
+      recipient_name: CompanyInfoEntry
+      recipient_title: CompanyInfoEntry
+      recipient_zip: CompanyInfoEntry
+      recipient_prefecture: CompanyInfoEntry
+      recipient_city: CompanyInfoEntry
+      recipient_street: CompanyInfoEntry
+      recipient_building: CompanyInfoEntry
+      recipient_tel: CompanyInfoEntry
+      recipient_email: CompanyInfoEntry
+      subtotal: FloatEntry
+      tax: FloatEntry
+      total: FloatEntry
+      line_items: [LineItem!]
+    }
+
+    type InvoiceData {
+      layout: [LayoutItem!]!
+      form: Form!
     }
 
     type Mutation {
@@ -99,6 +223,7 @@ async function startServer() {
     type Query {
       hello: String
       companyInfo: CompanyInfo
+      getInvoice(id: ID!): InvoiceData
     }
   `;
 
@@ -126,6 +251,95 @@ async function startServer() {
           },
           payment_due_date: { value: "End of Month", label: "支払期限" },
           bank_account: { value: "Bank Name Branch (Type) XXXXXXX", label: "振込先口座" },
+        };
+      },
+      getInvoice: (_: any, { id }: { id: string }) => {
+        console.log(`Fetching invoice with ID: ${id}`);
+        // Since we don't have a database, return mock data for now.
+        return {
+          layout: [
+            {
+              id: "text-1",
+              type: "text",
+              x: 50,
+              y: 50,
+              width: 200,
+              height: 30,
+              zIndex: 1,
+              content: "{{company_name}}",
+              contentType: "variable",
+            },
+            {
+              id: "text-2",
+              type: "text",
+              x: 50,
+              y: 100,
+              width: 200,
+              height: 30,
+              zIndex: 2,
+              content: "請求書",
+              contentType: "fixed",
+              fontSize: 24,
+              bold: true,
+            },
+            {
+              id: "table-1",
+              type: "table",
+              x: 50,
+              y: 200,
+              width: 700,
+              height: 300,
+              zIndex: 3,
+              data: [
+                ["品目名", "日付", "数量", "単価", "金額"],
+                ["", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["", "", "", "", ""],
+              ],
+            },
+          ],
+          form: {
+            issue_date: { value: "2025-09-29", label: "発行日" },
+            due_date: { value: "2025-10-31", label: "支払期限" },
+            invoice_number: { value: "INV-001", label: "請求書番号" },
+            company_name: { value: "My Awesome Company", label: "自社名" },
+            company_prefecture: { value: "Tokyo", label: "自社_都道府県" },
+            company_city: { value: "Shibuya-ku", label: "自社_市区町村" },
+            company_street: { value: "Jinnan 1-1-1", label: "自社_番地" },
+            company_building: { value: "Shibuya Building", label: "自社_建物名" },
+            recipient_name: { value: "Customer Inc.", label: "宛名" },
+            recipient_prefecture: { value: "Tokyo", label: "送付先_都道府県" },
+            recipient_city: { value: "Shinjuku-ku", label: "送付先_市区町村" },
+            recipient_street: { value: "Nishi-Shinjuku 2-8-1", label: "送付先_番地" },
+            recipient_building: { value: "Tokyo Metropolitan Government Building", label: "送付先_建物名" },
+            subtotal: { value: 120000, label: "小計" },
+            tax: { value: 12000, label: "消費税" },
+            total: { value: 132000, label: "合計金額" },
+            line_items: [
+              {
+                name: { value: "Webサイト制作", label: "品目名" },
+                date: { value: "2025-09-10", label: "日付" },
+                quantity: { value: 1, label: "数量" },
+                unit_price: { value: 80000, label: "単価" },
+                amount: { value: 80000, label: "金額" },
+              },
+              {
+                name: { value: "ロゴデザイン", label: "品目名" },
+                date: { value: "2025-09-15", label: "日付" },
+                quantity: { value: 1, label: "数量" },
+                unit_price: { value: 30000, label: "単価" },
+                amount: { value: 30000, label: "金額" },
+              },
+              {
+                name: { value: "保守費用 (1ヶ月)", label: "品目名" },
+                date: { value: "2025-09-01", label: "日付" },
+                quantity: { value: 1, label: "数量" },
+                unit_price: { value: 10000, label: "単価" },
+                amount: { value: 10000, label: "金額" },
+              },
+            ],
+          },
         };
       },
     },

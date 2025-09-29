@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   CssBaseline,
   Box,
@@ -22,6 +22,7 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import { LeftToolbar } from "./components/LeftToolbar";
 import { pdfjs } from "react-pdf";
 import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
+import { StatePreview } from "./components/StatePreview";
 
 const SAVE_INVOICE_MUTATION = gql`
   mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
@@ -32,19 +33,210 @@ const SAVE_INVOICE_MUTATION = gql`
 const GET_COMPANY_INFO = gql`
   query GetCompanyInfo {
     companyInfo {
-      name { label value }
-      zip { label value }
-      prefecture { label value }
-      city { label value }
-      street { label value }
-      building { label value }
-      tel { label value }
-      fax { label value }
-      email { label value }
-      contact_person { label value }
-      registration_number { label value }
-      payment_due_date { label value }
-      bank_account { label value }
+      name {
+        label
+        value
+      }
+      zip {
+        label
+        value
+      }
+      prefecture {
+        label
+        value
+      }
+      city {
+        label
+        value
+      }
+      street {
+        label
+        value
+      }
+      building {
+        label
+        value
+      }
+      tel {
+        label
+        value
+      }
+      fax {
+        label
+        value
+      }
+      email {
+        label
+        value
+      }
+      contact_person {
+        label
+        value
+      }
+      registration_number {
+        label
+        value
+      }
+      payment_due_date {
+        label
+        value
+      }
+      bank_account {
+        label
+        value
+      }
+    }
+  }
+`;
+
+const GET_INVOICE = gql`
+  query GetInvoice($id: ID!) {
+    getInvoice(id: $id) {
+      layout {
+        id
+        type
+        x
+        y
+        width
+        height
+        zIndex
+        locked
+        visible
+        content
+        contentType
+        label
+        src
+        data
+        shapeType
+        fontFamily
+        fontSize
+        lineHeight
+        textAlign
+        verticalAlign
+        color
+        bold
+        italic
+        wordWrap
+        backgroundColor
+        textShadow
+        isBullet
+      }
+      form {
+        issue_date {
+          value
+          label
+        }
+        due_date {
+          value
+          label
+        }
+        invoice_number {
+          value
+          label
+        }
+        company_name {
+          value
+          label
+        }
+        company_zip {
+          value
+          label
+        }
+        company_prefecture {
+          value
+          label
+        }
+        company_city {
+          value
+          label
+        }
+        company_street {
+          value
+          label
+        }
+        company_building {
+          value
+          label
+        }
+        company_tel {
+          value
+          label
+        }
+        company_email {
+          value
+          label
+        }
+        recipient_name {
+          value
+          label
+        }
+        recipient_title {
+          value
+          label
+        }
+        recipient_zip {
+          value
+          label
+        }
+        recipient_prefecture {
+          value
+          label
+        }
+        recipient_city {
+          value
+          label
+        }
+        recipient_street {
+          value
+          label
+        }
+        recipient_building {
+          value
+          label
+        }
+        recipient_tel {
+          value
+          label
+        }
+        recipient_email {
+          value
+          label
+        }
+        subtotal {
+          value
+          label
+        }
+        tax {
+          value
+          label
+        }
+        total {
+          value
+          label
+        }
+        line_items {
+          name {
+            value
+            label
+          }
+          date {
+            value
+            label
+          }
+          quantity {
+            value
+            label
+          }
+          unit_price {
+            value
+            label
+          }
+          amount {
+            value
+            label
+          }
+        }
+      }
     }
   }
 `;
@@ -70,12 +262,7 @@ function App() {
     canRedo,
   } = useHistoryState<InvoiceData>({
     layout: [],
-    form: {
-      issue_date: new Date().toLocaleDateString(),
-      due_date: new Date(
-        new Date().setDate(new Date().getDate() + 30)
-      ).toLocaleDateString(),
-    },
+    form: {},
   });
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [clipboard, setClipboard] = useState<LayoutItem | null>(null);
@@ -88,6 +275,7 @@ function App() {
   const [activeCreationPalette, setActiveCreationPalette] = useState<
     "shape" | null
   >(null);
+  const [showStatePreview, setShowStatePreview] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -203,7 +391,8 @@ function App() {
         height: 100,
         style: { backgroundColor: "#000000" },
       };
-    } else { // rect
+    } else {
+      // rect
       newShape = {
         ...baseShape,
         width: 150,
@@ -454,6 +643,14 @@ function App() {
             >
               PDFをトレース
             </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setShowStatePreview((prev) => !prev)}
+              sx={{ ml: 1 }}
+            >
+              State Preview
+            </Button>
             <Box sx={{ flexGrow: 1 }} />
             <Button>キャンセル</Button>
             <Button variant="contained" onClick={saveInvoice} sx={{ ml: 1 }}>
@@ -494,7 +691,9 @@ function App() {
               />
             </Box>
             {activeCreationPalette === "shape" && (
-              <Box sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
+              <Box
+                sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}
+              >
                 <ShapeCreationPalette onAddShape={addShapeObject} />
               </Box>
             )}
@@ -528,8 +727,10 @@ function App() {
               borderLeft: "1px solid",
               borderColor: "divider",
               overflowY: "auto",
+              position: "relative",
             }}
           >
+            {showStatePreview && <StatePreview data={invoiceData} />}
             {(() => {
               if (activeRightPanel === "layers") {
                 return (
@@ -549,6 +750,7 @@ function App() {
                     setInvoiceData={setInvoiceData}
                     onMoveLayer={moveLayer}
                     onDelete={deleteSelectedObject}
+                    companyInfoData={companyInfoData}
                   />
                 );
               }
