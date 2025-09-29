@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 import type { TextItem, InvoiceData, CompanyInfo } from "../../../utils/types";
-import { getProcessedContent } from "../../../utils/pdf";
+import { getProcessedContent } from "../../utils/pdf";
 
 interface TextItemProps {
   item: TextItem;
