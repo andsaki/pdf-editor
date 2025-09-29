@@ -16,19 +16,14 @@ import type { Style } from "@react-pdf/types";
 Font.register({
   family: "BIZ UDPGothic",
   fonts: [
-    {
-      src: "https://github.com/googlefonts/morisawa-biz-ud-gothic/raw/main/fonts/ttf/BIZUDPGothic-Regular.ttf",
-    },
-    {
-      src: "https://github.com/googlefonts/morisawa-biz-ud-gothic/raw/main/fonts/ttf/BIZUDPGothic-Bold.ttf",
-      fontWeight: "bold",
-    },
+    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // font-style: normal, font-weight: normal
+    { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
   ],
 });
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "BIZ UDPGothic",
     fontSize: 11,
     paddingTop: 30,
     paddingLeft: 60,
@@ -114,7 +109,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
               fontSize: item.style?.fontSize || 12,
               lineHeight: item.style?.lineHeight || 1,
               textAlign: item.style?.textAlign || "left",
-              fontFamily: item.style?.fontFamily || "Helvetica",
+              fontFamily: "BIZ UDPGothic",
               backgroundColor: item.style?.backgroundColor || "transparent",
             };
             if (item.style?.bold) {

@@ -153,7 +153,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           <FormControl fullWidth>
             <InputLabel>フォント</InputLabel>
             <Select
-              value={selectedObject.style?.fontFamily || "Helvetica"}
+              value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
               label="フォント"
               onChange={(e) =>
                 handleStyleChange({
@@ -161,7 +161,6 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
                 })
               }
             >
-              <MenuItem value="Helvetica">Helvetica</MenuItem>
               <MenuItem value="BIZ UDPGothic">BIZ UDPGothic</MenuItem>
             </Select>
           </FormControl>
