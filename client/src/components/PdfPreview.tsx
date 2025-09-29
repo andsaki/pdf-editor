@@ -22,7 +22,7 @@ interface PdfPreviewProps {
   companyInfo?: CompanyInfo;
 }
 
-const getProcessedContent = (
+const getPreviewProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
@@ -491,7 +491,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         <>
                           {item.style?.isBullet ? (
                             <ul style={{ margin: 0, paddingLeft: "1.5em" }}>
-                              {getProcessedContent(
+                              {getPreviewProcessedContent(
                                 item,
                                 invoiceData,
                                 variableDisplayMode,
@@ -504,7 +504,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                                 ))}
                             </ul>
                           ) : (
-                            getProcessedContent(
+                            getPreviewProcessedContent(
                               item,
                               invoiceData,
                               variableDisplayMode,
