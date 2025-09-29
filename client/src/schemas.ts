@@ -1,4 +1,12 @@
-import { z } from 'zod';
+import { z } from "zod";
+
+export const CompanyInfoSchema = z.record(
+  z.string(),
+  z.object({
+    label: z.string(),
+    value: z.string(),
+  })
+);
 
 const BaseLayoutItemSchema = z.object({
   id: z.string(),
@@ -11,6 +19,21 @@ const BaseLayoutItemSchema = z.object({
   visible: z.boolean().optional(),
 });
 
+const textItemStyleSchema = z.object({
+  fontFamily: z.enum(["Helvetica", "BIZ UDPGothic"]).optional(),
+  fontSize: z.number().optional(),
+  lineHeight: z.number().optional(),
+  textAlign: z.enum(["left", "center", "right"]).optional(),
+  verticalAlign: z.enum(["top", "center", "bottom"]).optional(),
+  color: z.string().optional(),
+  bold: z.boolean().optional(),
+  italic: z.boolean().optional(),
+  wordWrap: z.boolean().optional(),
+  backgroundColor: z.string().optional(),
+  textShadow: z.string().optional(),
+  isBullet: z.boolean().optional(),
+});
+
 export const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal("text"),
   content: z.string(),
@@ -18,32 +41,21 @@ export const TextItemSchema = BaseLayoutItemSchema.extend({
     .enum(["fixed", "variable", "labeled-variable"])
     .default("fixed"),
   label: z.string().optional(),
-  style: z
-    .object({
-      fontFamily: z.enum(["Helvetica", "BIZ UDPGothic"]).optional(),
-      fontSize: z.number().optional(),
-      lineHeight: z.number().optional(),
-      textAlign: z.enum(["left", "center", "right"]).optional(),
-      verticalAlign: z.enum(["top", "center", "bottom"]).optional(),
-      color: z.string().optional(),
-      bold: z.boolean().optional(),
-      italic: z.boolean().optional(),
-      wordWrap: z.boolean().optional(),
-      backgroundColor: z.string().optional(),
-      textShadow: z.string().optional(),
-      isBullet: z.boolean().optional(),
-    })
-    .optional(),
+  style: textItemStyleSchema.optional(),
 });
 
 export const ImageItemSchema = BaseLayoutItemSchema.extend({
-  type: z.literal('image'),
+  type: z.literal("image"),
   data: z.string(),
 });
 
 export const TableItemSchema = BaseLayoutItemSchema.extend({
-  type: z.literal('table'),
-  data: z.array(z.array(z.string()).min(2, "テーブルには少なくとも2つの列が必要です")).min(2, "テーブルには少なくとも2つの行が必要です"),
+  type: z.literal("table"),
+  data: z
+    .array(
+      z.array(z.string()).min(2, "テーブルには少なくとも2つの列が必要です")
+    )
+    .min(2, "テーブルには少なくとも2つの行が必要です"),
   style: z
     .object({
       backgroundColor: z.string().optional(),
@@ -52,8 +64,8 @@ export const TableItemSchema = BaseLayoutItemSchema.extend({
 });
 
 export const ShapeItemSchema = BaseLayoutItemSchema.extend({
-  type: z.literal('shape'),
-  shapeType: z.enum(['rect', 'h-line', 'v-line']),
+  type: z.literal("shape"),
+  shapeType: z.enum(["rect", "h-line", "v-line"]),
   style: z
     .object({
       backgroundColor: z.string().optional(),
@@ -90,3 +102,5 @@ export const InvoiceDataSchema = z.object({
     total: z.number().optional(),
   }),
 });
+
+export type TextItemStyle = z.infer<typeof textItemStyleSchema>;

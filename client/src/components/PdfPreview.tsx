@@ -6,8 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import { Document, Page } from "react-pdf";
-import { PDFDocument, StandardFonts, ColorTypes } from "pdf-lib";
-import type { InvoiceData, LayoutItem, ShapeItem } from "../types";
+import { PDFDocument } from "pdf-lib";
+import type { InvoiceData, LayoutItem, ShapeItem, CompanyInfo } from "../types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 
@@ -19,15 +19,15 @@ interface PdfPreviewProps {
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
   variableDisplayMode: "name" | "example";
-  companyInfo: any;
+  companyInfo?: CompanyInfo;
 }
 
 const getProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
-  companyInfo: any
-) => {
+  companyInfo?: CompanyInfo
+): string => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
@@ -37,7 +37,8 @@ const getProcessedContent = (
     if (variableName && companyInfo) {
       const key = variableName.replace("company_", "");
       if (companyInfo[key]) {
-        return `{{${companyInfo[key].label}}}`;
+        const companyInfoItem = companyInfo[key] as { label: string; value: string };
+        return `{{${companyInfoItem.label}}}`;
       }
     }
     return content;
@@ -46,12 +47,14 @@ const getProcessedContent = (
   if (contentType === "labeled-variable") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      return `${label}${(form as { [key: string]: any })[variableName]}`;
+      const value = form[variableName as keyof typeof form] ?? "";
+      return `${label}${value}`;
     }
   } else if (contentType === "variable") {
     const variableName = content.match(/{{(.*?)}}/)?.[1];
     if (variableName && variableName in form) {
-      return `${(form as { [key: string]: any })[variableName]}`;
+      const value = form[variableName as keyof typeof form] ?? "";
+      return String(value);
     }
   }
   return content;
@@ -70,7 +73,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   variableDisplayMode,
   companyInfo,
 }) => {
-  const [pageNumber, _setPageNumber] = useState(1);
+  const [pageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [containerHeight, setContainerHeight] = useState<number>(0);
   const [pageDimensions, setPageDimensions] = useState<{
@@ -87,7 +90,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     cellIndex: number;
   } | null>(null);
 
-  const [validationErrors, setValidationErrors] = useState<any>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);

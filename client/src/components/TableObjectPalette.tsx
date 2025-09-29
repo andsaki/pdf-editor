@@ -54,7 +54,7 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
       const formattedErrors = validation.error.flatten();
       setTableErrors({
         rows: formattedErrors.formErrors[0],
-        cols: (formattedErrors.fieldErrors as any)?.[0]?.[0],
+        cols: formattedErrors.fieldErrors.data?.[0],
       });
     } else {
       setTableErrors({});

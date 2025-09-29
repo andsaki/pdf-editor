@@ -1,5 +1,5 @@
 import React from "react";
-import type { InvoiceData, TextItem } from "../types";
+import type { InvoiceData, TextItem, TextItemStyle } from "../types";
 import {
   Box,
   Typography,
@@ -74,6 +74,15 @@ const GET_COMPANY_INFO = gql`
   }
 `;
 
+interface CompanyInfoData {
+  companyInfo: {
+    [key: string]: {
+      label: string;
+      value: string;
+    };
+  };
+}
+
 interface TextObjectPaletteProps {
   selectedObject: TextItem;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
@@ -83,13 +92,13 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   selectedObject,
   setInvoiceData,
 }) => {
-  const { data, loading, error } = useQuery(GET_COMPANY_INFO);
+  const { data, loading, error } = useQuery<CompanyInfoData>(GET_COMPANY_INFO);
 
   if (error) {
     console.error("Error fetching company info:", error);
   }
 
-  const handleStyleChange = (newStyle: Partial<TextItem["style"]>) => {
+  const handleStyleChange = (newStyle: Partial<TextItemStyle>) => {
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {
@@ -101,7 +110,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
     }));
   };
 
-  const handleContentChange = (key: string, value: any) => {
+  const handleContentChange = (key: keyof TextItem, value: TextItem[typeof key]) => {
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {
@@ -123,14 +132,14 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
     if (data && data.companyInfo) {
       const companyVariables = Object.entries(data.companyInfo)
         .filter(([key, entry]) => entry && key !== "__typename")
-        .map(([key, entry]: [string, any]) => ({
+        .map(([key, entry]) => ({
           key: key,
           label: entry.label,
         }));
 
       return [
         <ListSubheader key="company-info">自社情報</ListSubheader>,
-        ...companyVariables.map((v: any) => (
+        ...companyVariables.map((v) => (
           <MenuItem key={v.key} value={`{{company_${v.key}}}`}>
             {v.label}
           </MenuItem>
@@ -219,7 +228,9 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.fontFamily || "Helvetica"}
               label="フォント"
               onChange={(e) =>
-                handleStyleChange({ fontFamily: e.target.value as any })
+                handleStyleChange({
+                  fontFamily: e.target.value as TextItemStyle["fontFamily"],
+                })
               }
             >
               <MenuItem value="Helvetica">Helvetica</MenuItem>
@@ -256,7 +267,9 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.textAlign || "left"}
               label="水平方向の配置"
               onChange={(e) =>
-                handleStyleChange({ textAlign: e.target.value as any })
+                handleStyleChange({
+                  textAlign: e.target.value as TextItemStyle["textAlign"],
+                })
               }
             >
               <MenuItem value="left">左揃え</MenuItem>
@@ -272,7 +285,9 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.verticalAlign || "top"}
               label="垂直方向の配置"
               onChange={(e) =>
-                handleStyleChange({ verticalAlign: e.target.value as any })
+                handleStyleChange({
+                  verticalAlign: e.target.value as TextItemStyle["verticalAlign"],
+                })
               }
             >
               <MenuItem value="top">上揃え</MenuItem>

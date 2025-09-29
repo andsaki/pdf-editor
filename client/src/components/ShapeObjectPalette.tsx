@@ -19,7 +19,7 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
   selectedObject,
   setInvoiceData,
 }) => {
-  const handleShapeChange = (key: "shapeType", value: any) => {
+  const handleShapeChange = (key: "shapeType", value: ShapeItem["shapeType"]) => {
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {

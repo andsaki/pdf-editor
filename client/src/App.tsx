@@ -15,7 +15,6 @@ import { PdfPreview } from "./components/PdfPreview";
 import type { InvoiceData, LayoutItem } from "./types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
-import { StatePreview } from "./components/StatePreview";
 import { LayoutPalette } from "./components/LayoutPalette";
 import { LayerPalette } from "./components/LayerPalette";
 import { useHistoryState } from "./hooks/useHistoryState";

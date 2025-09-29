@@ -8,7 +8,8 @@ import {
   Image,
   Font,
 } from "@react-pdf/renderer";
-import type { InvoiceData, LayoutItem } from "../types";
+import type { InvoiceData, LayoutItem, CompanyInfo } from "../types";
+import type { Style } from "@react-pdf/types";
 
 // 重要: フォントファイルを /public/fonts ディレクトリに追加してください。
 // BIZ UDPGothic は Google Fonts からダウンロードできます。
@@ -39,41 +40,48 @@ const styles = StyleSheet.create({
 interface InvoiceDocumentProps {
   invoiceData: InvoiceData;
   variableDisplayMode: "name" | "example";
-  companyInfo: any;
+  companyInfo?: CompanyInfo;
 }
 
 const getProcessedContent = (
   item: LayoutItem,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
-  companyInfo: any
-) => {
+  companyInfo?: CompanyInfo
+): string => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
   const { form } = invoiceData;
 
-  if (variableDisplayMode === "name") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && companyInfo) {
-      const key = variableName.replace("company_", "");
-      if (companyInfo[key]) {
-        return `{{${companyInfo[key].label}}}`;
-      }
-    }
+  const variableName = content.match(/{{(.*?)}}/)?.[1];
+
+  if (!variableName) {
     return content;
   }
 
-  if (contentType === "labeled-variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && variableName in form) {
-      return `${label}${(form as { [key: string]: any })[variableName]}`;
-    }
-  } else if (contentType === "variable") {
-    const variableName = content.match(/{{(.*?)}}/)?.[1];
-    if (variableName && variableName in form) {
-      return `${(form as { [key: string]: any })[variableName]}`;
+  if (variableName.startsWith("company_")) {
+    const key = variableName.replace("company_", "");
+    if (companyInfo && companyInfo[key]) {
+      const companyInfoItem = companyInfo[key] as {
+        label: string;
+        value: string;
+      };
+      if (variableDisplayMode === "name") {
+        return `{{${companyInfoItem.label}}}`;
+      } else {
+        return companyInfoItem.value;
+      }
     }
   }
+
+  if (variableDisplayMode === "example" && variableName in form) {
+    const value = form[variableName as keyof typeof form] ?? "";
+    if (contentType === "labeled-variable") {
+      return `${label}${value}`;
+    }
+    return String(value);
+  }
+
   return content;
 };
 
@@ -91,7 +99,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
         .sort((a, b) => a.zIndex - b.zIndex)
         .map((item) => {
           if (item.type === "text") {
-            const style: any = {
+            const style: Style = {
               position: "absolute",
               left: item.x,
               top: item.y,

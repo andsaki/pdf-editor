@@ -9,7 +9,6 @@ import {
   Button,
   TextField,
   Divider,
-  Grid,
 } from "@mui/material";
 
 interface LayoutPaletteProps {
@@ -48,7 +47,14 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
 
       <Divider sx={{ my: 2 }} />
 
-
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button onClick={() => onMoveLayer("up")} fullWidth variant="outlined">
+          上へ
+        </Button>
+        <Button onClick={() => onMoveLayer("down")} fullWidth variant="outlined">
+          下へ
+        </Button>
+      </Box>
 
       <Typography variant="subtitle1" gutterBottom>
         共通
@@ -116,6 +122,16 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
           setInvoiceData={setInvoiceData}
         />
       )}
+
+      <Button
+        onClick={onDelete}
+        fullWidth
+        variant="outlined"
+        color="error"
+        sx={{ mt: 2 }}
+      >
+        削除
+      </Button>
     </Box>
   );
 };

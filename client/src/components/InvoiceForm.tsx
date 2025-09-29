@@ -11,7 +11,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   invoiceData,
   setInvoiceData,
 }) => {
-  const handleFormChange = (field: keyof InvoiceData["form"], value: any) => {
+  const handleFormChange = (
+    field: keyof InvoiceData["form"],
+    value: InvoiceData["form"][typeof field]
+  ) => {
     setInvoiceData((prev) => ({
       ...prev,
       form: {
