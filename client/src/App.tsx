@@ -10,7 +10,6 @@ import {
   ThemeProvider,
   Divider,
 } from "@mui/material";
-import { InvoiceForm } from "./components/InvoiceForm";
 import { PdfPreview } from "./components/PdfPreview";
 import type { InvoiceData, LayoutItem } from "./types";
 import { pdf } from "@react-pdf/renderer";
@@ -754,12 +753,6 @@ function App() {
                   />
                 );
               }
-              return (
-                <InvoiceForm
-                  invoiceData={invoiceData}
-                  setInvoiceData={setInvoiceData}
-                />
-              );
             })()}
           </Box>
         </Box>
