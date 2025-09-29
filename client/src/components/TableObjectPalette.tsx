@@ -51,7 +51,7 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
 
     const validation = TableItemSchema.shape.data.safeParse(newData);
     if (!validation.success) {
-      const formattedErrors = validation.error.flatten();
+      const formattedErrors: any = validation.error.flatten();
       setTableErrors({
         rows: formattedErrors.formErrors[0],
         cols: formattedErrors.fieldErrors.data?.[0],
