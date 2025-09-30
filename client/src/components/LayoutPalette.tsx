@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 
 interface LayoutPaletteProps {
+  invoiceData: InvoiceData;
   selectedObject: LayoutItem;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   onMoveLayer: (direction: "up" | "down") => void;
@@ -24,6 +25,7 @@ interface LayoutPaletteProps {
 }
 
 export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
+  invoiceData,
   selectedObject,
   setInvoiceData,
   onMoveLayer,
@@ -112,6 +114,7 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
         <TextObjectPalette
           selectedObject={selectedObject}
           setInvoiceData={setInvoiceData}
+          invoiceData={invoiceData}
           companyInfoData={companyInfoData}
         />
       )}

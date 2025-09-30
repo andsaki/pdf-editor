@@ -22,12 +22,14 @@ import {
 interface TextObjectPaletteProps {
   selectedObject: TextItem;
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  invoiceData: InvoiceData;
   companyInfoData: CompanyInfoGql | undefined;
 }
 
 export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   selectedObject,
   setInvoiceData,
+  invoiceData,
   companyInfoData,
 }) => {
   const handleStyleChange = (newStyle: Partial<TextItemStyle>) => {
@@ -42,7 +44,10 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
     }));
   };
 
-  const handleContentChange = (key: keyof TextItem, value: TextItem[typeof key]) => {
+  const handleContentChange = (
+    key: keyof TextItem,
+    value: TextItem[typeof key]
+  ) => {
     setInvoiceData((prev) => ({
       ...prev,
       layout: prev.layout.map((item) => {
@@ -67,11 +72,54 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
       options.push(<ListSubheader key="company-info">自社情報</ListSubheader>);
       options.push(
         ...companyVariables.map((v) => (
-          <MenuItem key={v.key} value={`{{${v.key}}}`}>
+          <MenuItem key={v.key} value={`{{${v.key}.value}}`}>
             {v.label}
           </MenuItem>
         ))
       );
+    }
+
+    if (invoiceData && invoiceData.form) {
+      const invoiceFormVariables = Object.entries(invoiceData.form)
+        .filter(
+          ([key, entry]) =>
+            entry && key !== "__typename" && key !== "line_items"
+        )
+        .map(([key, entry]: [string, any]) => ({
+          key: `form.${key}`,
+          label: entry.label,
+        }));
+      options.push(
+        <ListSubheader key="invoice-data">請求書データ</ListSubheader>
+      );
+      options.push(
+        ...invoiceFormVariables.map((v) => (
+          <MenuItem key={v.key} value={`{{${v.key}.value}}`}>
+            {v.label}
+          </MenuItem>
+        ))
+      );
+
+      if (
+        invoiceData.form.line_items &&
+        invoiceData.form.line_items.length > 0
+      ) {
+        options.push(<ListSubheader key="line-items">明細項目</ListSubheader>);
+        invoiceData.form.line_items.forEach((item, index) => {
+          Object.entries(item)
+            .filter(([key, entry]) => entry && key !== "__typename")
+            .forEach(([key, entry]: [string, any]) => {
+              options.push(
+                <MenuItem
+                  key={`line_items.${index}.${key}`}
+                  value={`{{form.line_items.${index}.${key}.value}}`}
+                >
+                  {`明細 ${index + 1} - ${entry.label}`}
+                </MenuItem>
+              );
+            });
+        });
+      }
     }
 
     return options;
@@ -213,7 +261,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               label="垂直方向の配置"
               onChange={(e) =>
                 handleStyleChange({
-                  verticalAlign: e.target.value as TextItemStyle["verticalAlign"],
+                  verticalAlign: e.target
+                    .value as TextItemStyle["verticalAlign"],
                 })
               }
             >

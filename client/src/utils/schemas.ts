@@ -84,26 +84,40 @@ export const LayoutItemSchema = z.discriminatedUnion("type", [
   ShapeItemSchema,
 ]);
 
+const FormFieldSchema = z.object({
+  label: z.string(),
+  value: z.union([z.string(), z.number()]),
+});
+
+const LineItemSchema = z.object({
+  name: FormFieldSchema.optional(),
+  date: FormFieldSchema.optional(),
+  quantity: FormFieldSchema.optional(),
+  unit_price: FormFieldSchema.optional(),
+  amount: FormFieldSchema.optional(),
+});
+
 export const InvoiceDataSchema = z.object({
   layout: z.array(LayoutItemSchema),
   form: z.object({
-    issue_date: z.string().optional(),
-    due_date: z.string().optional(),
-    invoice_number: z.string().optional(),
-    company_name: z.string().optional(),
-    company_zip: z.string().optional(),
-    company_address: z.string().optional(),
-    company_tel: z.string().optional(),
-    company_email: z.string().optional(),
-    recipient_name: z.string().optional(),
-    recipient_title: z.string().optional(),
-    recipient_zip: z.string().optional(),
-    recipient_address: z.string().optional(),
-    recipient_tel: z.string().optional(),
-    recipient_email: z.string().optional(),
-    subtotal: z.number().optional(),
-    tax: z.number().optional(),
-    total: z.number().optional(),
+    issue_date: FormFieldSchema.optional(),
+    due_date: FormFieldSchema.optional(),
+    invoice_number: FormFieldSchema.optional(),
+    company_name: FormFieldSchema.optional(),
+    company_zip: FormFieldSchema.optional(),
+    company_address: FormFieldSchema.optional(),
+    company_tel: FormFieldSchema.optional(),
+    company_email: FormFieldSchema.optional(),
+    recipient_name: FormFieldSchema.optional(),
+    recipient_title: FormFieldSchema.optional(),
+    recipient_zip: FormFieldSchema.optional(),
+    recipient_address: FormFieldSchema.optional(),
+    recipient_tel: FormFieldSchema.optional(),
+    recipient_email: FormFieldSchema.optional(),
+    subtotal: FormFieldSchema.optional(),
+    tax: FormFieldSchema.optional(),
+    total: FormFieldSchema.optional(),
+    line_items: z.array(LineItemSchema).optional(),
   }),
 });
 

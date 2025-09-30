@@ -17,7 +17,6 @@ export const getProcessedContent = (
 ): string => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
-  const { form } = invoiceData;
 
   const variableName = content.match(/{{(.*?)}}/)?.[1];
 
@@ -25,15 +24,30 @@ export const getProcessedContent = (
     return content;
   }
 
-  const [source, key] = variableName.split(".");
+  const keys = variableName.split(".");
+  let currentValue: any = { form: invoiceData.form, companyInfo };
 
-  if (source === "companyInfo" && companyInfo && companyInfo[key]) {
-    return companyInfo[key].value;
+  for (const key of keys) {
+    if (currentValue && typeof currentValue === "object") {
+      if (Array.isArray(currentValue) && !isNaN(Number(key))) {
+        currentValue = currentValue[Number(key)];
+      } else if (key in currentValue) {
+        currentValue = currentValue[key];
+      } else {
+        currentValue = undefined;
+        break;
+      }
+    } else {
+      currentValue = undefined;
+      break;
+    }
   }
 
-  if (source === "form" && form && form[key as keyof typeof form]) {
-    // @ts-ignore
-    return form[key as keyof typeof form].value;
+  if (currentValue !== undefined) {
+    if (contentType === "labeled-variable") {
+      return `${label}${currentValue}`;
+    }
+    return currentValue;
   }
 
   if (contentType === "labeled-variable") {

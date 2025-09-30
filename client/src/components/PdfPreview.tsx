@@ -38,46 +38,58 @@ const getPreviewProcessedContent = (
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
-):
-  string => {
+): string => {
   if (item.type !== "text") return "";
   const { contentType, content, label } = item;
-  const { form } = invoiceData;
 
   const variableName = content.match(/{{(.*?)}}/)?.[1];
+  if (!variableName) return content;
 
-  if (!variableName) {
-    return content;
-  }
+  const keys = variableName.split(".");
+  const data = { form: invoiceData.form, companyInfo };
 
-  const [source, key] = variableName.split(".");
+  const resolvePath = (pathKeys: string[]) => {
+    let current: any = data;
+    for (const key of pathKeys) {
+      if (current === undefined || current === null) return undefined;
+      if (typeof current === 'object') {
+        if (Array.isArray(current) && !isNaN(Number(key))) {
+          current = current[Number(key)];
+        } else if (key in current) {
+          current = current[key];
+        } else {
+          return undefined;
+        }
+      } else {
+        return undefined;
+      }
+    }
+    return current;
+  };
 
   if (variableDisplayMode === "example") {
-    if (source === "companyInfo" && companyInfo && companyInfo[key]) {
-      return `{{${companyInfo[key].label}}}`;
+    const objectKeys = variableName.endsWith('.value') ? keys.slice(0, -1) : keys;
+    const resolvedObject = resolvePath(objectKeys);
+
+    if (resolvedObject && typeof resolvedObject === 'object' && 'label' in resolvedObject) {
+      return `{{${resolvedObject.label}}}`;
     }
-    if (source === "form" && form && form[key as keyof typeof form]) {
-      // @ts-ignore
-      return `{{${form[key as keyof typeof form].label}}}`;
+    // Fallback for example mode, show the variable name itself
+    return `{{${variableName}}}`;
+  }
+
+  // 'name' mode (actual value)
+  const resolvedValue = resolvePath(keys);
+
+  if (resolvedValue !== undefined) {
+    if (contentType === "labeled-variable") {
+      return `${label || ""}${resolvedValue}`;
     }
-    return content;
+    return String(resolvedValue);
   }
 
-  let value: any = "";
-  if (source === "companyInfo" && companyInfo && companyInfo[key]) {
-    value = companyInfo[key].value;
-  } else if (source === "form" && form && form[key as keyof typeof form]) {
-    // @ts-ignore
-    value = form[key as keyof typeof form].value;
-  }
-
-  if (contentType === "labeled-variable") {
-    return `${label}${value}`;
-  } else if (contentType === "variable") {
-    return String(value);
-  }
-
-  return content;
+  // If resolution fails, return a specific string that indicates failure.
+  return `{{undefined}}`;
 };
 
 /**
