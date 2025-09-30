@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   CssBaseline,
   Box,
@@ -16,7 +16,6 @@ import type {
   LayoutItem,
   TableCell,
   TableItem,
-  TextItemStyle,
 } from "./utils/types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
@@ -304,9 +303,9 @@ function App() {
             item.type === "table" &&
             item.data &&
             (item.data as any).length > 0 &&
-            typeof ((item.data as unknown) as any[][])[0][0] === "string"
+            typeof (item.data as unknown as any[][])[0][0] === "string"
           ) {
-            const newTableData = ((item.data as unknown) as string[][]).map(
+            const newTableData = (item.data as unknown as string[][]).map(
               (row) =>
                 row.map((cellContent) => ({
                   id: crypto.randomUUID(),

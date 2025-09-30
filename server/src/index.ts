@@ -99,6 +99,29 @@ async function startServer() {
       line_items: [LineItemInput!]
     }
 
+    input StyleInput {
+      fontFamily: String
+      fontSize: Float
+      lineHeight: Float
+      textAlign: String
+      verticalAlign: String
+      color: String
+      bold: Boolean
+      italic: Boolean
+      wordWrap: Boolean
+      backgroundColor: String
+      textShadow: String
+      isBullet: Boolean
+    }
+
+    input TableCellInput {
+      id: String!
+      content: String!
+      contentType: String
+      label: String
+      style: StyleInput
+    }
+
     input LayoutItemInput {
       id: String!
       type: String!
@@ -119,12 +142,21 @@ async function startServer() {
       src: String
 
       # TableItem
-      data: [[String]]
+      data: [[TableCellInput]]
 
       # ShapeItem
       shapeType: String
 
-      # Style properties (flattened)
+      # Style
+      style: StyleInput
+    }
+
+    input InvoiceDataInput {
+      layout: [LayoutItemInput!]!
+      form: FormInput!
+    }
+
+    type Style {
       fontFamily: String
       fontSize: Float
       lineHeight: Float
@@ -139,9 +171,12 @@ async function startServer() {
       isBullet: Boolean
     }
 
-    input InvoiceDataInput {
-      layout: [LayoutItemInput!]!
-      form: FormInput!
+    type TableCell {
+      id: String!
+      content: String!
+      contentType: String
+      label: String
+      style: Style
     }
 
     type LayoutItem {
@@ -164,24 +199,13 @@ async function startServer() {
       src: String
 
       # TableItem
-      data: [[String]]
+      data: [[TableCell]]
 
       # ShapeItem
       shapeType: String
 
-      # Style properties (flattened)
-      fontFamily: String
-      fontSize: Float
-      lineHeight: Float
-      textAlign: String
-      verticalAlign: String
-      color: String
-      bold: Boolean
-      italic: Boolean
-      wordWrap: Boolean
-      backgroundColor: String
-      textShadow: String
-      isBullet: Boolean
+      # Style
+      style: Style
     }
 
     type Form {
