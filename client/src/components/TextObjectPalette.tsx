@@ -4,6 +4,7 @@ import type {
   TextItem,
   TextItemStyle,
   CompanyInfoGql,
+  TableCell,
 } from "../utils/types";
 import {
   Box,
@@ -20,45 +21,20 @@ import {
 } from "@mui/material";
 
 interface TextObjectPaletteProps {
-  selectedObject: TextItem;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  selectedObject: TextItem | TableCell;
   invoiceData: InvoiceData;
   companyInfoData: CompanyInfoGql | undefined;
+  onContentChange: (key: keyof (TextItem | TableCell), value: any) => void;
+  onStyleChange: (newStyle: Partial<TextItemStyle>) => void;
 }
 
 export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   selectedObject,
-  setInvoiceData,
   invoiceData,
   companyInfoData,
+  onContentChange,
+  onStyleChange,
 }) => {
-  const handleStyleChange = (newStyle: Partial<TextItemStyle>) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
-        if (item.id === selectedObject.id && item.type === "text") {
-          return { ...item, style: { ...item.style, ...newStyle } };
-        }
-        return item;
-      }),
-    }));
-  };
-
-  const handleContentChange = (
-    key: keyof TextItem,
-    value: TextItem[typeof key]
-  ) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
-        if (item.id === selectedObject.id && item.type === "text") {
-          return { ...item, [key]: value };
-        }
-        return item;
-      }),
-    }));
-  };
-
   const renderVariableOptions = () => {
     const options = [];
 
@@ -137,7 +113,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           value={selectedObject.contentType}
           label="コンテントタイプ"
           onChange={(e) =>
-            handleContentChange(
+            onContentChange(
               "contentType",
               e.target.value as TextItem["contentType"]
             )
@@ -157,7 +133,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           fullWidth
           margin="normal"
           value={selectedObject.content}
-          onChange={(e) => handleContentChange("content", e.target.value)}
+          onChange={(e) => onContentChange("content", e.target.value)}
         />
       )}
 
@@ -167,7 +143,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           <Select
             value={selectedObject.content}
             label="データ"
-            onChange={(e) => handleContentChange("content", e.target.value)}
+            onChange={(e) => onContentChange("content", e.target.value)}
           >
             {renderVariableOptions()}
           </Select>
@@ -181,14 +157,14 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             fullWidth
             margin="normal"
             value={selectedObject.label || ""}
-            onChange={(e) => handleContentChange("label", e.target.value)}
+            onChange={(e) => onContentChange("label", e.target.value)}
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>変数</InputLabel>
             <Select
               value={selectedObject.content}
               label="変数"
-              onChange={(e) => handleContentChange("content", e.target.value)}
+              onChange={(e) => onContentChange("content", e.target.value)}
             >
               {renderVariableOptions()}
             </Select>
@@ -204,7 +180,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
               label="フォント"
               onChange={(e) =>
-                handleStyleChange({
+                onStyleChange({
                   fontFamily: e.target.value as TextItemStyle["fontFamily"],
                 })
               }
@@ -220,7 +196,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             fullWidth
             value={selectedObject.style?.fontSize || 12}
             onChange={(e) =>
-              handleStyleChange({ fontSize: parseFloat(e.target.value) })
+              onStyleChange({ fontSize: parseFloat(e.target.value) })
             }
           />
         </Box>
@@ -231,7 +207,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             fullWidth
             value={selectedObject.style?.lineHeight || 1}
             onChange={(e) =>
-              handleStyleChange({ lineHeight: parseFloat(e.target.value) })
+              onStyleChange({ lineHeight: parseFloat(e.target.value) })
             }
           />
         </Box>
@@ -242,7 +218,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.textAlign || "left"}
               label="水平方向の配置"
               onChange={(e) =>
-                handleStyleChange({
+                onStyleChange({
                   textAlign: e.target.value as TextItemStyle["textAlign"],
                 })
               }
@@ -260,7 +236,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
               value={selectedObject.style?.verticalAlign || "top"}
               label="垂直方向の配置"
               onChange={(e) =>
-                handleStyleChange({
+                onStyleChange({
                   verticalAlign: e.target
                     .value as TextItemStyle["verticalAlign"],
                 })
@@ -277,7 +253,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             label="テキスト影"
             fullWidth
             value={selectedObject.style?.textShadow || ""}
-            onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
+            onChange={(e) => onStyleChange({ textShadow: e.target.value })}
             placeholder="e.g., 2px 2px 4px #000000"
           />
         </Box>
@@ -286,7 +262,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           <input
             type="color"
             value={selectedObject.style?.color || "#000000"}
-            onChange={(e) => handleStyleChange({ color: e.target.value })}
+            onChange={(e) => onStyleChange({ color: e.target.value })}
             style={{ width: "100%", height: "40px" }}
           />
         </Box>
@@ -296,7 +272,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             type="color"
             value={selectedObject.style?.backgroundColor || "#FFFFFF"}
             onChange={(e) =>
-              handleStyleChange({ backgroundColor: e.target.value })
+              onStyleChange({ backgroundColor: e.target.value })
             }
             style={{ width: "100%", height: "40px" }}
           />
@@ -308,7 +284,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           control={
             <Checkbox
               checked={selectedObject.style?.bold || false}
-              onChange={(e) => handleStyleChange({ bold: e.target.checked })}
+              onChange={(e) => onStyleChange({ bold: e.target.checked })}
             />
           }
           label="太字"
@@ -317,7 +293,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           control={
             <Checkbox
               checked={selectedObject.style?.italic || false}
-              onChange={(e) => handleStyleChange({ italic: e.target.checked })}
+              onChange={(e) => onStyleChange({ italic: e.target.checked })}
             />
           }
           label="斜体"
@@ -327,7 +303,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             <Checkbox
               checked={selectedObject.style?.wordWrap || false}
               onChange={(e) =>
-                handleStyleChange({ wordWrap: e.target.checked })
+                onStyleChange({ wordWrap: e.target.checked })
               }
             />
           }
@@ -360,7 +336,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             } else {
               newContent = selectedObject.content;
             }
-            handleContentChange("content", newContent);
+            onContentChange("content", newContent);
           }}
         />
       )}

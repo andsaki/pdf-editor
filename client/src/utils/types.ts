@@ -9,6 +9,7 @@ import {
   CompanyInfoSchema,
   CompanyInfoGqlSchema,
   InvoiceGqlSchema,
+  TableCellSchema,
   type TextItemStyle,
 } from "./schemas";
 
@@ -21,4 +22,5 @@ export type ImageItem = z.infer<typeof ImageItemSchema>;
 export type CompanyInfo = z.infer<typeof CompanyInfoSchema>;
 export type CompanyInfoGql = z.infer<typeof CompanyInfoGqlSchema>;
 export type InvoiceGql = z.infer<typeof InvoiceGqlSchema>;
+export type TableCell = z.infer<typeof TableCellSchema>;
 export type { TextItemStyle };

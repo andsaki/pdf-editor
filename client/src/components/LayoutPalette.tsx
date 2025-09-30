@@ -3,6 +3,9 @@ import type {
   InvoiceData,
   LayoutItem,
   CompanyInfoGql,
+  TextItem,
+  TextItemStyle,
+  TableCell,
 } from "../utils/types";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
@@ -44,6 +47,33 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
           ? { ...item, [field]: parseFloat(value) }
           : item
       ),
+    }));
+  };
+
+  const handleTextContentChange = (
+    key: keyof (TextItem | TableCell),
+    value: any
+  ) => {
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: prev.layout.map((item) => {
+        if (item.id === selectedObject.id && item.type === "text") {
+          return { ...item, [key]: value };
+        }
+        return item;
+      }),
+    }));
+  };
+
+  const handleTextStyleChange = (newStyle: Partial<TextItemStyle>) => {
+    setInvoiceData((prev) => ({
+      ...prev,
+      layout: prev.layout.map((item) => {
+        if (item.id === selectedObject.id && item.type === "text") {
+          return { ...item, style: { ...item.style, ...newStyle } };
+        }
+        return item;
+      }),
     }));
   };
 
@@ -113,9 +143,10 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
       {selectedObject.type === "text" && (
         <TextObjectPalette
           selectedObject={selectedObject}
-          setInvoiceData={setInvoiceData}
           invoiceData={invoiceData}
           companyInfoData={companyInfoData}
+          onContentChange={handleTextContentChange}
+          onStyleChange={handleTextStyleChange}
         />
       )}
 

@@ -250,55 +250,17 @@ async function startServer() {
             label: "自社適格請求書発行番号",
           },
           payment_due_date: { value: "End of Month", label: "支払期限" },
-          bank_account: { value: "Bank Name Branch (Type) XXXXXXX", label: "振込先口座" },
+          bank_account: {
+            value: "Bank Name Branch (Type) XXXXXXX",
+            label: "振込先口座",
+          },
         };
       },
       getInvoice: (_: any, { id }: { id: string }) => {
         console.log(`Fetching invoice with ID: ${id}`);
         // Since we don't have a database, return mock data for now.
         return {
-          layout: [
-            {
-              id: "text-1",
-              type: "text",
-              x: 50,
-              y: 50,
-              width: 200,
-              height: 30,
-              zIndex: 1,
-              content: "{{company_name}}",
-              contentType: "variable",
-            },
-            {
-              id: "text-2",
-              type: "text",
-              x: 50,
-              y: 100,
-              width: 200,
-              height: 30,
-              zIndex: 2,
-              content: "請求書",
-              contentType: "fixed",
-              fontSize: 24,
-              bold: true,
-            },
-            {
-              id: "table-1",
-              type: "table",
-              x: 50,
-              y: 200,
-              width: 700,
-              height: 300,
-              zIndex: 3,
-              data: [
-                ["品目名", "日付", "数量", "単価", "金額"],
-                ["", "", "", "", ""],
-                ["", "", "", "", ""],
-                ["", "", "", "", ""],
-                ["", "", "", "", ""],
-              ],
-            },
-          ],
+          layout: [],
           form: {
             issue_date: { value: "2025-09-29", label: "発行日" },
             due_date: { value: "2025-10-31", label: "支払期限" },
@@ -307,12 +269,21 @@ async function startServer() {
             company_prefecture: { value: "Tokyo", label: "自社_都道府県" },
             company_city: { value: "Shibuya-ku", label: "自社_市区町村" },
             company_street: { value: "Jinnan 1-1-1", label: "自社_番地" },
-            company_building: { value: "Shibuya Building", label: "自社_建物名" },
+            company_building: {
+              value: "Shibuya Building",
+              label: "自社_建物名",
+            },
             recipient_name: { value: "Customer Inc.", label: "宛名" },
             recipient_prefecture: { value: "Tokyo", label: "送付先_都道府県" },
             recipient_city: { value: "Shinjuku-ku", label: "送付先_市区町村" },
-            recipient_street: { value: "Nishi-Shinjuku 2-8-1", label: "送付先_番地" },
-            recipient_building: { value: "Tokyo Metropolitan Government Building", label: "送付先_建物名" },
+            recipient_street: {
+              value: "Nishi-Shinjuku 2-8-1",
+              label: "送付先_番地",
+            },
+            recipient_building: {
+              value: "Tokyo Metropolitan Government Building",
+              label: "送付先_建物名",
+            },
             subtotal: { value: 120000, label: "小計" },
             tax: { value: 12000, label: "消費税" },
             total: { value: 132000, label: "合計金額" },

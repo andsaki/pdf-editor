@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   CssBaseline,
   Box,
@@ -11,7 +11,13 @@ import {
   Divider,
 } from "@mui/material";
 import { PdfPreview } from "./components/PdfPreview";
-import type { InvoiceData, LayoutItem } from "./utils/types";
+import type {
+  InvoiceData,
+  LayoutItem,
+  TableCell,
+  TableItem,
+  TextItemStyle,
+} from "./utils/types";
 import { pdf } from "@react-pdf/renderer";
 import { InvoiceDocument } from "./components/InvoiceDocument";
 import { LayoutPalette } from "./components/LayoutPalette";
@@ -22,6 +28,7 @@ import { LeftToolbar } from "./components/LeftToolbar";
 import { pdfjs } from "react-pdf";
 import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
 import { StatePreview } from "./components/StatePreview";
+import { TextObjectPalette } from "./components/TextObjectPalette";
 
 const SAVE_INVOICE_MUTATION = gql`
   mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
@@ -264,6 +271,11 @@ function App() {
     form: {},
   });
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{
+    tableId: string;
+    rowIndex: number;
+    cellIndex: number;
+  } | null>(null);
   const [clipboard, setClipboard] = useState<LayoutItem | null>(null);
   const [variableDisplayMode, setVariableDisplayMode] = useState<
     "name" | "example"
@@ -281,6 +293,35 @@ function App() {
 
   const [saveInvoiceMutation] = useMutation(SAVE_INVOICE_MUTATION);
   const { data: companyInfoData } = useQuery(GET_COMPANY_INFO);
+  useQuery(GET_INVOICE, {
+    variables: { id: "1" },
+    fetchPolicy: "network-only",
+    onCompleted: (data) => {
+      if (data && data.getInvoice) {
+        const invoice = data.getInvoice;
+        const migratedLayout = invoice.layout.map((item: LayoutItem) => {
+          if (
+            item.type === "table" &&
+            item.data &&
+            (item.data as any).length > 0 &&
+            typeof ((item.data as unknown) as any[][])[0][0] === "string"
+          ) {
+            const newTableData = ((item.data as unknown) as string[][]).map(
+              (row) =>
+                row.map((cellContent) => ({
+                  id: crypto.randomUUID(),
+                  content: cellContent,
+                  contentType: "fixed",
+                }))
+            );
+            return { ...item, data: newTableData };
+          }
+          return item;
+        });
+        setInvoiceData({ ...invoice, layout: migratedLayout });
+      }
+    },
+  });
 
   const getNewZIndex = () => {
     if (invoiceData.layout.length === 0) return 1;
@@ -301,7 +342,36 @@ function App() {
     setSelectedObjectId(objectId);
     if (objectId) {
       setActiveRightPanel("properties");
+      setSelectedCell(null); // Deselect cell when an object is selected
     }
+  };
+
+  const handleSelectCell = (
+    selection: { tableId: string; rowIndex: number; cellIndex: number } | null
+  ) => {
+    setSelectedCell(selection);
+    if (selection) {
+      setSelectedObjectId(null); // Deselect object when a cell is selected
+      setActiveRightPanel("properties");
+    }
+  };
+
+  const handleCellUpdate = (update: Partial<TableCell>) => {
+    if (!selectedCell) return;
+    const { tableId, rowIndex, cellIndex } = selectedCell;
+
+    setInvoiceData((prev) => {
+      const newLayout = prev.layout.map((item) => {
+        if (item.id === tableId && item.type === "table") {
+          const newTableItem = JSON.parse(JSON.stringify(item)) as TableItem;
+          const cellToUpdate = newTableItem.data[rowIndex][cellIndex];
+          Object.assign(cellToUpdate, update);
+          return newTableItem;
+        }
+        return item;
+      });
+      return { ...prev, layout: newLayout };
+    });
   };
 
   const addTextObject = () => {
@@ -325,6 +395,12 @@ function App() {
   };
 
   const addTableObject = () => {
+    const createCell = (content: string): TableCell => ({
+      id: crypto.randomUUID(),
+      content,
+      contentType: "fixed",
+    });
+
     const newTable: LayoutItem = {
       id: crypto.randomUUID(),
       type: "table",
@@ -333,8 +409,8 @@ function App() {
       width: 300,
       height: 100,
       data: [
-        ["Header 1", "Header 2"],
-        ["Cell 1", "Cell 2"],
+        [createCell("Header 1"), createCell("Header 2")],
+        [createCell("Cell 1"), createCell("Cell 2")],
       ],
       zIndex: getNewZIndex(),
     };
@@ -583,6 +659,16 @@ function App() {
     (obj) => obj.id === selectedObjectId
   );
 
+  const selectedCellObject = useMemo(() => {
+    if (!selectedCell) return null;
+    const { tableId, rowIndex, cellIndex } = selectedCell;
+    const table =
+      (invoiceData.layout.find(
+        (item) => item.id === tableId && item.type === "table"
+      ) as TableItem) || null;
+    return table?.data[rowIndex]?.[cellIndex] || null;
+  }, [selectedCell, invoiceData.layout]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -712,6 +798,8 @@ function App() {
               setInvoiceData={setInvoiceData}
               selectedObjectId={selectedObjectId}
               onSelectObject={handleSelectObject}
+              selectedCell={selectedCell}
+              onSelectCell={handleSelectCell}
               variableDisplayMode={variableDisplayMode}
               companyInfo={companyInfoData?.companyInfo}
             />
@@ -741,9 +829,27 @@ function App() {
                   />
                 );
               }
+              if (selectedCellObject) {
+                return (
+                  <TextObjectPalette
+                    selectedObject={selectedCellObject as any} // Cast for now
+                    invoiceData={invoiceData}
+                    companyInfoData={companyInfoData}
+                    onContentChange={(key, value) =>
+                      handleCellUpdate({ [key]: value })
+                    }
+                    onStyleChange={(newStyle) =>
+                      handleCellUpdate({
+                        style: { ...selectedCellObject.style, ...newStyle },
+                      })
+                    }
+                  />
+                );
+              }
               if (selectedObject) {
                 return (
                   <LayoutPalette
+                    invoiceData={invoiceData}
                     selectedObject={selectedObject}
                     setInvoiceData={setInvoiceData}
                     onMoveLayer={moveLayer}

@@ -64,7 +64,7 @@ export const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             return <PdfImageItem key={item.id} item={item} />;
           }
           if (item.type === "table") {
-            return <PdfTableItem key={item.id} item={item} />;
+            return <PdfTableItem key={item.id} item={item} invoiceData={invoiceData} companyInfo={companyInfo} />;
           }
           return null;
         })}

@@ -1,4 +1,4 @@
-import type { LayoutItem, InvoiceData, CompanyInfo } from "./types";
+import type { LayoutItem, InvoiceData, CompanyInfo, TableCell } from "./types";
 
 /**
  * テキストアイテムのコンテンツを処理し、最終的な表示文字列を返します。
@@ -11,11 +11,11 @@ import type { LayoutItem, InvoiceData, CompanyInfo } from "./types";
  * @returns 処理済みのコンテンツ文字列
  */
 export const getProcessedContent = (
-  item: LayoutItem,
+  item: LayoutItem | TableCell,
   invoiceData: InvoiceData,
   companyInfo?: CompanyInfo
 ): string => {
-  if (item.type !== "text") return "";
+  if ("type" in item && item.type !== "text") return "";
   const { contentType, content, label } = item;
 
   const variableName = content.match(/{{(.*?)}}/)?.[1];
@@ -24,7 +24,7 @@ export const getProcessedContent = (
     return content;
   }
 
-  const keys = variableName.split(".");
+  const keys = variableName.trim().split(".");
   let currentValue: any = { form: invoiceData.form, companyInfo };
 
   for (const key of keys) {

@@ -38,6 +38,16 @@ const textItemStyleSchema = z.object({
   isBullet: z.boolean().optional(),
 });
 
+export const TableCellSchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  contentType: z
+    .enum(["fixed", "variable", "labeled-variable"])
+    .default("fixed"),
+  label: z.string().optional(),
+  style: textItemStyleSchema.optional(),
+});
+
 export const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal("text"),
   content: z.string(),
@@ -57,7 +67,7 @@ export const TableItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal("table"),
   data: z
     .array(
-      z.array(z.string()).min(2, "テーブルには少なくとも2つの列が必要です")
+      z.array(TableCellSchema).min(2, "テーブルには少なくとも2つの列が必要です")
     )
     .min(2, "テーブルには少なくとも2つの行が必要です"),
   style: z
@@ -126,3 +136,4 @@ export const InvoiceGqlSchema = z.object({
 });
 
 export type TextItemStyle = z.infer<typeof textItemStyleSchema>;
+export type TableCell = z.infer<typeof TableCellSchema>;

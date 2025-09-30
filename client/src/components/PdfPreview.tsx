@@ -7,7 +7,13 @@ import React, {
 } from "react";
 import { Document, Page } from "react-pdf";
 import { PDFDocument } from "pdf-lib";
-import type { InvoiceData, LayoutItem, ShapeItem, CompanyInfo } from "../utils/types";
+import type {
+  InvoiceData,
+  LayoutItem,
+  ShapeItem,
+  CompanyInfo,
+  TableCell,
+} from "../utils/types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 
@@ -18,6 +24,10 @@ interface PdfPreviewProps {
   setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
+  selectedCell: { tableId: string; rowIndex: number; cellIndex: number } | null;
+  onSelectCell: (
+    selection: { tableId: string; rowIndex: number; cellIndex: number } | null
+  ) => void;
   variableDisplayMode: "name" | "example";
   companyInfo?: CompanyInfo;
 }
@@ -34,25 +44,28 @@ interface PdfPreviewProps {
  * @returns 処理済みのコンテンツ文字列
  */
 const getPreviewProcessedContent = (
-  item: LayoutItem,
+  item: LayoutItem | TableCell,
   invoiceData: InvoiceData,
   variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
 ): string => {
-  if (item.type !== "text") return "";
+  if (!("content" in item && "contentType" in item)) {
+    return "";
+  }
   const { contentType, content, label } = item;
 
   const variableName = content.match(/{{(.*?)}}/)?.[1];
   if (!variableName) return content;
 
-  const keys = variableName.split(".");
+  const trimmedVariableName = variableName.trim();
+  const keys = trimmedVariableName.split(".");
   const data = { form: invoiceData.form, companyInfo };
 
   const resolvePath = (pathKeys: string[]) => {
     let current: any = data;
     for (const key of pathKeys) {
       if (current === undefined || current === null) return undefined;
-      if (typeof current === 'object') {
+      if (typeof current === "object") {
         if (Array.isArray(current) && !isNaN(Number(key))) {
           current = current[Number(key)];
         } else if (key in current) {
@@ -68,17 +81,21 @@ const getPreviewProcessedContent = (
   };
 
   if (variableDisplayMode === "example") {
-    const objectKeys = variableName.endsWith('.value') ? keys.slice(0, -1) : keys;
+    const objectKeys = trimmedVariableName.endsWith(".value")
+      ? keys.slice(0, -1)
+      : keys;
     const resolvedObject = resolvePath(objectKeys);
 
-    if (resolvedObject && typeof resolvedObject === 'object' && 'label' in resolvedObject) {
+    if (
+      resolvedObject &&
+      typeof resolvedObject === "object" &&
+      "label" in resolvedObject
+    ) {
       return `{{${resolvedObject.label}}}`;
     }
-    // Fallback for example mode, show the variable name itself
-    return `{{${variableName}}}`;
+    return `{{${trimmedVariableName}}}`;
   }
 
-  // 'name' mode (actual value)
   const resolvedValue = resolvePath(keys);
 
   if (resolvedValue !== undefined) {
@@ -88,7 +105,6 @@ const getPreviewProcessedContent = (
     return String(resolvedValue);
   }
 
-  // If resolution fails, return a specific string that indicates failure.
   return `{{undefined}}`;
 };
 
@@ -102,6 +118,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   setInvoiceData,
   selectedObjectId,
   onSelectObject,
+  selectedCell,
+  onSelectCell,
   variableDisplayMode,
   companyInfo,
 }) => {
@@ -115,12 +133,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [editingText, setEditingText] = useState<string | null>(null); // 現在編集中のテキストオブジェクトのID
-  const [editingCell, setEditingCell] = useState<{
-    itemId: string;
-    rowIndex: number;
-    cellIndex: number;
-  } | null>(null);
+  const [editingText, setEditingText] = useState<string | null>(null);
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -144,9 +157,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     initializePageDimensions();
   }, []);
 
-  /**
-   * 表示用のPDFバイトを生成します。
-   */
   const generatePdfBytes = useCallback(async () => {
     if (!pageDimensions) return;
 
@@ -219,30 +229,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     };
   }, []);
 
-  /**
-   * PDFドキュメントの読み込みが成功したときに呼び出されるコールバックです。
-   * @param {{ numPages: number }} { numPages } ドキュメントの総ページ数
-   */
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    // numPages の state は使用されていませんが、明確化のためにこの関数は残しています。
     console.log(`PDF loaded successfully with ${numPages} pages.`);
     setError(null);
   };
 
-  /**
-   * PDFドキュメントの読み込み中にエラーが発生したときに呼び出されるコールバックです。
-   * @param {Error} error 発生したエラーオブジェクト
-   */
   const onDocumentLoadError = (error: Error) => {
     console.error("PDF load error:", error);
     setError("PDFの読み込みに失敗しました");
   };
 
-  /**
-   * レイアウト項目を新しいプロパティで更新します。
-   * @param {string} itemId 更新するアイテムのID
-   * @param {function(LayoutItem): LayoutItem} updateFn 古いアイテムを受け取り、新しいアイテムを返す関数
-   */
   const updateLayoutItem = (
     itemId: string,
     updateFn: (item: LayoutItem) => LayoutItem
@@ -255,11 +251,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     }));
   };
 
-  /**
-   * テキストアイテムのコンテンツの変更を処理します。
-   * @param {string} itemId テキストアイテムのID
-   * @param {string} content 新しいコンテンツ
-   */
   const handleTextChange = (itemId: string, content: string) => {
     const validation = contentSchema.safeParse(content);
     if (!validation.success) {
@@ -275,44 +266,6 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     updateLayoutItem(itemId, (item) => {
       if (item.type === "text") {
         return { ...item, content };
-      }
-      return item;
-    });
-  };
-
-  /**
-   * テーブルセルのコンテンツの変更を処理します。
-   * @param {string} itemId テーブルアイテムのID
-   * @param {number} rowIndex セルの行インデックス
-   * @param {number} cellIndex セルの列インデックス
-   * @param {string} content 新しいコンテンツ
-   */
-  const handleTableCellChange = (
-    itemId: string,
-    rowIndex: number,
-    cellIndex: number,
-    content: string
-  ) => {
-    const validation = contentSchema.safeParse(content);
-    const errorKey = `${itemId}-${rowIndex}-${cellIndex}`;
-    if (!validation.success) {
-      setValidationErrors({
-        ...validationErrors,
-        [errorKey]: validation.error.issues[0].message,
-      });
-    } else {
-      const newErrors = { ...validationErrors };
-      delete newErrors[errorKey];
-      setValidationErrors(newErrors);
-    }
-
-    updateLayoutItem(itemId, (item) => {
-      if (item.type === "table") {
-        const newTableData = [...item.data];
-        const newRow = [...newTableData[rowIndex]];
-        newRow[cellIndex] = content;
-        newTableData[rowIndex] = newRow;
-        return { ...item, data: newTableData };
       }
       return item;
     });
@@ -364,7 +317,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           width: pageDimensions ? pageDimensions.width * displayScale : 0,
           height: pageDimensions ? pageDimensions.height * displayScale : 0,
         }}
-        onClick={() => onSelectObject(null)}
+        onClick={() => {
+          onSelectObject(null);
+          onSelectCell(null);
+        }}
       >
         <div style={{ position: "absolute", zIndex: 1 }}>
           {pdfFile && containerWidth > 0 && pageDimensions ? (
@@ -433,7 +389,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     onSelectObject(item.id);
                   }}
                   onDragStop={(_e, d) => {
-                    if (item.locked) return; // useCallbackでメモ化可能
+                    if (item.locked) return;
                     updateLayoutItem(item.id, (item) => ({
                       ...item,
                       x: d.x / displayScale,
@@ -441,7 +397,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     }));
                   }}
                   onResizeStop={(_e, _direction, ref, _delta, position) => {
-                    if (item.locked) return; // useCallbackでメモ化可能
+                    if (item.locked) return;
                     updateLayoutItem(item.id, (item) => ({
                       ...item,
                       x: position.x / displayScale,
@@ -562,6 +518,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                           backgroundColor:
                             item.style?.backgroundColor || "transparent",
                           overflow: "hidden",
+                          pointerEvents: "none"
                         }}
                       >
                         <table
@@ -572,60 +529,51 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                           }}
                         >
                           <tbody>
-                            {item.data.map((row, rowIndex) => (
+                            {(item.data as TableCell[][]).map((row, rowIndex) => (
                               <tr key={rowIndex}>
                                 {row.map((cell, cellIndex) => {
-                                  const isEditing =
-                                    editingCell?.itemId === item.id &&
-                                    editingCell.rowIndex === rowIndex &&
-                                    editingCell.cellIndex === cellIndex;
-                                  const errorKey = `${item.id}-${rowIndex}-${cellIndex}`;
+                                  const isSelected =
+                                    selectedCell?.tableId === item.id &&
+                                    selectedCell.rowIndex === rowIndex &&
+                                    selectedCell.cellIndex === cellIndex;
+
                                   return (
                                     <td
-                                      key={cellIndex}
+                                      key={cell.id}
                                       style={{
-                                        border: "1px solid #ccc",
+                                        border: isSelected
+                                          ? "1px solid blue"
+                                          : "1px solid #ccc",
                                         padding: "5px",
                                         fontSize: `${12 * displayScale}px`,
+                                        pointerEvents: "auto",
+                                        color: cell.style?.color || "black",
+                                        fontWeight:
+                                          cell.style?.bold ? "bold" : "normal",
+                                        fontStyle:
+                                          cell.style?.italic
+                                            ? "italic"
+                                            : "normal",
+                                        textAlign:
+                                          cell.style?.textAlign || "left",
+                                        backgroundColor:
+                                          cell.style?.backgroundColor ||
+                                          "transparent",
                                       }}
-                                      onDoubleClick={() => {
-                                        setEditingCell({
-                                          itemId: item.id,
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSelectCell({
+                                          tableId: item.id,
                                           rowIndex,
                                           cellIndex,
                                         });
                                       }}
                                     >
-                                      {isEditing ? (
-                                        <div>
-                                          <input
-                                            type="text"
-                                            value={cell}
-                                            onChange={(e) =>
-                                              handleTableCellChange(
-                                                item.id,
-                                                rowIndex,
-                                                cellIndex,
-                                                e.target.value
-                                              )
-                                            }
-                                            onBlur={() => setEditingCell(null)}
-                                            autoFocus
-                                            style={{
-                                              width: "100%",
-                                              border: "none",
-                                              background: "transparent",
-                                              outline: "none",
-                                            }}
-                                          />
-                                          {validationErrors[errorKey] && (
-                                            <span className="text-red-500 text-xs">
-                                              {validationErrors[errorKey]}
-                                            </span>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        cell
+                                      {getPreviewProcessedContent(
+                                        cell,
+                                        invoiceData,
+                                        variableDisplayMode,
+                                        companyInfo
                                       )}
                                     </td>
                                   );
