@@ -15,18 +15,6 @@
 
 ## 2. アーキテクチャ
 
-本アプリケーションは、モダンな Web 開発スタックを採用したクライアントサーバーアーキテクチャで構築されています。
-
-- **クライアントサイド:**
-  - **技術スタック:** React をベースに、TypeScript による型安全な開発、Tailwind CSS による効率的なスタイリングを採用しています。
-  - **役割:** ユーザーインターフェースの構築、状態管理、サーバーとの非同期通信を担当します。
-- **サーバーサイド:**
-  - **技術スタック:** Node.js と Express を基盤とし、GraphQL API を提供するために Apollo Server を統合しています。
-  - **役割:** クライアントからのデータ永続化リクエストの処理、ビジネスロジックの実行（将来的には）、およびデータストアとの連携（将来的には）を担当します。
-- **通信プロトコル:** クライアントとサーバー間のデータ通信には GraphQL を採用しており、効率的かつ柔軟なデータ取得・更新を可能にしています。
-
-## 7. 抽象化したアーキテクチャ図
-
 ```mermaid
 graph TD
     subgraph "Client (React)"
@@ -44,7 +32,7 @@ graph TD
 
         User_Interactions -- "イベント発行" --> Main_UI
         User_Interactions -- "直接操作" --> Canvas
-        
+
         Main_UI -- "状態更新を要求" --> App_State
         Canvas -- "状態更新を要求" --> App_State
 
@@ -53,14 +41,14 @@ graph TD
 
         %% データ永続化・復元の流れ
         App_State -- "保存 (Mutation)" --> GraphQL_Client
-        Main_UI -- "<b>読込 (Query)</b>" --> GraphQL_Client
+        Main_UI -- "<b>PDFトレース/読込 (Query)</b>" --> GraphQL_Client
         GraphQL_Client -- "<b>取得データで状態を更新</b>" --> App_State
-        
-        GraphQL_Client -- "GraphQLリクエスト" --> Server
+
+        GraphQL_Client -- "GraphQLリクエスト" --> API_Server
     end
 
-    subgraph "Server "
-        API_Server["APIサーバー "]
+    subgraph "Server"
+        API_Server["APIサーバー"]
         GraphQL_Endpoint["GraphQLエンドポイント (Apollo Server)"]
         Database["(データストア)"]
 
