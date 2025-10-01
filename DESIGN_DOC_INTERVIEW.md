@@ -6,10 +6,12 @@
 
 ### 1.1. 主なゴール
 
-- **WYSIWYG 編集:** ユーザーが見たままの形で請求書を編集できる、インタラクティブなキャンバスを提供する。
-- **柔軟なレイアウト:** テキスト、画像、テーブルなどのオブジェクトを、キャンバス上の任意の位置に配置し、サイズを変更できる。
-- **PDF 出力:** 作成した請求書を、高品質な PDF としてダウンロードまたはプレビューできる。
-- **拡張性:** 将来的に新しいオブジェクト（例：図形、署名欄）を追加しやすい、堅牢なデータ構造とコンポーネント設計を実現する。
+- ユーザーが見たままの形で請求書を編集できる、インタラクティブなキャンバスを提供すること。
+- Redo・Undo やコピーペーストなどの編集状態の管理ができること。
+- キャンバス上で共通のオブジェクト操作（移動、リサイズ）の仕組みを各オブジェクト（テキスト、画像、テーブルなど）に適用すること。
+- 対象のオブジェクトの編集をプロパティパレットで詳細な設定ができること。
+- 編集した請求書を PDF としてプレビューできること。
+- 過去編集した PDF を参照し、レイアウトプリセットとして使用すること。
 
 ## 2. アーキテクチャ
 
@@ -23,27 +25,48 @@
   - **役割:** クライアントからのデータ永続化リクエストの処理、ビジネスロジックの実行（将来的には）、およびデータストアとの連携（将来的には）を担当します。
 - **通信プロトコル:** クライアントとサーバー間のデータ通信には GraphQL を採用しており、効率的かつ柔軟なデータ取得・更新を可能にしています。
 
-### アーキテクチャ図
+## 7. 抽象化したアーキテクチャ図
 
 ```mermaid
 graph TD
-    subgraph "クライアントサイド (React)"
-        A[UI (コンポーネント)]
-        B[状態管理 (フック)]
-        C[GraphQL通信 (Apollo)]
+    subgraph "Client (React)"
+        User_Interactions["ユーザー操作<br/>(オブジェクト追加・編集, 保存, <br/><b>プリセット読み込み</b>)"]
+
+        subgraph "UI層"
+            Main_UI["メインUI<br/>(ツールバー, プロパティパネルなど)"]
+            Canvas["請求書キャンバス<br/>(オブジェクトの描画と操作)"]
+        end
+
+        subgraph "ロジック・データ層"
+            App_State["アプリケーション状態管理<br/>(<b>Undo/Redo用カスタムフック<br/>useHistoryState</b>)"]
+            GraphQL_Client["GraphQLクライアント<br/>(Apollo Client)"]
+        end
+
+        User_Interactions -- "イベント発行" --> Main_UI
+        User_Interactions -- "直接操作" --> Canvas
+        
+        Main_UI -- "状態更新を要求" --> App_State
+        Canvas -- "状態更新を要求" --> App_State
+
+        App_State -- "状態を提供" --> Main_UI
+        App_State -- "状態を提供" --> Canvas
+
+        %% データ永続化・復元の流れ
+        App_State -- "保存 (Mutation)" --> GraphQL_Client
+        Main_UI -- "<b>読込 (Query)</b>" --> GraphQL_Client
+        GraphQL_Client -- "<b>取得データで状態を更新</b>" --> App_State
+        
+        GraphQL_Client -- "GraphQLリクエスト" --> Server
     end
 
-    subgraph "サーバーサイド (Node.js/Express)"
-        D[GraphQL API (Apollo Server)]
-        E[ビジネスロジック]
-        F[(データストア)]
-    end
+    subgraph "Server "
+        API_Server["APIサーバー "]
+        GraphQL_Endpoint["GraphQLエンドポイント (Apollo Server)"]
+        Database["(データストア)"]
 
-    A -- 対話 --> B
-    B -- 要求 --> C
-    C -- GraphQL --> D
-    D -- 処理 --> E
-    E -- 永続化 --> F
+        API_Server -- "/graphql" --> GraphQL_Endpoint
+        GraphQL_Endpoint -- "CRUD処理" --> Database
+    end
 ```
 
 ## 3. 主要コンポーネントの役割
@@ -76,7 +99,7 @@ graph TD
 
 ### 6.1. インタラクティブなキャンバス
 
-- **オブジェクト操作:** サードパーティライブラリを活用し、キャンバス上のオブジェクトのドラッグ＆ドロップ、リサイズといった直感的な操作を実現しています。
+- **オブジェクト操作:** `react-rnd` ライブラリを活用し、キャンバス上のオブジェクトのドラッグ＆ドロップ、リサイズといった直感的な操作を実現しています。これにより、ユーザーはオブジェクトの角や辺をドラッグして、インタラクティブにサイズを変更できます。
 - **インライン編集:** テキストやテーブルセルは、直接キャンバス上で編集可能です。
 - **レイヤー管理:** 各オブジェクトの重なり順序は、`zIndex`プロパティによって制御され、専用の UI を通じて管理できます。
 
@@ -114,10 +137,10 @@ const BaseLayoutItemSchema = z.object({
 // TextItemのスキーマ
 const TextItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal("text"),
-  content: z.string(), // テキスト内容。'{{自社名}}'のような変数名を格納することもある
+  content: z.string(), // テキスト内容。'''{{自社名}}'''のような変数名を格納することもある
   contentType: z.enum(["fixed", "variable", "labeled-variable"]), // contentの解釈方法を定義する
-  // 'labeled-variable'の場合、"label: content" のように表示される (例: "電話: {{電話番号}}")
-  label: z.string().optional(), // contentTypeが'labeled-variable'の時のラベル部分 (例: "電話")
+  // '''labeled-variable'''の場合、"label: content" のように表示される (例: "電話: {{電話番号}}")
+  label: z.string().optional(), // contentTypeが'''labeled-variable'''の時のラベル部分 (例: "電話")
   style: z
     .object({
       fontFamily: z.enum(["Helvetica", "BIZ UDPGothic"]).optional(), // フォント
@@ -189,7 +212,7 @@ export const LayoutItemSchema = z.discriminatedUnion("type", [
     # オプショナルなフィールドとして一つの型にまとめています。
     input LayoutItemInput {
       id: ID!
-      type: String! # オブジェクト種別: 'text', 'image', 'table'
+      type: String! # オブジェクト種別: '''text''', '''image''', '''table'''
       x: Float! # 横軸の座標 (左上が0)
       y: Float! # 縦軸の座標 (左上が0)
       width: Float! # 幅
@@ -197,12 +220,12 @@ export const LayoutItemSchema = z.discriminatedUnion("type", [
       zIndex: Int! # 重なりの順序
       # TextItem properties
       content: String # テキスト内容
-      contentType: String # コンテンツ種別: 'fixed', 'variable', 'labeled-variable'
+      contentType: String # コンテンツ種別: '''fixed''', '''variable''', '''labeled-variable'''
       label: String # ラベル付き変数のラベル
       fontFamily: String # フォント
       fontSize: Int # フォントサイズ
       color: String # 文字色
-      align: String # 水平方向の配置: 'left', 'center', 'right'
+      align: String # 水平方向の配置: '''left''', '''center''', '''right'''
       # ImageItem properties
       src: String # 画像データ (Data URL)
       # TableItem properties
