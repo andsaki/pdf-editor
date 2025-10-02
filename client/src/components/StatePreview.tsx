@@ -1,8 +1,7 @@
 import React from 'react';
-import type { InvoiceData } from '../utils/types';
 
 interface StatePreviewProps {
-  data: InvoiceData;
+  data: any;
 }
 
 export const StatePreview: React.FC<StatePreviewProps> = ({ data }) => {

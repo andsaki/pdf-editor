@@ -1,5 +1,5 @@
 import React from "react";
-import type { InvoiceData } from "../utils/types";
+import type { LayoutItem } from "../utils/types";
 import {
   Box,
   Typography,
@@ -18,32 +18,33 @@ import ArrowUpward from "@mui/icons-material/ArrowUpward";
 import ArrowDownward from "@mui/icons-material/ArrowDownward";
 
 interface LayerPaletteProps {
-  invoiceData: InvoiceData;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  layout: LayoutItem[];
+  setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
   onMoveLayer: (direction: "up" | "down") => void;
 }
 
 export const LayerPalette: React.FC<LayerPaletteProps> = ({
-  invoiceData,
-  setInvoiceData,
+  layout,
+  setLayout,
   selectedObjectId,
   onSelectObject,
   onMoveLayer,
 }) => {
-  const sortedLayout = [...invoiceData.layout].sort(
+  const sortedLayout = [...layout].sort(
     (a, b) => b.zIndex - a.zIndex
   );
 
   const toggleProperty = (itemId: string, property: "locked" | "visible") => {
-    const newLayout = invoiceData.layout.map((item) => {
-      if (item.id === itemId) {
-        return { ...item, [property]: !item[property] };
-      }
-      return item;
-    });
-    setInvoiceData((prev) => ({ ...prev, layout: newLayout }));
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
+        if (item.id === itemId) {
+          return { ...item, [property]: !item[property] };
+        }
+        return item;
+      })
+    );
   };
 
   return (

@@ -55,7 +55,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
       );
     }
 
-    if (invoiceData && invoiceData.form) {
+    if (invoiceData && invoiceData.form && Object.keys(invoiceData.form).length > 0) {
       const invoiceFormVariables = Object.entries(invoiceData.form)
         .filter(
           ([key, entry]) =>

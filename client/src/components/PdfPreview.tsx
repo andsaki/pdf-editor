@@ -21,7 +21,7 @@ const contentSchema = z.string().min(1, "テーブルのセルは空にできま
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
   selectedCell: { tableId: string; rowIndex: number; cellIndex: number } | null;
@@ -58,6 +58,8 @@ const getPreviewProcessedContent = (
   if (!variableName) return content;
 
   const trimmedVariableName = variableName.trim();
+
+  // Example mode
   const keys = trimmedVariableName.split(".");
   const data = { form: invoiceData.form, companyInfo };
 
@@ -115,7 +117,7 @@ const getPreviewProcessedContent = (
  */
 export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
-  setInvoiceData,
+  setLayout,
   selectedObjectId,
   onSelectObject,
   selectedCell,
@@ -243,12 +245,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     itemId: string,
     updateFn: (item: LayoutItem) => LayoutItem
   ) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) =>
-        item.id === itemId ? updateFn(item) : item
-      ),
-    }));
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => (item.id === itemId ? updateFn(item) : item))
+    );
   };
 
   const handleTextChange = (itemId: string, content: string) => {
@@ -518,7 +517,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                           backgroundColor:
                             item.style?.backgroundColor || "transparent",
                           overflow: "hidden",
-                          pointerEvents: "none"
+                          pointerEvents: "none",
                         }}
                       >
                         <table
@@ -529,57 +528,59 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                           }}
                         >
                           <tbody>
-                            {(item.data as TableCell[][]).map((row, rowIndex) => (
-                              <tr key={rowIndex}>
-                                {row.map((cell, cellIndex) => {
-                                  const isSelected =
-                                    selectedCell?.tableId === item.id &&
-                                    selectedCell.rowIndex === rowIndex &&
-                                    selectedCell.cellIndex === cellIndex;
+                            {(item.data as TableCell[][]).map(
+                              (row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  {row.map((cell, cellIndex) => {
+                                    const isSelected =
+                                      selectedCell?.tableId === item.id &&
+                                      selectedCell.rowIndex === rowIndex &&
+                                      selectedCell.cellIndex === cellIndex;
 
-                                  return (
-                                    <td
-                                      key={cell.id}
-                                      style={{
-                                        border: isSelected
-                                          ? "1px solid blue"
-                                          : "1px solid #ccc",
-                                        padding: "5px",
-                                        fontSize: `${12 * displayScale}px`,
-                                        pointerEvents: "auto",
-                                        color: cell.style?.color || "black",
-                                        fontWeight:
-                                          cell.style?.bold ? "bold" : "normal",
-                                        fontStyle:
-                                          cell.style?.italic
+                                    return (
+                                      <td
+                                        key={cell.id}
+                                        style={{
+                                          border: isSelected
+                                            ? "1px solid blue"
+                                            : "1px solid #ccc",
+                                          padding: "5px",
+                                          fontSize: `${12 * displayScale}px`,
+                                          pointerEvents: "auto",
+                                          color: cell.style?.color || "black",
+                                          fontWeight: cell.style?.bold
+                                            ? "bold"
+                                            : "normal",
+                                          fontStyle: cell.style?.italic
                                             ? "italic"
                                             : "normal",
-                                        textAlign:
-                                          cell.style?.textAlign || "left",
-                                        backgroundColor:
-                                          cell.style?.backgroundColor ||
-                                          "transparent",
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onSelectCell({
-                                          tableId: item.id,
-                                          rowIndex,
-                                          cellIndex,
-                                        });
-                                      }}
-                                    >
-                                      {getPreviewProcessedContent(
-                                        cell,
-                                        invoiceData,
-                                        variableDisplayMode,
-                                        companyInfo
-                                      )}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
+                                          textAlign:
+                                            cell.style?.textAlign || "left",
+                                          backgroundColor:
+                                            cell.style?.backgroundColor ||
+                                            "transparent",
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onSelectCell({
+                                            tableId: item.id,
+                                            rowIndex,
+                                            cellIndex,
+                                          });
+                                        }}
+                                      >
+                                        {getPreviewProcessedContent(
+                                          cell,
+                                          invoiceData,
+                                          variableDisplayMode,
+                                          companyInfo
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              )
+                            )}
                           </tbody>
                         </table>
                       </div>

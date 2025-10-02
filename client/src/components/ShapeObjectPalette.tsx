@@ -1,5 +1,5 @@
 import React from "react";
-import type { InvoiceData, ShapeItem } from "../utils/types";
+import type { LayoutItem, ShapeItem } from "../utils/types";
 import {
   Box,
   Typography,
@@ -12,35 +12,33 @@ import {
 
 interface ShapeObjectPaletteProps {
   selectedObject: ShapeItem;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
 }
 
 export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
   selectedObject,
-  setInvoiceData,
+  setLayout,
 }) => {
   const handleShapeChange = (key: "shapeType", value: ShapeItem["shapeType"]) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "shape") {
           return { ...item, [key]: value };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   const handleStyleChange = (newStyle: Partial<ShapeItem["style"]>) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "shape") {
           return { ...item, style: { ...item.style, ...newStyle } };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   return (

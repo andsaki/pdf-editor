@@ -21,7 +21,7 @@ import {
 interface LayoutPaletteProps {
   invoiceData: InvoiceData;
   selectedObject: LayoutItem;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
   onMoveLayer: (direction: "up" | "down") => void;
   onDelete: () => void;
   companyInfoData: CompanyInfoGql | undefined;
@@ -30,7 +30,7 @@ interface LayoutPaletteProps {
 export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
   invoiceData,
   selectedObject,
-  setInvoiceData,
+  setLayout,
   onMoveLayer,
   onDelete,
   companyInfoData,
@@ -40,41 +40,38 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
   }
 
   const handleNumericChange = (field: keyof LayoutItem, value: string) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) =>
+    setLayout((prevLayout) =>
+      prevLayout.map((item) =>
         item.id === selectedObject.id
           ? { ...item, [field]: parseFloat(value) }
           : item
-      ),
-    }));
+      )
+    );
   };
 
   const handleTextContentChange = (
     key: keyof (TextItem | TableCell),
     value: any
   ) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "text") {
           return { ...item, [key]: value };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   const handleTextStyleChange = (newStyle: Partial<TextItemStyle>) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "text") {
           return { ...item, style: { ...item.style, ...newStyle } };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   return (
@@ -153,14 +150,14 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
       {selectedObject.type === "table" && (
         <TableObjectPalette
           selectedObject={selectedObject}
-          setInvoiceData={setInvoiceData}
+          setLayout={setLayout}
         />
       )}
 
       {selectedObject.type === "shape" && (
         <ShapeObjectPalette
           selectedObject={selectedObject}
-          setInvoiceData={setInvoiceData}
+          setLayout={setLayout}
         />
       )}
 

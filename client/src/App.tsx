@@ -259,17 +259,18 @@ const theme = createTheme({
 
 function App() {
   const {
-    state: invoiceData,
-    setState: setInvoiceData,
+    state: layout,
+    setState: setLayout,
     undo,
     redo,
     canUndo,
     canRedo,
-  } = useHistoryState<InvoiceData>({
-    layout: [],
-    form: {},
-  });
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  } = useHistoryState<LayoutItem[]>([]);
+  const [form, setForm] = useState<InvoiceData["form"]>({});
+  const invoiceData: InvoiceData = useMemo(
+    () => ({ layout, form }),
+    [layout, form]
+  );  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<{
     tableId: string;
     rowIndex: number;
@@ -317,14 +318,15 @@ function App() {
           }
           return item;
         });
-        setInvoiceData({ ...invoice, layout: migratedLayout });
+        setLayout(migratedLayout);
+        setForm(invoice.form);
       }
     },
   });
 
   const getNewZIndex = () => {
-    if (invoiceData.layout.length === 0) return 1;
-    const maxZIndex = invoiceData.layout.reduce(
+    if (layout.length === 0) return 1;
+    const maxZIndex = layout.reduce(
       (max, item) => Math.max(max, item.zIndex),
       0
     );
@@ -359,8 +361,8 @@ function App() {
     if (!selectedCell) return;
     const { tableId, rowIndex, cellIndex } = selectedCell;
 
-    setInvoiceData((prev) => {
-      const newLayout = prev.layout.map((item) => {
+    setLayout((prevLayout) => {
+      return prevLayout.map((item) => {
         if (item.id === tableId && item.type === "table") {
           const newTableItem = JSON.parse(JSON.stringify(item)) as TableItem;
           const cellToUpdate = newTableItem.data[rowIndex][cellIndex];
@@ -369,7 +371,6 @@ function App() {
         }
         return item;
       });
-      return { ...prev, layout: newLayout };
     });
   };
 
@@ -386,10 +387,7 @@ function App() {
       zIndex: getNewZIndex(),
       style: { isBullet: false, lineHeight: 1.2 },
     };
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: [...(prev.layout || []), newText],
-    }));
+    setLayout((prevLayout) => [...(prevLayout || []), newText]);
     handleSelectObject(newText.id);
   };
 
@@ -413,10 +411,7 @@ function App() {
       ],
       zIndex: getNewZIndex(),
     };
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: [...(prev.layout || []), newTable],
-    }));
+    setLayout((prevLayout) => [...(prevLayout || []), newTable]);
     handleSelectObject(newTable.id);
   };
 
@@ -433,10 +428,7 @@ function App() {
       zIndex: getNewZIndex(),
       style: { isBullet: true, lineHeight: 1.5 },
     };
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: [...(prev.layout || []), newBullet],
-    }));
+    setLayout((prevLayout) => [...(prevLayout || []), newBullet]);
     handleSelectObject(newBullet.id);
   };
 
@@ -475,34 +467,29 @@ function App() {
       };
     }
 
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: [...(prev.layout || []), newShape],
-    }));
+    setLayout((prevLayout) => [...(prevLayout || []), newShape]);
     handleSelectObject(newShape.id);
     setActiveCreationPalette(null);
   };
 
   const deleteSelectedObject = () => {
     if (!selectedObjectId) return;
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.filter((item) => item.id !== selectedObjectId),
-    }));
+    setLayout((prevLayout) =>
+      prevLayout.filter((item) => item.id !== selectedObjectId)
+    );
     handleSelectObject(null);
   };
 
   const cut = () => {
     if (!selectedObjectId) return;
-    const objectToCut = invoiceData.layout.find(
+    const objectToCut = layout.find(
       (item) => item.id === selectedObjectId
     );
     if (objectToCut) {
       setClipboard(objectToCut);
-      setInvoiceData((prev) => ({
-        ...prev,
-        layout: prev.layout.filter((item) => item.id !== selectedObjectId),
-      }));
+      setLayout((prevLayout) =>
+        prevLayout.filter((item) => item.id !== selectedObjectId)
+      );
       handleSelectObject(null);
     }
   };
@@ -515,16 +502,13 @@ function App() {
       x: clipboard.x + 10,
       y: clipboard.y + 10,
     };
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: [...prev.layout, newObject],
-    }));
+    setLayout((prevLayout) => [...prevLayout, newObject]);
   };
 
   const moveLayer = (direction: "up" | "down") => {
     if (!selectedObjectId) return;
 
-    const sortedLayout = [...invoiceData.layout].sort(
+    const sortedLayout = [...layout].sort(
       (a, b) => a.zIndex - b.zIndex
     );
     const currentIndex = sortedLayout.findIndex(
@@ -541,17 +525,17 @@ function App() {
     const currentItem = sortedLayout[currentIndex];
     const targetItem = sortedLayout[targetIndex];
 
-    const newLayout = invoiceData.layout.map((item) => {
-      if (item.id === currentItem.id) {
-        return { ...item, zIndex: targetItem.zIndex };
-      }
-      if (item.id === targetItem.id) {
-        return { ...item, zIndex: currentItem.zIndex };
-      }
-      return item;
+    setLayout((prevLayout) => {
+      return prevLayout.map((item) => {
+        if (item.id === currentItem.id) {
+          return { ...item, zIndex: targetItem.zIndex };
+        }
+        if (item.id === targetItem.id) {
+          return { ...item, zIndex: currentItem.zIndex };
+        }
+        return item;
+      });
     });
-
-    setInvoiceData((prev) => ({ ...prev, layout: newLayout }));
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -574,10 +558,7 @@ function App() {
             height: img.height,
             zIndex: getNewZIndex(),
           };
-          setInvoiceData((prev) => ({
-            ...prev,
-            layout: [...(prev.layout || []), newImage],
-          }));
+          setLayout((prevLayout) => [...(prevLayout || []), newImage]);
         };
         img.src = data;
       }
@@ -618,10 +599,7 @@ function App() {
               height: viewport.height,
               zIndex: getNewZIndex(),
             };
-            setInvoiceData((prev) => ({
-              ...prev,
-              layout: [...(prev.layout || []), newImage],
-            }));
+            setLayout((prevLayout) => [...(prevLayout || []), newImage]);
           }
         }
       }
@@ -654,7 +632,7 @@ function App() {
     window.open(url);
   };
 
-  const selectedObject = invoiceData.layout.find(
+  const selectedObject = layout.find(
     (obj) => obj.id === selectedObjectId
   );
 
@@ -662,11 +640,11 @@ function App() {
     if (!selectedCell) return null;
     const { tableId, rowIndex, cellIndex } = selectedCell;
     const table =
-      (invoiceData.layout.find(
+      (layout.find(
         (item) => item.id === tableId && item.type === "table"
       ) as TableItem) || null;
     return table?.data[rowIndex]?.[cellIndex] || null;
-  }, [selectedCell, invoiceData.layout]);
+  }, [selectedCell, layout]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -794,7 +772,7 @@ function App() {
           >
             <PdfPreview
               invoiceData={invoiceData}
-              setInvoiceData={setInvoiceData}
+              setLayout={setLayout}
               selectedObjectId={selectedObjectId}
               onSelectObject={handleSelectObject}
               selectedCell={selectedCell}
@@ -815,13 +793,13 @@ function App() {
               position: "relative",
             }}
           >
-            {showStatePreview && <StatePreview data={invoiceData} />}
+            {showStatePreview && <StatePreview data={layout} />}
             {(() => {
               if (activeRightPanel === "layers") {
                 return (
                   <LayerPalette
-                    invoiceData={invoiceData}
-                    setInvoiceData={setInvoiceData}
+                    layout={layout}
+                    setLayout={setLayout}
                     selectedObjectId={selectedObjectId}
                     onSelectObject={handleSelectObject}
                     onMoveLayer={moveLayer}
@@ -850,7 +828,7 @@ function App() {
                   <LayoutPalette
                     invoiceData={invoiceData}
                     selectedObject={selectedObject}
-                    setInvoiceData={setInvoiceData}
+                    setLayout={setLayout}
                     onMoveLayer={moveLayer}
                     onDelete={deleteSelectedObject}
                     companyInfoData={companyInfoData}

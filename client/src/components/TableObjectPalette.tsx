@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { InvoiceData, TableItem } from "../utils/types";
+import type { InvoiceData, TableItem, LayoutItem } from "../utils/types";
 import { TableItemSchema } from "../utils/schemas";
 import {
   Box,
@@ -11,12 +11,12 @@ import {
 
 interface TableObjectPaletteProps {
   selectedObject: TableItem;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
+  setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
 }
 
 export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
   selectedObject,
-  setInvoiceData,
+  setLayout,
 }) => {
   const [tableErrors, setTableErrors] = useState<{
     rows?: string;
@@ -24,16 +24,15 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
   }>({});
 
   const handleStyleChange = (newStyle: Partial<TableItem["style"]>) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "table") {
           const currentStyle = item.style || {};
           return { ...item, style: { ...currentStyle, ...newStyle } };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   const handleTableDataChange = (rows: number, cols: number) => {
@@ -60,15 +59,14 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
       setTableErrors({});
     }
 
-    setInvoiceData((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
+    setLayout((prevLayout) =>
+      prevLayout.map((item) => {
         if (item.id === selectedObject.id && item.type === "table") {
           return { ...item, data: newData };
         }
         return item;
-      }),
-    }));
+      })
+    );
   };
 
   return (
