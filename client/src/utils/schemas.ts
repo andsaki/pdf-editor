@@ -9,7 +9,7 @@ export const CompanyInfoSchema = z.record(
 );
 
 export const CompanyInfoGqlSchema = z.object({
-  companyInfo: CompanyInfoSchema,
+  getCompanyInfo: CompanyInfoSchema,
 });
 
 const BaseLayoutItemSchema = z.object({
