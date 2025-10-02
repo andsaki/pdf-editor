@@ -17,10 +17,8 @@ Architecture
 インタラクティブキャンバス + 設定 UI パネル
 状態管理に useHistoryState を用いた Undo/Redo
 
-
 サーバーサイド
 GraphQL API を提供し、クライアントのデータ永続化を担当
-
 
 この構成により、フロントは UI/操作に集中し、サーバーはデータ永続性を担保する役割分担を実現。
 
@@ -83,157 +81,179 @@ graph TD
     end
 ```
 
-
 Service Interface
 
 ```graphql
-# 任意のJSONオブジェクトを表すカスタムスカラー型
-scalar JSON
-
-# 会社情報の各エントリの型
-type CompanyInfoEntry {
-  value: String # フィールドの値
-  label: String # フィールドの表示ラベル
+type BaseLayoutItem {
+  id: ID!
+  type: String! # text, image, table など
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  rotation: Float
+  properties: JSON
 }
 
-# フォームの各入力フィールドの型（文字列値）
-input FormEntryInput {
-  value: String # 入力フィールドの値
-  label: String # 入力フィールドの表示ラベル
-}
-
-# フォームの各入力フィールドの型（数値値）
-input FloatEntryInput {
-  value: Float # 入力フィールドの数値
-  label: String # 入力フィールドの表示ラベル
-}
-
-# 自社情報
-# アプリケーション全体で利用されるデフォルトの会社情報。
-# 各フィールドは値 (value) と表示ラベル (label) を持つ。
-type CompanyInfo {
-  name: CompanyInfoEntry # 会社名
-  zip: CompanyInfoEntry # 郵便番号
-  prefecture: CompanyInfoEntry # 都道府県
-  city: CompanyInfoEntry # 市区町村
-  street: CompanyInfoEntry # 番地
-  building: CompanyInfoEntry # 建物名
-  tel: CompanyInfoEntry # 電話番号
-  fax: CompanyInfoEntry # FAX番号
-  email: CompanyInfoEntry # メールアドレス
-  contact_person: CompanyInfoEntry # 担当者名
-  registration_number: CompanyInfoEntry # 適格請求書発行事業者登録番号
-  payment_due_date: CompanyInfoEntry # 支払期限
-  bank_account: CompanyInfoEntry # 振込先口座情報
-}
-
-# 請求書明細アイテムの型
-type LineItem {
-  name: CompanyInfoEntry # 品目名
-  date: CompanyInfoEntry # 日付
-  quantity: FloatEntry # 数量
-  unit_price: FloatEntry # 単価
-  amount: FloatEntry # 金額
-}
-
-# 請求書明細アイテムの入力型
-input LineItemInput {
-  name: FormEntryInput # 品目名
-  date: FormEntryInput # 日付
-  quantity: FloatEntryInput # 数量
-  unit_price: FloatEntryInput # 単価
-  amount: FloatEntryInput # 金額
-}
-
-# 請求書フォーム全体の型
-type Form {
-  issue_date: CompanyInfoEntry # 発行日
-  due_date: CompanyInfoEntry # 支払期限
-  invoice_number: CompanyInfoEntry # 請求書番号
-  company_name: CompanyInfoEntry # 自社名
-  company_zip: CompanyInfoEntry # 自社郵便番号
-  company_prefecture: CompanyInfoEntry # 自社都道府県
-  company_city: CompanyInfoEntry # 自社市区町村
-  company_street: CompanyInfoEntry # 自社番地
-  company_building: CompanyInfoEntry # 自社建物名
-  company_tel: CompanyInfoEntry # 自社電話番号
-  company_email: CompanyInfoEntry # 自社メールアドレス
-  recipient_name: CompanyInfoEntry # 宛名
-  recipient_title: CompanyInfoEntry # 宛先敬称
-  recipient_zip: CompanyInfoEntry # 宛先郵便番号
-  recipient_prefecture: CompanyInfoEntry # 宛先都道府県
-  recipient_city: CompanyInfoEntry # 宛先市区町村
-  recipient_street: CompanyInfoEntry # 宛先番地
-  recipient_building: CompanyInfoEntry # 宛先建物名
-  recipient_tel: CompanyInfoEntry # 宛先電話番号
-  recipient_email: CompanyInfoEntry # 宛先メールアドレス
-  subtotal: FloatEntry # 小計
-  tax: FloatEntry # 消費税
-  total: FloatEntry # 合計金額
-  line_items: [LineItem!] # 明細アイテムのリスト
-}
-
-# 請求書全体のデータ型
 type Invoice {
   id: ID!
   name: String!
-  layout: JSON! # キャンバス上のオブジェクト配列
-  form: JSON! # 請求日や顧客名などのフォームデータ
+  layout: [BaseLayoutItem!]!
+  form: JSON!
   createdAt: String!
   updatedAt: String!
 }
 
-# 新規作成用の入力データ型
-input CreateInvoiceInput {
-  name: String!
-  layout: JSON!
-  form: JSON!
-}
-
-# 更新用の入力データ型
 input UpdateInvoiceInput {
   name: String
-  layout: JSON
+  layout: [JSON!] # BaseLayoutItem[] を JSON として受け取る
   form: JSON
 }
 
-# 取得系のクエリ
 type Query {
   getInvoice(id: ID!): Invoice
-  getInvoices: [Invoice!]! #PDFトレース用
-  getCompanyInfo: CompanyInfo #自社情報取得。これは一般的なデフォルトの会社情報を提供します。
+  getInvoices: [Invoice!]!
+  getCompanyInfo: JSON
 }
 
-# 請求書データを変更するための操作
 type Mutation {
   updateInvoice(id: ID!, input: UpdateInvoiceInput!): Invoice!
-  createInvoice(input: CreateInvoiceInput!): Invoice! #当該画面では使用しない
-  deleteInvoice(id: ID!): Boolean! #当該画面では使用しない
+}
+
+type Invoice {
+  id: ID!
+  name: String!
+  layout: [BaseLayoutItem!]!
+  form: JSON!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input UpdateInvoiceInput {
+  name: String
+  layout: [JSON!] # BaseLayoutItem[] を JSON として受け取る
+  form: JSON
+}
+
+type Query {
+  getInvoice(id: ID!): Invoice
+  getInvoices: [Invoice!]!
+  getCompanyInfo: JSON
+}
+
+type Mutation {
+  updateInvoice(id: ID!, input: UpdateInvoiceInput!): Invoice!
 }
 ```
 
+### Service Interface が扱う主要なオブジェクト型（TypeScript）
 
+Service Interface は、クライアントサイドの状態管理（`AppState.invoiceData.objects`として）にも利用される以下の TypeScript 型に基づいて、PDF キャンバス上に配置されるインタラクティブなオブジェクトのデータ構造を扱います。特に、`Invoice`型の`layout`フィールドはこれらのオブジェクトの配列を JSON 形式で保持し、Service Interface を通じてバックエンドと交換されます。
+
+```typescript
+// client/src/utils/types.ts より抜粋
+
+// PDF上のインタラクティブなオブジェクトの基底
+export type BaseLayoutItem = {
+  id: string; // オブジェクトの一意な識別子
+  x: number; // PDF上でのX座標（左端からの距離）
+  y: number; // PDF上でのY座標（上端からの距離）
+  width: number; // オブジェクトの幅
+  height: number; // オブジェクトの高さ
+  zIndex: number; // オブジェクトの重なり順（大きいほど前面）
+  locked?: boolean; // オブジェクトがロックされているか（編集不可）
+  visible?: boolean; // オブジェクトが表示されているか
+};
+
+// テキストアイテムのスタイル定義
+export type TextItemStyle = {
+  fontFamily?: "Helvetica" | "BIZ UDPGothic";
+  fontSize?: number;
+  lineHeight?: number;
+  textAlign?: "left" | "center" | "right";
+  verticalAlign?: "top" | "center" | "bottom";
+  color?: string;
+  bold?: boolean;
+  italic?: boolean;
+  wordWrap?: boolean;
+  backgroundColor?: string;
+  textShadow?: string;
+  isBullet?: boolean;
+};
+
+// テキストオブジェクト
+export type TextObject = BaseLayoutItem & {
+  type: "text";
+  content: string;
+  contentType: "fixed" | "variable" | "labeled-variable";
+  label?: string;
+  style?: TextItemStyle;
+};
+
+// 画像オブジェクト
+export type ImageObject = BaseLayoutItem & {
+  type: "image";
+  src: string; // URL or base64
+};
+
+// テーブルセル
+export type TableCell = {
+  id: string;
+  content: string;
+  contentType: "fixed" | "variable" | "labeled-variable";
+  label?: string;
+  style?: TextItemStyle;
+};
+
+// テーブルオブジェクト
+export type TableObject = BaseLayoutItem & {
+  type: "table";
+  data: TableCell[][];
+  style?: {
+    backgroundColor?: string;
+  };
+};
+
+// 図形オブジェクト
+export type ShapeObject = BaseLayoutItem & {
+  type: "shape";
+  shapeType: "rect" | "h-line" | "v-line";
+  style?: {
+    backgroundColor?: string;
+  };
+};
+
+// すべてのインタラクティブなオブジェクトの共用型
+export type InvoiceObject =
+  | TextObject
+  | ImageObject
+  | TableObject
+  | ShapeObject;
+```
 
 Technical Decisions
 技術的な意思決定
 
 - 主要技術スタック (Core Technology Stack)
-  - フロントエンド: React と TypeScript を採用し、堅牢でコンポーネントベースのUIを構築します。
-  - API通信: GraphQL を採用し、サーバーとの通信には Apollo Client を利用します。これにより、効率的なデータ取得と強力なキャッシュ機能、型安全なAPI操作を実現します。
+
+  - フロントエンド: React と TypeScript を採用し、堅牢でコンポーネントベースの UI を構築します。
+  - API 通信: GraphQL を採用し、サーバーとの通信には Apollo Client を利用します。これにより、効率的なデータ取得と強力なキャッシュ機能、型安全な API 操作を実現します。
 
 - キャンバスの実装 (Canvas Implementation)
+
   - 採用技術: `react-rnd`, `pdf-lib`, react-pdf
   - 理由: キャンバスは複数の技術を組み合わせたハイブリッドな実装です。
     - インタラクティブな操作: react-rnd を使用し、各オブジェクトをドラッグ・リサイズ可能にしています。
-    - 静的背景の描画: pdf-lib で画像などを含むPDFを動的に生成し、`react-pdf` でキャンバスの背景として描画。その上にインタラクティブなオブジェクトを重ねています。これによりWYSIWYGな編集体験とパフォーマンスを両立しています。
+    - 静的背景の描画: pdf-lib で画像などを含む PDF を動的に生成し、`react-pdf` でキャンバスの背景として描画。その上にインタラクティブなオブジェクトを重ねています。これにより WYSIWYG な編集体験とパフォーマンスを両立しています。
 
-- PDF生成 (PDF Generation)
+- PDF 生成 (PDF Generation)
+
   - 採用技術: @react-pdf/renderer
-  - 理由: 最終的なダウンロード用のPDFファイルは、` @react-pdf/renderer` を用いて生成します。`InvoiceDocument.tsx`がこの役割を担い、Reactコンポーネントから直接PDFを構築します。
+  - 理由: 最終的なダウンロード用の PDF ファイルは、` @react-pdf/renderer` を用いて生成します。`InvoiceDocument.tsx`がこの役割を担い、React コンポーネントから直接 PDF を構築します。
 
 - 状態管理 (State Management)
   - 採用技術: カスタムフック useHistoryState
-  - 理由: 編集中のレイアウト情報など、Undo/Redoが必要なクライアント状態は`useHistoryState`フックで管理します。これにより、状態のスナップショットを配列として保持し、過去の状態へ簡単に移動できます。
+  - 理由: 編集中のレイアウト情報など、Undo/Redo が必要なクライアント状態は`useHistoryState`フックで管理します。これにより、状態のスナップショットを配列として保持し、過去の状態へ簡単に移動できます。
 
 Alternatives Considered（Optional）
 検討した代替案とその理由
