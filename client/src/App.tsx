@@ -37,7 +37,7 @@ const SAVE_INVOICE_MUTATION = gql`
 
 const GET_COMPANY_INFO = gql`
   query GetCompanyInfo {
-    companyInfo {
+    getCompanyInfo {
       name {
         label
         value
@@ -625,7 +625,7 @@ function App() {
     const blob = await pdf(
       <InvoiceDocument
         invoiceData={invoiceData}
-        companyInfo={companyInfoData?.companyInfo}
+        companyInfo={companyInfoData?.getCompanyInfo}
       />
     ).toBlob();
     const url = URL.createObjectURL(blob);
@@ -778,7 +778,7 @@ function App() {
               selectedCell={selectedCell}
               onSelectCell={handleSelectCell}
               variableDisplayMode={variableDisplayMode}
-              companyInfo={companyInfoData?.companyInfo}
+              companyInfo={companyInfoData?.getCompanyInfo}
             />
           </Box>
           <Box

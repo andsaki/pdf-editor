@@ -38,8 +38,8 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   const renderVariableOptions = () => {
     const options = [];
 
-    if (companyInfoData && companyInfoData.companyInfo) {
-      const companyVariables = Object.entries(companyInfoData.companyInfo)
+    if (companyInfoData && companyInfoData.getCompanyInfo) {
+      const companyVariables = Object.entries(companyInfoData.getCompanyInfo)
         .filter(([key, entry]) => entry && key !== "__typename")
         .map(([key, entry]: [string, any]) => ({
           key: `companyInfo.${key}`,

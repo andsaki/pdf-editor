@@ -245,16 +245,14 @@ async function startServer() {
     }
 
     type Query {
-      hello: String
-      companyInfo: CompanyInfo
+      getCompanyInfo: CompanyInfo
       getInvoice(id: ID!): InvoiceData
     }
   `;
 
   const resolvers = {
     Query: {
-      hello: () => "Hello world!",
-      companyInfo: () => {
+      getCompanyInfo: () => {
         return {
           name: { value: "Your Company Name", label: "自社名" },
           zip: { value: "XXX-XXXX", label: "自社郵便番号" },
