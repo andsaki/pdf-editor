@@ -111,20 +111,33 @@ const GET_INVOICE = gql`
         contentType
         label
         src
-        data
+        data {
+          id
+          content
+          contentType
+          label
+          style {
+            fontFamily
+            fontSize
+            bold
+            italic
+          }
+        }
         shapeType
-        fontFamily
-        fontSize
-        lineHeight
-        textAlign
-        verticalAlign
-        color
-        bold
-        italic
-        wordWrap
-        backgroundColor
-        textShadow
-        isBullet
+        style {
+          fontFamily
+          fontSize
+          lineHeight
+          textAlign
+          verticalAlign
+          color
+          bold
+          italic
+          wordWrap
+          backgroundColor
+          textShadow
+          isBullet
+        }
       }
       form {
         issue_date {
@@ -270,7 +283,8 @@ function App() {
   const invoiceData: InvoiceData = useMemo(
     () => ({ layout, form }),
     [layout, form]
-  );  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  );
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<{
     tableId: string;
     rowIndex: number;
@@ -297,30 +311,14 @@ function App() {
     variables: { id: "1" },
     fetchPolicy: "network-only",
     onCompleted: (data) => {
+      console.log("data", data);
       if (data && data.getInvoice) {
-        const invoice = data.getInvoice;
-        const migratedLayout = invoice.layout.map((item: LayoutItem) => {
-          if (
-            item.type === "table" &&
-            item.data &&
-            (item.data as any).length > 0 &&
-            typeof (item.data as unknown as any[][])[0][0] === "string"
-          ) {
-            const newTableData = (item.data as unknown as string[][]).map(
-              (row) =>
-                row.map((cellContent) => ({
-                  id: crypto.randomUUID(),
-                  content: cellContent,
-                  contentType: "fixed",
-                }))
-            );
-            return { ...item, data: newTableData };
-          }
-          return item;
-        });
-        setLayout(migratedLayout);
-        setForm(invoice.form);
+        setLayout(data.getInvoice.layout);
+        setForm(data.getInvoice.form);
       }
+    },
+    onError: (error) => {
+      console.error("Error fetching invoice:", error);
     },
   });
 
@@ -396,6 +394,7 @@ function App() {
       id: crypto.randomUUID(),
       content,
       contentType: "fixed",
+      style: {},
     });
 
     const newTable: LayoutItem = {
@@ -482,9 +481,7 @@ function App() {
 
   const cut = () => {
     if (!selectedObjectId) return;
-    const objectToCut = layout.find(
-      (item) => item.id === selectedObjectId
-    );
+    const objectToCut = layout.find((item) => item.id === selectedObjectId);
     if (objectToCut) {
       setClipboard(objectToCut);
       setLayout((prevLayout) =>
@@ -508,9 +505,7 @@ function App() {
   const moveLayer = (direction: "up" | "down") => {
     if (!selectedObjectId) return;
 
-    const sortedLayout = [...layout].sort(
-      (a, b) => a.zIndex - b.zIndex
-    );
+    const sortedLayout = [...layout].sort((a, b) => a.zIndex - b.zIndex);
     const currentIndex = sortedLayout.findIndex(
       (item) => item.id === selectedObjectId
     );
@@ -551,7 +546,7 @@ function App() {
           const newImage: LayoutItem = {
             id: crypto.randomUUID(),
             type: "image",
-            data,
+            src: data,
             x: 50,
             y: 50,
             width: img.width,
@@ -592,7 +587,7 @@ function App() {
             const newImage: LayoutItem = {
               id: crypto.randomUUID(),
               type: "image" as const,
-              data: imageDataUrl,
+              src: imageDataUrl,
               x: 50,
               y: 50 + (i - 1) * (viewport.height + 20),
               width: viewport.width,
@@ -632,9 +627,7 @@ function App() {
     window.open(url);
   };
 
-  const selectedObject = layout.find(
-    (obj) => obj.id === selectedObjectId
-  );
+  const selectedObject = layout.find((obj) => obj.id === selectedObjectId);
 
   const selectedCellObject = useMemo(() => {
     if (!selectedCell) return null;

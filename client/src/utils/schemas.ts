@@ -60,7 +60,7 @@ export const TextItemSchema = BaseLayoutItemSchema.extend({
 
 export const ImageItemSchema = BaseLayoutItemSchema.extend({
   type: z.literal("image"),
-  data: z.string(),
+  src: z.string(),
 });
 
 export const TableItemSchema = BaseLayoutItemSchema.extend({
