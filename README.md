@@ -30,7 +30,6 @@ Design Doc や ADR の清書のための調査として出力したドキュメ�
   - [Vite](https://vitejs.dev/)
   - [TypeScript](https://www.typescriptlang.org/)
   - [Material-UI](https://mui.com/) (AI 駆動開発のため既存コンポーネントを活用)
-  - [Tailwind CSS](https://tailwindcss.com/)
   - [Apollo Client](https://www.apollographql.com/docs/react/) (GraphQL クライアント)
   - [zod](https://zod.dev/)
   - [react-pdf](https://react-pdf.org/) (`@react-pdf/renderer`): PDFのレンダリングとプレビュー
