@@ -17,7 +17,7 @@ import type {
 import { Rnd } from "react-rnd";
 import { z } from "zod";
 
-const contentSchema = z.string().min(1, "テーブルのセルは空にできません");
+const textContentSchema = z.string().min(1, "テキストは空にできません");
 
 interface PdfPreviewProps {
   invoiceData: InvoiceData;
@@ -264,7 +264,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   };
 
   const handleTextChange = (itemId: string, content: string) => {
-    const validation = contentSchema.safeParse(content);
+    const validation = textContentSchema.safeParse(content);
     if (!validation.success) {
       setValidationErrors({
         ...validationErrors,
