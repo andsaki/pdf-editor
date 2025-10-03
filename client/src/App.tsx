@@ -152,38 +152,6 @@ const GET_INVOICE = gql`
           value
           label
         }
-        company_name {
-          value
-          label
-        }
-        company_zip {
-          value
-          label
-        }
-        company_prefecture {
-          value
-          label
-        }
-        company_city {
-          value
-          label
-        }
-        company_street {
-          value
-          label
-        }
-        company_building {
-          value
-          label
-        }
-        company_tel {
-          value
-          label
-        }
-        company_email {
-          value
-          label
-        }
         recipient_name {
           value
           label

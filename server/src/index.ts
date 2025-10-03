@@ -76,12 +76,6 @@ async function startServer() {
       issue_date: FormEntryInput
       due_date: FormEntryInput
       invoice_number: FormEntryInput
-      company_name: FormEntryInput
-      company_zip: FormEntryInput
-      company_prefecture: FormEntryInput
-      company_city: FormEntryInput
-      company_street: FormEntryInput
-      company_building: FormEntryInput
       company_tel: FormEntryInput
       company_email: FormEntryInput
       recipient_name: FormEntryInput
@@ -214,12 +208,6 @@ async function startServer() {
       issue_date: CompanyInfoEntry
       due_date: CompanyInfoEntry
       invoice_number: CompanyInfoEntry
-      company_name: CompanyInfoEntry
-      company_zip: CompanyInfoEntry
-      company_prefecture: CompanyInfoEntry
-      company_city: CompanyInfoEntry
-      company_street: CompanyInfoEntry
-      company_building: CompanyInfoEntry
       company_tel: CompanyInfoEntry
       company_email: CompanyInfoEntry
       recipient_name: CompanyInfoEntry
@@ -291,14 +279,6 @@ async function startServer() {
             issue_date: { value: "2025-09-29", label: "発行日" },
             due_date: { value: "2025-10-31", label: "支払期限" },
             invoice_number: { value: "INV-001", label: "請求書番号" },
-            company_name: { value: "My Awesome Company", label: "自社名" },
-            company_prefecture: { value: "Tokyo", label: "自社_都道府県" },
-            company_city: { value: "Shibuya-ku", label: "自社_市区町村" },
-            company_street: { value: "Jinnan 1-1-1", label: "自社_番地" },
-            company_building: {
-              value: "Shibuya Building",
-              label: "自社_建物名",
-            },
             recipient_name: { value: "Customer Inc.", label: "宛名" },
             recipient_title: { value: "様", label: "送付先敬称" },
             recipient_zip: { value: "163-8001", label: "送付先郵便番号" },
