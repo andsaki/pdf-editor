@@ -35,6 +35,12 @@ const SAVE_INVOICE_MUTATION = gql`
   }
 `;
 
+const GENERATE_PDF_MUTATION = gql`
+  mutation GeneratePdf($html: String!) {
+    generatePdf(html: $html)
+  }
+`;
+
 const GET_COMPANY_INFO = gql`
   query GetCompanyInfo {
     getCompanyInfo {
@@ -282,6 +288,7 @@ function App() {
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [saveInvoiceMutation] = useMutation(SAVE_INVOICE_MUTATION);
+  const [generatePdfMutation] = useMutation(GENERATE_PDF_MUTATION);
   const { data: companyInfoData } = useQuery(GET_COMPANY_INFO);
   useQuery(GET_INVOICE, {
     variables: { id: "1" },
@@ -613,6 +620,64 @@ function App() {
     window.open(url);
   };
 
+  const openPdfWithPuppeteer = async () => {
+    try {
+      // Generate HTML from current layout
+      const htmlContent = generateHtmlFromLayout(invoiceData, companyInfoData?.getCompanyInfo);
+
+      const result = await generatePdfMutation({
+        variables: { html: htmlContent },
+      });
+
+      if (result.data?.generatePdf) {
+        // Convert base64 to blob
+        const base64 = result.data.generatePdf;
+        const binaryString = window.atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url);
+      }
+    } catch (e: any) {
+      console.error("Error generating PDF:", e);
+      alert(`PDF generation failed: ${e.message}`);
+    }
+  };
+
+  const generateHtmlFromLayout = (data: InvoiceData, companyInfo?: any): string => {
+    // Generate a simple HTML representation of the invoice
+    const itemsHtml = data.layout
+      .filter(item => item.visible !== false)
+      .map(item => {
+        if (item.type === 'text') {
+          return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px; font-size: ${item.style?.fontSize || 16}px; color: ${item.style?.color || 'black'};">${item.content}</div>`;
+        }
+        return '';
+      })
+      .join('');
+
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: "BIZ UDPGothic", "Hiragino Sans", sans-serif; }
+      .page { width: 210mm; height: 297mm; position: relative; background: white; }
+      .item { position: absolute; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      ${itemsHtml}
+    </div>
+  </body>
+</html>`;
+  };
+
   const selectedObject = layout.find((obj) => obj.id === selectedObjectId);
 
   const selectedCellObject = useMemo(() => {
@@ -673,7 +738,15 @@ function App() {
               onClick={openPdfInNewTab}
               sx={{ ml: 1 }}
             >
-              プレビュー
+              プレビュー (React-PDF)
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={openPdfWithPuppeteer}
+              sx={{ ml: 1 }}
+            >
+              プレビュー (Puppeteer)
             </Button>
             <Button
               variant="outlined"

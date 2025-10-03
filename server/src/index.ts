@@ -4,6 +4,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
+import puppeteer from "puppeteer";
 
 async function startServer() {
   console.log("Starting server...");
@@ -234,6 +235,7 @@ async function startServer() {
 
     type Mutation {
       saveInvoice(invoiceData: InvoiceDataInput!): String
+      generatePdf(html: String!): String
     }
 
     type Query {
@@ -343,6 +345,30 @@ async function startServer() {
         );
         // Here you would save the data to a database
         return "Invoice saved successfully!";
+      },
+      generatePdf: async (_: any, { html }: { html: string }) => {
+        console.log("Generating PDF with Puppeteer...");
+        const browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        try {
+          const page = await browser.newPage();
+          await page.setContent(html, { waitUntil: 'networkidle0' });
+          const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+              top: '0mm',
+              right: '0mm',
+              bottom: '0mm',
+              left: '0mm',
+            },
+          });
+          return Buffer.from(pdfBuffer).toString('base64');
+        } finally {
+          await browser.close();
+        }
       },
     },
   };
