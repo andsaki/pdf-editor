@@ -11,7 +11,6 @@ Redo・Undo・コピーペーストなどの編集状態の管理を可能にす
 Non Goals（Optional）
 バックエンドの詳細設計（DB スキーマ/インフラ等）は対象外。
 Architecture
-
 概要
 Client: React + TypeScript
 インタラクティブキャンバス + 設定 UI パネル
@@ -19,9 +18,7 @@ Client: React + TypeScript
 Undo/Redo の対象: layout: BaseLayoutItem[] のみ（form や会社情報は別画面のフォームで管理し、本画面では参照/適用のみ）
 Server: GraphQL API（Apollo Client 経由で利用）
 データの取得・保存・プリセット参照
-
 この構成により、フロントは UI/操作に集中し、サーバーはデータ永続性を担保する役割分担を実現。
-
 System context diagram
 
 この機能は以下の間でのデータのやり取りを中心とします：
@@ -114,7 +111,7 @@ type TableCell {
 # キャンバス上のオブジェクト（説明用に1型で統合）
 type LayoutItem {
   id: String!
-  type: String! # text, image, table, shape
+  type: String!          # text, image, table, shape
   x: Float!
   y: Float!
   width: Float!
@@ -145,8 +142,8 @@ type LayoutItem {
 type Invoice {
   id: ID!
   name: String!
-  layout: [LayoutItem!]! # キャンバス上のオブジェクト
-  form: JSON! # フォームデータ（請求日、宛先、合計など）
+  layout: [LayoutItem!]!  # キャンバス上のオブジェクト
+  form: Form!             # フォームデータ（請求日、宛先、合計など）
   createdAt: String!
   updatedAt: String!
 }
@@ -154,20 +151,21 @@ type Invoice {
 # 更新用の入力型
 input UpdateInvoiceInput {
   name: String
-  layout: [JSON!] # 実装では BaseLayoutItem[] を JSON として受け取る
+  layout: [JSON!]         # 実装では BaseLayoutItem[] を JSON として受け取る
   form: JSON
 }
 
 # クエリ
 type Query {
   getInvoice(id: ID!): Invoice
-  getInvoices: [Invoice!]! # PDFトレース用
-  getCompanyInfo: JSON # 自社情報（別画面フォームから参照）
+  getInvoices: [Invoice!]!   # PDFトレース用
+  getCompanyInfo: JSON       # 自社情報（別画面フォームから参照）
 }
 
 # ミューテーション
 type Mutation {
   updateInvoice(id: ID!, input: UpdateInvoiceInput!): Invoice!
+  generatePdf(html: String!): String # Puppeteerによるサーバーサイド PDF 生成
 }
 ```
 
@@ -207,7 +205,10 @@ export type TextObject = BaseLayoutItem & {
   type: "text"; // オブジェクトのタイプ
   content: string; // 表示するテキスト内容
   contentType: "fixed" | "variable" | "labeled-variable"; // テキスト内容の種類
-  label?: string; // 変数テキストの場合のラベル
+  // - "fixed": 固定テキスト（例: "御請求書"）
+  // - "variable": 変数のみ（例: content="{{form.total.value}}" → "132000"）
+  // - "labeled-variable": ラベル付き変数（例: label="合計", content="{{form.total.value}}" → "合計 132000"）
+  label?: string; // labeled-variableの場合に使用するラベル
   style?: TextItemStyle; // テキストのスタイル
 };
 
@@ -230,8 +231,8 @@ export type TableObject = BaseLayoutItem & {
 export type TableCell = {
   id: string; // セルの一意な識別子
   content: string; // セルの内容
-  contentType: "fixed" | "variable" | "labeled-variable"; // セル内容の種類
-  label?: string; // 変数テキストの場合のラベル
+  contentType: "fixed" | "variable" | "labeled-variable"; // セル内容の種類（TextObjectと同様）
+  label?: string; // labeled-variableの場合に使用するラベル
   style?: TextItemStyle; // セルのテキストスタイル
 };
 
@@ -279,33 +280,78 @@ export type InvoiceData = {
 Technical Decisions
 技術的な意思決定
 
-- 主要技術スタック (Core Technology Stack)
+主要技術スタック (Core Technology Stack)
+フロントエンド:
+React + TypeScript を採用し、堅牢かつコンポーネントベースで拡張性の高い UI を構築する。
+API 通信:
+GraphQL + Apollo Client を採用。
+効率的なデータ取得とキャッシュ機能を提供し、型安全な API 操作が可能。
 
-  - フロントエンド: React と TypeScript を採用し、堅牢でコンポーネントベースの UI を構築します。
-  - API 通信: GraphQL を採用し、サーバーとの通信には Apollo Client を利用します。これにより、効率的なデータ取得と強力なキャッシュ機能、型安全な API 操作を実現します。
+キャンバスの実装 (Canvas Implementation)
+採用技術: react-rnd, pdf-lib, react-pdf
+理由:
+インタラクティブな操作: react-rnd を利用し、キャンバス上のオブジェクト（テキスト・画像・テーブル等）を直感的にドラッグ＆リサイズ可能にする。
+静的背景の描画: pdf-lib を使い、PDF の既存ページや画像を取り込みつつ、react-pdf で背景としてレンダリング。
+重ね合わせ: 上記の背景に対して、React の DOM 要素を絶対配置することで WYSIWYG に近い編集体験を実現。
+これにより リアルタイム編集の操作性 と 背景 PDF の再現性 を両立。
 
-- キャンバスの実装 (Canvas Implementation)
+PDF 生成 (PDF Generation)
+採用技術: Puppeteer
+理由:
+最終的なダウンロード用 PDF は サーバーサイドで Puppeteer により生成。
+HTML/CSS で記述したレイアウトをそのままレンダリングし、プレビューと出力の差異をなくす (WYSIWYG 保証)。
+標準 CSS 完全対応（Grid, Flexbox, 絶対配置, カスタムプロパティ等）。
+日本語対応: システムフォントを利用することで、自然で崩れのない表示が可能。
+デバッグ性: ブラウザ開発者ツールを用いた確認が可能で、スタイル崩れの原因を迅速に調査できる。
 
-  - 採用技術: `react-rnd`, `pdf-lib`, `react-pdf`
-  - 理由: キャンバスは複数の技術を組み合わせたハイブリッドな実装です。
-    - インタラクティブな操作: react-rnd を使用し、各オブジェクトをドラッグ・リサイズ可能にしています。
-    - 静的背景の描画: pdf-lib で画像などを含む PDF を動的に生成し、`react-pdf` でキャンバスの背景として描画。その上にインタラクティブなオブジェクトを重ねています。これにより WYSIWYG な編集体験とパフォーマンスを両立しています。
-
-- PDF 生成 (PDF Generation)
-
-  - 採用技術: @react-pdf/renderer
-  - 理由: 最終的なダウンロード用の PDF ファイルは、`@react-pdf/renderer` を用いて生成します。`InvoiceDocument.tsx`がこの役割を担い、React コンポーネントから直接 PDF を構築します。
-
-- 状態管理 (State Management)
-  - 採用技術: カスタムフック useHistoryState
-  - 理由: 編集中のレイアウト情報など、Undo/Redo が必要なクライアント状態は`useHistoryState`フックで管理します。これにより、状態のスナップショットを配列として保持し、過去の状態へ簡単に移動できます。
-
+状態管理 (State Management)
+採用技術: カスタムフック useHistoryState
+理由:
+編集中のレイアウト情報（BaseLayoutItem[]）について、Undo/Redo が必要。
+useHistoryState を利用して状態のスナップショットを履歴として保持し、ユーザーが過去の状態に容易に戻れるようにする。
+これにより直感的な編集操作を保証します。
 Alternatives Considered（Optional）
 検討した代替案とその理由
 
 下記、3 項目について ADR に記載
-`pdf-lib` + `react-pdf` の検討理由について
-`react-rnd` + `dnd-kit` の検討理由について
-`zod` + `yup`の検討理由について
+ADR: PDF の出力方式の選定
+ADR: PDF プレビューと操作ライブラリの選定
+ADR: ドラッグ＆ドロップおよびリサイズライブラリの選定
+ADR: データバリデーションライブラリの選定
 Cross-cutting concerns（Optional）
 システム全体に影響する非機能要件や共通処理があればご記入ください
+
+対応環境
+ブラウザ:
+Chrome, Edge, Firefox の最新版
+Safari ≥ 14（Safari 13 以前は FinalizationRegistry 非対応のためサポート外）
+react-pdf の話
+
+モバイルブラウザ:
+iOS Safari, Android Chrome はプレビュー中心の利用を想定
+編集操作は PC 向けを基本とし、タッチ操作対応は優先度低
+アクセシビリティ
+キーボード操作:
+Tab キーによるオブジェクトフォーカス移動
+矢印キーによる位置調整（1px / 10px 単位移動)
+スクリーンリーダー:
+キャンバス上のオブジェクトには aria-label を付与し、要素の種類や内容を伝達
+編集可能/ロック済みなどの状態も通知
+
+ライブラリの特性:
+react-rnd: 標準でキーボード/スクリーンリーダー非対応 → 独自実装が必要
+dnd-kit: アクセシビリティ API を標準サポート（フォーカス管理やセンサー制御が可能）
+エラーハンドリング
+ネットワーク障害、保存失敗、API エラーに対してはユーザーにトースト通知
+Undo/Redo と組み合わせて「直前の状態に戻す」ことを保証
+パフォーマンス
+スケルトン UI の導入: レンダリング切り替え時に白画面を出さず、スケルトン UI を表示することで体感レスポンスを改善
+キャッシュ活用:
+UI レンダリングキャッシュ
+React.memo によるオブジェクトコンポーネントの再描画抑制
+useMemo / useCallback による不要な計算・ハンドラ再生成の削減
+データキャッシュ
+Apollo Client のキャッシュを利用し、同じ請求書データや自社情報を再取得せず高速化
+テスト戦略
+単体テスト: レイアウトアイテム（移動、リサイズ）の状態更新ロジックをテスト。
+E2E テスト: キャンバス操作と PDF 出力までの一連の流れを Cypress/Playwright などで確認。

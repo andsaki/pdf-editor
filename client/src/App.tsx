@@ -30,9 +30,13 @@ import { ShapeCreationPalette } from "./components/ShapeCreationPalette";
 import { StatePreview } from "./components/StatePreview";
 import { TextObjectPalette } from "./components/TextObjectPalette";
 
-const SAVE_INVOICE_MUTATION = gql`
-  mutation SaveInvoice($invoiceData: InvoiceDataInput!) {
-    saveInvoice(invoiceData: $invoiceData)
+const UPDATE_INVOICE_MUTATION = gql`
+  mutation UpdateInvoice($id: ID!, $input: UpdateInvoiceInput!) {
+    updateInvoice(id: $id, input: $input) {
+      id
+      name
+      updatedAt
+    }
   }
 `;
 
@@ -104,6 +108,10 @@ const GET_COMPANY_INFO = gql`
 const GET_INVOICE = gql`
   query GetInvoice($id: ID!) {
     getInvoice(id: $id) {
+      id
+      name
+      createdAt
+      updatedAt
       layout {
         id
         type
@@ -288,7 +296,7 @@ function App() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
-  const [saveInvoiceMutation] = useMutation(SAVE_INVOICE_MUTATION);
+  const [updateInvoiceMutation] = useMutation(UPDATE_INVOICE_MUTATION);
   const [generatePdfMutation] = useMutation(GENERATE_PDF_MUTATION);
   const { data: companyInfoData } = useQuery(GET_COMPANY_INFO);
   useQuery(GET_INVOICE, {
@@ -594,19 +602,25 @@ function App() {
           key === "__typename" ? undefined : value
         )
       );
-      console.log("Attempting to save invoice data:", cleanData);
-      await saveInvoiceMutation({
+      console.log("Attempting to update invoice data:", cleanData);
+      const result = await updateInvoiceMutation({
         variables: {
-          invoiceData: cleanData,
+          id: "1", // TODO: Get actual invoice ID
+          input: {
+            name: "請求書",
+            layout: cleanData.layout,
+            form: cleanData.form,
+          },
         },
       });
-      alert("Invoice saved successfully!");
+      console.log("Update result:", result);
+      alert("Invoice updated successfully!");
     } catch (e: any) {
-      console.error("Error saving invoice:", e);
+      console.error("Error updating invoice:", e);
       console.error("GraphQL errors:", e.graphQLErrors);
       console.error("Network error:", e.networkError);
       const errorMessage = e.graphQLErrors?.[0]?.message || e.networkError?.message || e.message || "Unknown error";
-      alert(`An error occurred while saving the invoice: ${errorMessage}`);
+      alert(`An error occurred while updating the invoice: ${errorMessage}`);
     }
   };
 

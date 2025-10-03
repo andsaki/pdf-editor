@@ -233,14 +233,30 @@ async function startServer() {
       form: Form!
     }
 
+    type Invoice {
+      id: ID!
+      name: String!
+      layout: [LayoutItem!]!
+      form: Form!
+      createdAt: String!
+      updatedAt: String!
+    }
+
+    input UpdateInvoiceInput {
+      name: String
+      layout: [LayoutItemInput!]
+      form: FormInput
+    }
+
     type Mutation {
-      saveInvoice(invoiceData: InvoiceDataInput!): String
+      updateInvoice(id: ID!, input: UpdateInvoiceInput!): Invoice!
       generatePdf(html: String!): String
     }
 
     type Query {
       getCompanyInfo: CompanyInfo
-      getInvoice(id: ID!): InvoiceData
+      getInvoice(id: ID!): Invoice
+      getInvoices: [Invoice!]!
     }
   `;
 
@@ -275,7 +291,12 @@ async function startServer() {
       getInvoice: (_: any, { id }: { id: string }) => {
         console.log(`Fetching invoice with ID: ${id}`);
         // Since we don't have a database, return mock data for now.
+        const currentDate = new Date().toISOString();
         return {
+          id,
+          name: "請求書サンプル",
+          createdAt: currentDate,
+          updatedAt: currentDate,
           layout: [],
           form: {
             issue_date: { value: "2025-09-29", label: "発行日" },
@@ -336,15 +357,28 @@ async function startServer() {
           },
         };
       },
+      getInvoices: () => {
+        console.log("Fetching all invoices");
+        // Return empty array for now, will be populated when DB is implemented
+        return [];
+      },
     },
     Mutation: {
-      saveInvoice: (_: any, { invoiceData }: { invoiceData: any }) => {
+      updateInvoice: (_: any, { id, input }: { id: string; input: any }) => {
         console.log(
-          "Received invoice data via GraphQL:",
-          JSON.stringify(invoiceData, null, 2)
+          `Updating invoice ${id}${input.name ? ` (name: ${input.name})` : ''}:`,
+          JSON.stringify(input, null, 2)
         );
         // Here you would save the data to a database
-        return "Invoice saved successfully!";
+        const currentDate = new Date().toISOString();
+        return {
+          id,
+          name: input.name || "請求書",
+          layout: input.layout || [],
+          form: input.form || {},
+          createdAt: currentDate,
+          updatedAt: currentDate,
+        };
       },
       generatePdf: async (_: any, { html }: { html: string }) => {
         console.log("Generating PDF with Puppeteer...");
