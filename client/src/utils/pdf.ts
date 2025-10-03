@@ -45,14 +45,19 @@ export const getProcessedContent = (
 
   if (currentValue !== undefined) {
     if (contentType === "labeled-variable") {
-      return `${label}${currentValue}`;
+      // Add space between label and value if label doesn't end with space
+      const labelText = label || "";
+      const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+      return `${labelText}${separator}${currentValue}`;
     }
     return currentValue;
   }
 
   if (contentType === "labeled-variable") {
     const value = ""; // fallback for unresolved variables
-    return `${label}${value}`;
+    const labelText = label || "";
+    const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+    return `${labelText}${separator}${value}`;
   }
 
   return content;

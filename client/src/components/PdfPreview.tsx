@@ -49,7 +49,7 @@ const getPreviewProcessedContent = (
   variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
 ): string => {
-  if (!("content" in item && "contentType" in item)) {
+  if (!item || typeof item !== "object" || !("content" in item && "contentType" in item)) {
     return "";
   }
   const { contentType, content, label } = item;
@@ -93,7 +93,17 @@ const getPreviewProcessedContent = (
       typeof resolvedObject === "object" &&
       "label" in resolvedObject
     ) {
+      if (contentType === "labeled-variable") {
+        const labelText = label || "";
+        const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+        return `${labelText}${separator}{{${resolvedObject.label}}}`;
+      }
       return `{{${resolvedObject.label}}}`;
+    }
+    if (contentType === "labeled-variable") {
+      const labelText = label || "";
+      const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+      return `${labelText}${separator}{{${trimmedVariableName}}}`;
     }
     return `{{${trimmedVariableName}}}`;
   }
@@ -102,7 +112,10 @@ const getPreviewProcessedContent = (
 
   if (resolvedValue !== undefined) {
     if (contentType === "labeled-variable") {
-      return `${label || ""}${resolvedValue}`;
+      // Add space between label and value if label doesn't end with space
+      const labelText = label || "";
+      const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+      return `${labelText}${separator}${resolvedValue}`;
     }
     return String(resolvedValue);
   }
@@ -532,6 +545,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                               (row, rowIndex) => (
                                 <tr key={rowIndex}>
                                   {row.map((cell, cellIndex) => {
+                                    if (!cell) return null;
+
                                     const isSelected =
                                       selectedCell?.tableId === item.id &&
                                       selectedCell.rowIndex === rowIndex &&
@@ -539,7 +554,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
                                     return (
                                       <td
-                                        key={cell.id}
+                                        key={cell.id || `${rowIndex}-${cellIndex}`}
                                         style={{
                                           border: isSelected
                                             ? "1px solid blue"
