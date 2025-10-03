@@ -220,6 +220,14 @@ const GET_INVOICE = gql`
           value
           label
         }
+        recipient_department_name {
+          value
+          label
+        }
+        recipient_contact_name {
+          value
+          label
+        }
         subtotal {
           value
           label

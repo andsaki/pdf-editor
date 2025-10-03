@@ -124,6 +124,8 @@ export const InvoiceDataSchema = z.object({
     recipient_address: FormFieldSchema.optional(),
     recipient_tel: FormFieldSchema.optional(),
     recipient_email: FormFieldSchema.optional(),
+    recipient_department_name: FormFieldSchema.optional(),
+    recipient_contact_name: FormFieldSchema.optional(),
     subtotal: FormFieldSchema.optional(),
     tax: FormFieldSchema.optional(),
     total: FormFieldSchema.optional(),

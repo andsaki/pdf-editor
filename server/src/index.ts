@@ -93,6 +93,8 @@ async function startServer() {
       recipient_building: FormEntryInput
       recipient_tel: FormEntryInput
       recipient_email: FormEntryInput
+      recipient_department_name: FormEntryInput
+      recipient_contact_name: FormEntryInput
       subtotal: FloatEntryInput
       tax: FloatEntryInput
       total: FloatEntryInput
