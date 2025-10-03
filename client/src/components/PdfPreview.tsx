@@ -172,9 +172,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       for (const item of invoiceData.layout) {
         if (item.type === "image") {
           try {
-            const imageBytes = item.data.startsWith("data:image/jpeg")
-              ? await pdfDoc.embedJpg(item.data)
-              : await pdfDoc.embedPng(item.data);
+            const imageBytes = item.src.startsWith("data:image/jpeg")
+              ? await pdfDoc.embedJpg(item.src)
+              : await pdfDoc.embedPng(item.src);
 
             const pdfY = height - item.y - item.height;
 
@@ -499,7 +499,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     ))}
                   {item.type === "image" && (
                     <img
-                      src={item.data}
+                      src={item.src}
                       style={{
                         width: "100%",
                         height: "100%",

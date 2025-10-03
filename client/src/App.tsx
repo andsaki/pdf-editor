@@ -580,15 +580,25 @@ function App() {
 
   const saveInvoice = async () => {
     try {
+      // Remove __typename fields that Apollo Client adds
+      const cleanData = JSON.parse(
+        JSON.stringify(invoiceData, (key, value) =>
+          key === "__typename" ? undefined : value
+        )
+      );
+      console.log("Attempting to save invoice data:", cleanData);
       await saveInvoiceMutation({
         variables: {
-          invoiceData,
+          invoiceData: cleanData,
         },
       });
       alert("Invoice saved successfully!");
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error saving invoice:", e);
-      alert("An error occurred while saving the invoice.");
+      console.error("GraphQL errors:", e.graphQLErrors);
+      console.error("Network error:", e.networkError);
+      const errorMessage = e.graphQLErrors?.[0]?.message || e.networkError?.message || e.message || "Unknown error";
+      alert(`An error occurred while saving the invoice: ${errorMessage}`);
     }
   };
 

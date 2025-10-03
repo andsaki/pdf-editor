@@ -26,7 +26,7 @@ async function startServer() {
     }
 
     type FloatEntry {
-      value: Float
+      value: String
       label: String
     }
 
@@ -52,7 +52,7 @@ async function startServer() {
     }
 
     input FloatEntryInput {
-      value: Float
+      value: String
       label: String
     }
 
