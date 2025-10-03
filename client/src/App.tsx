@@ -622,16 +622,21 @@ function App() {
 
   const openPdfWithPuppeteer = async () => {
     try {
+      console.log("Starting Puppeteer PDF generation...");
       // Generate HTML from current layout
       const htmlContent = generateHtmlFromLayout(invoiceData, companyInfoData?.getCompanyInfo);
+      console.log("Generated HTML:", htmlContent);
 
       const result = await generatePdfMutation({
         variables: { html: htmlContent },
       });
 
+      console.log("Mutation result:", result);
+
       if (result.data?.generatePdf) {
         // Convert base64 to blob
         const base64 = result.data.generatePdf;
+        console.log("Received base64 PDF, length:", base64.length);
         const binaryString = window.atob(base64);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -639,11 +644,16 @@ function App() {
         }
         const blob = new Blob([bytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
+        console.log("Opening PDF URL:", url);
         window.open(url);
+      } else {
+        console.error("No PDF data in result:", result);
+        alert("PDF生成に失敗しました: データが返されませんでした");
       }
     } catch (e: any) {
       console.error("Error generating PDF:", e);
-      alert(`PDF generation failed: ${e.message}`);
+      console.error("Error details:", e.graphQLErrors, e.networkError);
+      alert(`PDF生成に失敗しました: ${e.message}`);
     }
   };
 
