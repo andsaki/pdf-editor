@@ -231,6 +231,8 @@ async function startServer() {
       recipient_building: CompanyInfoEntry
       recipient_tel: CompanyInfoEntry
       recipient_email: CompanyInfoEntry
+      recipient_department_name: CompanyInfoEntry
+      recipient_contact_name: CompanyInfoEntry
       subtotal: FloatEntry
       tax: FloatEntry
       total: FloatEntry
@@ -298,15 +300,30 @@ async function startServer() {
               label: "自社_建物名",
             },
             recipient_name: { value: "Customer Inc.", label: "宛名" },
-            recipient_prefecture: { value: "Tokyo", label: "送付先_都道府県" },
-            recipient_city: { value: "Shinjuku-ku", label: "送付先_市区町村" },
+            recipient_title: { value: "様", label: "送付先敬称" },
+            recipient_zip: { value: "163-8001", label: "送付先郵便番号" },
+            recipient_prefecture: { value: "Tokyo", label: "送付先都道府県" },
+            recipient_city: { value: "Shinjuku-ku", label: "送付先市区町村" },
             recipient_street: {
               value: "Nishi-Shinjuku 2-8-1",
-              label: "送付先_番地",
+              label: "送付先番地",
             },
             recipient_building: {
               value: "Tokyo Metropolitan Government Building",
-              label: "送付先_建物名",
+              label: "送付先建物名",
+            },
+            recipient_tel: { value: "03-5321-1111", label: "送付先電話番号" },
+            recipient_email: {
+              value: "recipient@example.com",
+              label: "送付先メールアドレス",
+            },
+            recipient_department_name: {
+              value: "Sales Department",
+              label: "送付先部署名",
+            },
+            recipient_contact_name: {
+              value: "Taro Yamada",
+              label: "送付先担当者名",
             },
             subtotal: { value: 120000, label: "小計" },
             tax: { value: 12000, label: "消費税" },
