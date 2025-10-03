@@ -81,13 +81,15 @@ graph TD
   - **GraphQLクライアント:** [Apollo Client](https://www.apollographql.com/docs/react/) を使用し、サーバーとのデータ通信を管理します。
   - **ビルドツール:** [Vite](https://vitejs.dev/) を採用し、高速な開発サーバーと最適化されたビルドを実現します。
   - **言語:** [TypeScript](https://www.typescriptlang.org/) を全面的に採用し、型安全性を確保します。
-  - **スタイリング:** [Tailwind CSS](https://tailwindcss.com/) を使用し、ユーティリティファーストのアプローチで効率的にUIを構築します。
+  - **スタイリング:** [Material-UI (MUI)](https://mui.com/) を使用し、洗練されたUIコンポーネントを構築します。
+  - **バリデーション:** [Zod](https://zod.dev/) を使用し、ランタイムの型安全性とスキーマバリデーションを実現します。
 
 - **サーバー:**
   - **フレームワーク:** [Express](https://expressjs.com/) を使用し、堅牢なAPIサーバーを構築します。
   - **GraphQLサーバー:** [Apollo Server](https://www.apollographql.com/docs/apollo-server/) をExpressに統合し、GraphQL APIを提供します。
+  - **PDF生成:** [Puppeteer](https://pptr.dev/) を使用し、サーバーサイドで高品質なPDFを生成します。
 
-- **パッケージ管理:** [pnpm](https://pnpm.io/) を使用し、高速で効率的な依存関係管理を行います。
+- **パッケージ管理:** [npm](https://www.npmjs.com/) を使用し、依存関係を管理します。
 
 ## 3. コンポーネント設計
 
@@ -98,29 +100,44 @@ graph TD
   - 請求書データ (`invoiceData`) や選択中のオブジェクトID (`selectedObjectId`) など、アプリケーション全体の状態を `useHistoryState` カスタムフックで一元管理します。
   - 主要なコンポーネントのレイアウトと配置を担当し、状態とセッター関数を各コンポーネントにpropsとして渡します。
 
-- **`InvoiceForm.tsx`**
-  - 新しいレイアウトオブジェクト（テキスト、画像、テーブル）を追加するためのツールボタンを提供します。
-  - PDFファイルを画像としてアップロードする機能を提供します。
-  - 請求書の詳細情報（自社情報、宛先、請求書番号など）を入力するためのフォームを提供します。
-
 - **`PdfPreview.tsx`**
   - 請求書のライブプレビューを表示する中心的なコンポーネント。
   - `react-rnd` を利用して、キャンバス上のオブジェクトのドラッグ＆ドロップ、リサイズを可能にします。
   - オブジェクトの選択状態と`zIndex`に基づいたスタッキング順序を管理します。
+  - テキスト・テーブルセルのインライン編集機能を提供します。
 
 - **`LayoutPalette.tsx`**
   - オブジェクトが選択された際に表示されるプロパティ編集パネル。
-  - 選択されたオブジェクトの共通プロパティ（座標、サイズ）と、オブジェクト種別ごとの固有プロパティを編集するUIを提供します。
+  - 選択されたオブジェクトの種類に応じて、適切なサブパレットを表示します。
+  - 共通プロパティ（位置、サイズ、zIndex）の編集機能を提供します。
 
 - **`TextObjectPalette.tsx`**
-  - テキストオブジェクトが選択された際の詳細なプロパティ編集パネル。
-  - コンテンツの種類（固定文言、変数、ラベル付き変数）の選択機能を提供します。
-  - フォントスタイル（フォント、サイズ、色、配置など）の編集機能を提供します。
+  - テキストオブジェクト専用のプロパティ編集パネル。
+  - コンテンツタイプ（`fixed`, `variable`, `labeled-variable`）の選択機能。
+  - フォントスタイル（フォント、サイズ、色、太字、斜体、配置など）の編集機能。
+  - 背景色、テキストシャドウ、箇条書きモードなどの高度な設定。
+
+- **`TableObjectPalette.tsx`**
+  - テーブルオブジェクト専用のプロパティ編集パネル。
+  - 行・列の追加・削除機能を提供します。
+
+- **`ShapeObjectPalette.tsx`**
+  - 図形オブジェクト（矩形、水平線、垂直線）専用のプロパティ編集パネル。
+  - 背景色の編集機能を提供します。
 
 - **`LayerPalette.tsx`**
   - キャンバス上の全オブジェクトをレイヤーとして一覧表示し、管理するためのパネル。
   - レイヤーのスタッキング順序（`zIndex`）を上下に移動させる機能を提供します。
-  - レイヤー（オブジェクト）の削除機能を提供します。
+  - レイヤーの表示/非表示、ロック/アンロック機能を提供します。
+
+- **`LeftToolbar.tsx`**
+  - 左サイドバーのツールボタン群を提供します。
+  - テキスト、箇条書き、テーブル、図形、画像、PDF追加のボタンを配置。
+  - レイヤーパネル切り替えボタンを提供します。
+
+- **`ShapeCreationPalette.tsx`**
+  - 図形追加時に表示されるサブパレット。
+  - 矩形、水平線、垂直線の選択肢を提供します。
 
 - **`InvoiceDocument.tsx`**
   - `@react-pdf/renderer` を使用して、ダウンロード用のPDFドキュメントの構造を定義します。
@@ -271,62 +288,48 @@ export interface IInvoiceApiService {
 
 #### 6.2.2. バックエンド API (GraphQL)
 
-バックエンドは、データ永続化のためのGraphQLミューテーションを公開します。
+バックエンドは、請求書の取得・更新・PDF生成のためのGraphQL APIを公開します。
 
 **スキーマ定義 (SDL):**
 ```graphql
-# 請求書データ全体を表現する入力型
-input InvoiceDataInput {
-  layout: [LayoutItemInput!]!
-  form: FormInput!
-}
-
-# フォームデータを表現する入力型
-input FormInput {
-  issue_date: String
-  invoice_number: String
-  # ... other form fields
-}
-
-# 各レイアウトオブジェクトを表現する入力型。
-# GraphQLのInput Unionの制約のため、各タイプのプロパティを
-# オプショナルなフィールドとして一つの型にまとめています。
-input LayoutItemInput {
+# 請求書全体の型
+type Invoice {
   id: ID!
-  type: String! # 'text', 'image', 'table'
-  x: Float!
-  y: Float!
-  width: Float!
-  height: Float!
-  zIndex: Int!
-
-  # TextItem properties
-  content: String
-  contentType: String
-  label: String
-  fontFamily: String
-  fontSize: Int
-  color: String
-  align: String
-
-  # ImageItem properties
-  src: String
-
-  # TableItem properties
-  data: [[String]]
-  backgroundColor: String
+  name: String!
+  layout: [LayoutItem!]!
+  form: Form!
+  createdAt: String!
+  updatedAt: String!
 }
 
-type Mutation {
-  # 請求書データを保存するミューテーション
-  saveInvoice(invoiceData: InvoiceDataInput!): Boolean
+# 更新用の入力型
+input UpdateInvoiceInput {
+  name: String
+  layout: [LayoutItemInput!]
+  form: FormInput
 }
 
+# クエリ
 type Query {
-  # (将来的に) 請求書データを取得するためのクエリ
-  getInvoice(id: ID!): String # 返り値は仮
+  getInvoice(id: ID!): Invoice
+  getInvoices: [Invoice!]!
+  getCompanyInfo: CompanyInfo
+}
+
+# ミューテーション
+type Mutation {
+  updateInvoice(id: ID!, input: UpdateInvoiceInput!): Invoice!
+  generatePdf(html: String!): String  # Puppeteerによるサーバーサイド PDF 生成
 }
 ```
+
+**主要な機能:**
+
+- **getInvoice**: 指定されたIDの請求書を取得します。現在はモックデータを返しますが、将来的にはデータベースから取得します。
+- **getInvoices**: すべての請求書リストを取得します（PDFトレース用、現在は空配列）。
+- **getCompanyInfo**: 自社情報を取得します。請求書の変数展開に使用されます。
+- **updateInvoice**: 請求書データを更新し、更新後の請求書オブジェクトを返します。
+- **generatePdf**: HTMLからPuppeteerを使ってサーバーサイドでPDFを生成し、Base64エンコードされたPDFデータを返します。
 
 #### 6.2.3. データ永続化フロー
 
@@ -338,36 +341,66 @@ type Query {
 
 ### 6.3. PDF生成
 
-#### PDF関連ライブラリの役割分担
+本アプリケーションでは、用途に応じて2つのPDF生成方式を採用しています。
 
-本プロジェクトでは、目的別に3つのPDFライブラリを使い分けています。
+#### 6.3.1. クライアントサイドPDF生成（プレビュー用）
 
-- **`@react-pdf/renderer` (最終PDFの生成)**:
-  - **役割**: Reactコンポーネントから直接、最終的にダウンロードされる高品質なPDFを生成します。
-  - **使用箇所**: `InvoiceDocument.tsx`
-- **`pdf-lib` (プレビュー背景の作成)**:
-  - **役割**: プレビュー画面の背景となるPDF（主に画像などを含む）を、JavaScriptコードで動的にメモリ上で作成します。
-  - **使用箇所**: `PdfPreview.tsx`
-- **`react-pdf` (プレビュー背景の表示)**:
-  - **役割**: `pdf-lib`が作成した背景用PDFを、Reactコンポーネントとして画面に表示します。
-  - **使用箇所**: `PdfPreview.tsx`
+**使用ライブラリ:** `@react-pdf/renderer`
 
-本アプリケーションでは、目的別に2つのライブラリを使い分けてPDFを生成します。
+- **目的:** 編集中の請求書をブラウザ上で即座にプレビューする
+- **実装:** `InvoiceDocument.tsx` でReactコンポーネントとしてPDF構造を定義
+- **特徴:**
+  - クライアントサイドで完結するため、高速なプレビューが可能
+  - Reactの宣言的な構文でPDFレイアウトを記述
+  - `invoiceData.layout` 配列をマップし、各オブジェクトをPDF要素に変換
 
-- **ライブプレビュー (`PdfPreview.tsx`):**
-  - `pdf-lib` を使用します。このライブラリは、既存のPDFを操作したり、低レベルのAPIでPDFを動的に構築するのに適しています。
-  - `invoiceData` が変更されるたびに、`generatePdfBytes` 関数が呼び出され、オブジェクト（現在は画像のみ）を描画した新しいPDFのバイナリデータ (`Uint8Array`) を生成します。
-  - **フォントの最適化:** パフォーマンスを向上させるため、フォントは一度だけフェッチおよび埋め込みされ、`fontCache` (Map) にキャッシュされます。同じフォントが再度要求された場合は、キャッシュから返されます。
-  - 生成されたバイナリデータは `react-pdf` に渡され、Canvasとしてプレビュー表示されます。これにより、高速な再描画が可能になります。
-
+**フロー:**
 ```mermaid
-graph TD
-    A[User Edits Invoice] --> B[Invoice Data (State)]
-    B --> C[PdfPreview Component]
-    C -- Extracts Image Data --> D[pdf-lib: Manipulate PDF Data]
-    D -- Outputs PDF Bytes --> E[react-pdf: Display PDF]
-    E -- Displays PDF --> C
+graph LR
+    A[invoiceData] --> B[InvoiceDocument.tsx]
+    B --> C[@react-pdf/renderer]
+    C --> D[PDF Blob]
+    D --> E[ブラウザでプレビュー]
 ```
-- **ダウンロード (`InvoiceDocument.tsx`):**
-  - `@react-pdf/renderer` を使用します。このライブラリは、Reactコンポーネントの宣言的な構文でPDFドキュメントを定義できるため、最終的な出力用のレイアウトを構築するのに適しています。
-  - `InvoiceDocument` コンポーネントは、`invoiceData.layout` 配列をマップし、各レイアウトオブジェクトを対応するPDF要素（`<Text>`, `<Image>`, `<View>`など）に変換します。
+
+#### 6.3.2. サーバーサイドPDF生成（最終出力用）
+
+**使用ライブラリ:** `Puppeteer`
+
+- **目的:** 最終的にダウンロード・保存される高品質なPDFを生成
+- **実装:** クライアントがHTMLを生成し、サーバーの `generatePdf` ミューテーションに送信
+- **特徴:**
+  - **完全なCSS対応:** Grid、Flexbox、絶対配置など、標準CSSを完全サポート
+  - **日本語フォント対応:** システムフォントを利用し、自然な日本語表示
+  - **WYSIWYG保証:** ブラウザでの表示とPDF出力の一貫性を実現
+  - **デバッグ性:** ブラウザ開発者ツールでスタイル調整が可能
+
+**フロー:**
+```mermaid
+graph LR
+    A[invoiceData] --> B[generateHtmlFromLayout]
+    B --> C[HTML String]
+    C --> D[GraphQL: generatePdf]
+    D --> E[Puppeteer on Server]
+    E --> F[PDF Buffer]
+    F --> G[Base64 Encoded PDF]
+    G --> H[Client: Blob & Download]
+```
+
+**実装詳細:**
+
+1. **クライアント側** (`App.tsx`):
+   - `generateHtmlFromLayout` 関数で `invoiceData` からHTMLを生成
+   - レイアウトアイテムごとに絶対配置のdiv要素を作成
+   - 変数を実際の値に展開
+
+2. **サーバー側** (`server/src/index.ts`):
+   - Puppeteerでヘッドレスブラウザを起動
+   - 受け取ったHTMLをレンダリング
+   - A4サイズのPDFとして出力
+   - Base64エンコードしてクライアントに返却
+
+**選定理由:**
+
+- **@react-pdf/renderer**: 日本語フォント対応が不完全、CSS制約が多い → プレビューのみに使用
+- **Puppeteer**: 完全なブラウザエンジンによる確実なレンダリング → 最終出力に最適
