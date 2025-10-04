@@ -16,6 +16,9 @@ Client: React + TypeScript
 インタラクティブキャンバス + 設定 UI パネル
 状態管理: useHistoryState による Undo/Redo（対象は後述）
 Undo/Redo の対象: layout: BaseLayoutItem[] のみ（form や会社情報は別画面のフォームで管理し、本画面では参照/適用のみ）
+コンポーネント設計: UI層とロジック層を明確に分離
+- UI層: EditorAppBar（トップバー）、EditorLeftSidebar（ツール）、EditorRightSidebar（プロパティ）
+- ロジック層: カスタムフック（useLayoutOperations、useFileUpload、usePdfGeneration）
 Server: GraphQL API（Apollo Client 経由で利用）
 データの取得・保存・プリセット参照
 この構成により、フロントは UI/操作に集中し、サーバーはデータ永続性を担保する役割分担を実現。
@@ -189,7 +192,7 @@ export type BaseLayoutItem = {
 
 // テキストアイテムのスタイル定義
 export type TextItemStyle = {
-  fontFamily?: "Helvetica" | "BIZ UDPGothic"; // フォントファミリー
+  fontFamily?: string; // フォントファミリー（例: "BIZ UDPGothic", "Noto Sans JP"）
   fontSize?: number; // フォントサイズ
   lineHeight?: number; // 行の高さ
   textAlign?: "left" | "center" | "right"; // テキストの水平方向の配置
@@ -306,13 +309,31 @@ GraphQL + Apollo Client を採用。
 これにより リアルタイム編集の操作性 と 背景 PDF の再現性 を両立。
 
 PDF 生成 (PDF Generation)
-採用技術: Puppeteer
+採用技術: Puppeteer（サーバーサイド）、@react-pdf/renderer（クライアントサイド）
 理由:
 最終的なダウンロード用 PDF は サーバーサイドで Puppeteer により生成。
 HTML/CSS で記述したレイアウトをそのままレンダリングし、プレビューと出力の差異をなくす (WYSIWYG 保証)。
 標準 CSS 完全対応（Grid, Flexbox, 絶対配置, カスタムプロパティ等）。
-日本語対応: システムフォントを利用することで、自然で崩れのない表示が可能。
+日本語フォント対応:
+- Google Fonts から無料で入手可能な日本語フォントを使用
+- デフォルト: Noto Sans JP（高品質なゴシック体）
+- 選択肢: BIZ UDPGothic（UD フォント）、Noto Serif JP（明朝体）
+- フォントは型安全に選択可能（TypeScript の Union Type で制約）
 デバッグ性: ブラウザ開発者ツールを用いた確認が可能で、スタイル崩れの原因を迅速に調査できる。
+
+フロントエンドアーキテクチャのリファクタリング
+UI 層とロジック層の分離:
+App.tsx からビジネスロジックをカスタムフックに抽出（約 460 行 → 約 330 行に削減）
+カスタムフック:
+- useLayoutOperations: レイアウトアイテムの追加・削除・コピー・ペースト・レイヤー移動
+- useFileUpload: 画像・PDF ファイルのアップロード処理
+- usePdfGeneration: React-PDF と Puppeteer を使用した PDF 生成
+UI コンポーネント:
+- EditorAppBar: トップバー（編集操作、プレビュー、保存ボタン）
+- EditorLeftSidebar: 左サイドバー（ツールバーと図形作成パレット）
+- EditorRightSidebar: 右サイドバー（プロパティ、レイヤー、状態プレビュー）
+ユーティリティ関数:
+- layoutUtils.ts: z-index 計算などのヘルパー関数
 
 状態管理 (State Management)
 採用技術: カスタムフック useHistoryState

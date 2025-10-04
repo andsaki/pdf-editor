@@ -11,18 +11,54 @@ import { PdfImageItem } from "./pdf/ImageItem";
 import { PdfTableItem } from "./pdf/TableItem";
 
 // 重要: フォントファイルを /public/fonts ディレクトリに追加してください。
-// BIZ UDPGothic は Google Fonts からダウンロードできます。
+// 以下のフォントは全てGoogle Fontsから無料でダウンロード可能です：
+// - Noto Sans JP: Googleが開発した高品質な日本語フォント（推奨）
+// - BIZ UDPGothic: ユニバーサルデザインフォント（読みやすさ重視）
+// - Noto Serif JP: 明朝体（フォーマルな文書向け）
+// - M PLUS 1p / M PLUS Rounded 1c: モダンで読みやすいゴシック体
+
+/**
+ * 利用可能なフォントファミリーの型定義
+ */
+type FontFamily = "Noto Sans JP" | "BIZ UDPGothic" | "Noto Serif JP";
+
+/**
+ * 使用するフォントを選択（デフォルト: Noto Sans JP）
+ */
+const FONT_FAMILY: FontFamily = "Noto Sans JP";
+
+// Noto Sans JP の登録
 Font.register({
-  family: "BIZ UDPGothic",
+  family: "Noto Sans JP",
   fonts: [
-    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // 標準フォント（通常スタイル、通常ウェイト）
-    { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
+    { src: "/fonts/NotoSansJP-Regular.ttf" },
+    { src: "/fonts/NotoSansJP-Medium.ttf", fontWeight: 500 },
+    { src: "/fonts/NotoSansJP-Bold.ttf", fontWeight: "bold" },
   ],
 });
 
+// BIZ UDPGothic の登録（コメントアウト時に使用）
+// Font.register({
+//   family: "BIZ UDPGothic",
+//   fonts: [
+//     { src: "/fonts/BIZUDPGothic-Regular.ttf" },
+//     { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
+//   ],
+// });
+
+// Noto Serif JP の登録（明朝体を使用する場合）
+// Font.register({
+//   family: "Noto Serif JP",
+//   fonts: [
+//     { src: "/fonts/NotoSerifJP-Regular.ttf" },
+//     { src: "/fonts/NotoSerifJP-Medium.ttf", fontWeight: 500 },
+//     { src: "/fonts/NotoSerifJP-Bold.ttf", fontWeight: "bold" },
+//   ],
+// });
+
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "BIZ UDPGothic",
+    fontFamily: FONT_FAMILY,
     fontSize: 11,
     paddingTop: 30,
     paddingLeft: 60,
