@@ -72,7 +72,7 @@ graph TB
 
     AppBar -->|Undo/Redo| HistoryHook
     AppBar -->|PDF生成| PdfHook
-    AppBar -->|保存| AppState
+    AppBar -->|保存| ApolloClient
     LeftSidebar -->|オブジェクト追加| LayoutHook
     LeftSidebar -->|ファイル選択| FileHook
     Canvas --> AppState
