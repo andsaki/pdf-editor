@@ -245,6 +245,10 @@ const GET_INVOICE = gql`
             label
           }
         }
+        notes {
+          value
+          label
+        }
       }
     }
   }
@@ -439,14 +443,24 @@ function App() {
         ...baseShape,
         width: 200,
         height: 2,
-        style: { backgroundColor: "#000000" },
+        style: {
+          backgroundColor: "#000000",
+          borderColor: "#000000",
+          borderWidth: 1,
+          borderStyle: "solid",
+        },
       };
     } else if (shapeType === "v-line") {
       newShape = {
         ...baseShape,
         width: 2,
         height: 100,
-        style: { backgroundColor: "#000000" },
+        style: {
+          backgroundColor: "#000000",
+          borderColor: "#000000",
+          borderWidth: 1,
+          borderStyle: "solid",
+        },
       };
     } else {
       // rect
@@ -454,7 +468,12 @@ function App() {
         ...baseShape,
         width: 150,
         height: 100,
-        style: { backgroundColor: "#cccccc" },
+        style: {
+          backgroundColor: "#cccccc",
+          borderColor: "#000000",
+          borderWidth: 1,
+          borderStyle: "solid",
+        },
       };
     }
 
@@ -673,6 +692,9 @@ function App() {
   };
 
   const generateHtmlFromLayout = (data: InvoiceData, companyInfo?: any): string => {
+    // Convert px (points) to mm for Puppeteer: 595px -> 210mm, 842px -> 297mm
+    const pxToMm = (px: number) => (px * 210 / 595);
+
     // Generate a simple HTML representation of the invoice
     const itemsHtml = data.layout
       .filter(item => item.visible !== false)
@@ -688,9 +710,9 @@ function App() {
           const backgroundColor = item.style?.backgroundColor || 'transparent';
           const lineHeight = item.style?.lineHeight || 1.5;
 
-          return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px; font-size: ${item.style?.fontSize || 16}px; color: ${item.style?.color || 'black'}; word-wrap: ${wordWrap}; white-space: ${whiteSpace}; overflow: ${overflow}; text-align: ${textAlign}; font-weight: ${fontWeight}; font-style: ${fontStyle}; background-color: ${backgroundColor}; line-height: ${lineHeight};">${processedContent}</div>`;
+          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; font-size: ${pxToMm(item.style?.fontSize || 16)}mm; color: ${item.style?.color || 'black'}; word-wrap: ${wordWrap}; white-space: ${whiteSpace}; overflow: ${overflow}; text-align: ${textAlign}; font-weight: ${fontWeight}; font-style: ${fontStyle}; background-color: ${backgroundColor}; line-height: ${lineHeight};">${processedContent}</div>`;
         } else if (item.type === 'image' && 'src' in item && item.src) {
-          return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px;"><img src="${item.src}" style="width: 100%; height: 100%; object-fit: contain;" /></div>`;
+          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm;"><img src="${item.src}" style="width: 100%; height: 100%; object-fit: contain;" /></div>`;
         } else if (item.type === 'table' && 'data' in item && item.data) {
           const tableRows = item.data.map(row => {
             const cells = row.map(cell => {
@@ -698,7 +720,7 @@ function App() {
               const cellStyle = `
                 padding: 4px;
                 border: 1px solid #ccc;
-                font-size: ${cell.style?.fontSize || 12}px;
+                font-size: ${pxToMm(cell.style?.fontSize || 12)}mm;
                 color: ${cell.style?.color || 'black'};
                 text-align: ${cell.style?.textAlign || 'left'};
                 background-color: ${cell.style?.backgroundColor || 'transparent'};
@@ -708,19 +730,25 @@ function App() {
             return `<tr>${cells}</tr>`;
           }).join('');
 
-          return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px;">
+          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm;">
             <table style="width: 100%; height: 100%; border-collapse: collapse;">
               ${tableRows}
             </table>
           </div>`;
         } else if (item.type === 'shape' && 'shapeType' in item) {
-          const backgroundColor = item.style?.backgroundColor || 'black';
+          const backgroundColor = item.style?.backgroundColor || 'transparent';
+          const borderColor = item.style?.borderColor || '#000000';
+          const borderWidth = item.style?.borderWidth || 1;
+          const borderStyle = item.style?.borderStyle || 'solid';
+          const border = borderWidth ? `${pxToMm(borderWidth)}mm ${borderStyle} ${borderColor}` : 'none';
+
           if (item.shapeType === 'h-line') {
-            return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: 2px; background-color: ${backgroundColor};"></div>`;
+            return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; border-top: ${border};"></div>`;
           } else if (item.shapeType === 'v-line') {
-            return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: 2px; height: ${item.height}px; background-color: ${backgroundColor};"></div>`;
+            return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; border-left: ${border};"></div>`;
           } else {
-            return `<div class="item" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px; background-color: ${backgroundColor};"></div>`;
+            // rect
+            return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; background-color: ${backgroundColor}; border: ${border};"></div>`;
           }
         }
         return '';
@@ -732,9 +760,16 @@ function App() {
   <head>
     <meta charset="UTF-8">
     <style>
+      @page { size: 210mm 297mm; margin: 0; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
       body { font-family: "BIZ UDPGothic", "Hiragino Sans", sans-serif; }
-      .page { width: 210mm; height: 297mm; position: relative; background: white; }
+      .page {
+        width: 210mm;
+        height: 297mm;
+        position: relative;
+        background: white;
+      }
       .item { position: absolute; }
     </style>
   </head>

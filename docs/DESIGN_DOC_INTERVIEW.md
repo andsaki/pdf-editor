@@ -97,6 +97,9 @@ type Style {
   backgroundColor: String
   textShadow: String
   isBullet: Boolean
+  borderColor: String
+  borderWidth: Float
+  borderStyle: String
 }
 
 # テーブルセル
@@ -198,6 +201,9 @@ export type TextItemStyle = {
   backgroundColor?: string; // 背景色
   textShadow?: string; // テキストの影
   isBullet?: boolean; // 箇条書きかどうか
+  borderColor?: string; // 枠線の色
+  borderWidth?: number; // 枠線の太さ
+  borderStyle?: "solid" | "dashed" | "dotted"; // 枠線のスタイル
 };
 
 // テキストオブジェクト
@@ -243,6 +249,9 @@ export type ShapeObject = BaseLayoutItem & {
   style?: {
     // 図形のスタイル
     backgroundColor?: string; // 背景色
+    borderColor?: string; // 枠線の色
+    borderWidth?: number; // 枠線の太さ
+    borderStyle?: "solid" | "dashed" | "dotted"; // 枠線のスタイル
   };
 };
 
@@ -272,6 +281,7 @@ export type InvoiceData = {
     company_name?: FormField;
     recipient_name?: FormField;
     total?: FormField;
+    notes?: FormField; // 備考
     // ...など
   };
 };

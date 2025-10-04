@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { Document, Page } from "react-pdf";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 import type {
   InvoiceData,
   LayoutItem,
@@ -178,11 +178,13 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     setError(null);
 
     try {
+      console.log('Generating PDF with layout items:', invoiceData.layout.length);
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage();
       const { height } = page.getSize();
 
       for (const item of invoiceData.layout) {
+        console.log('Processing item type:', item.type);
         if (item.type === "image") {
           try {
             const imageBytes = item.src.startsWith("data:image/jpeg")
@@ -201,10 +203,115 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
             console.error("Failed to embed image:", imgErr);
           }
         }
+
+        if (item.type === "shape") {
+          const pdfY = height - item.y - item.height;
+          const shapeItem = item as ShapeItem;
+
+          const hexToRgb = (hex: string) => {
+            const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+            if (!match) return undefined;
+            return rgb(
+              parseInt(match[1], 16) / 255,
+              parseInt(match[2], 16) / 255,
+              parseInt(match[3], 16) / 255
+            );
+          };
+
+          console.log('=== Shape Debug ===');
+          console.log('Shape type:', shapeItem.shapeType);
+          console.log('Shape item:', JSON.stringify(shapeItem, null, 2));
+          console.log('Border color:', shapeItem.style?.borderColor);
+          console.log('Border width:', shapeItem.style?.borderWidth);
+          console.log('Background color:', shapeItem.style?.backgroundColor);
+
+          const bgColor = shapeItem.style?.backgroundColor ? hexToRgb(shapeItem.style.backgroundColor) : undefined;
+          const borderColor = shapeItem.style?.borderColor ? hexToRgb(shapeItem.style.borderColor) : undefined;
+
+          console.log('Converted bg color:', bgColor);
+          console.log('Converted border color:', borderColor);
+          console.log('==================');
+
+          // 横線の場合
+          if (shapeItem.shapeType === "h-line") {
+            if (borderColor) {
+              page.drawLine({
+                start: { x: item.x, y: pdfY + item.height / 2 },
+                end: { x: item.x + item.width, y: pdfY + item.height / 2 },
+                thickness: shapeItem.style?.borderWidth || 1,
+                color: borderColor,
+              });
+            }
+          }
+          // 縦線の場合
+          else if (shapeItem.shapeType === "v-line") {
+            if (borderColor) {
+              page.drawLine({
+                start: { x: item.x + item.width / 2, y: pdfY },
+                end: { x: item.x + item.width / 2, y: pdfY + item.height },
+                thickness: shapeItem.style?.borderWidth || 1,
+                color: borderColor,
+              });
+            }
+          }
+          // 四角形の場合
+          else {
+            console.log('Drawing rectangle at:', { x: item.x, y: pdfY, width: item.width, height: item.height });
+            console.log('Has bgColor:', !!bgColor, 'Has borderColor:', !!borderColor);
+
+            // 背景色を描画
+            if (bgColor) {
+              console.log('Drawing background with color:', bgColor);
+              page.drawRectangle({
+                x: item.x,
+                y: pdfY,
+                width: item.width,
+                height: item.height,
+                color: bgColor,
+              });
+            }
+            // 枠線を4本の線で描画
+            if (borderColor && shapeItem.style?.borderWidth) {
+              const thickness = shapeItem.style.borderWidth;
+              console.log('Drawing border with thickness:', thickness, 'color:', borderColor);
+
+              // 上の線
+              page.drawLine({
+                start: { x: item.x, y: pdfY + item.height },
+                end: { x: item.x + item.width, y: pdfY + item.height },
+                thickness: thickness,
+                color: borderColor,
+              });
+              // 右の線
+              page.drawLine({
+                start: { x: item.x + item.width, y: pdfY + item.height },
+                end: { x: item.x + item.width, y: pdfY },
+                thickness: thickness,
+                color: borderColor,
+              });
+              // 下の線
+              page.drawLine({
+                start: { x: item.x + item.width, y: pdfY },
+                end: { x: item.x, y: pdfY },
+                thickness: thickness,
+                color: borderColor,
+              });
+              // 左の線
+              page.drawLine({
+                start: { x: item.x, y: pdfY },
+                end: { x: item.x, y: pdfY + item.height },
+                thickness: thickness,
+                color: borderColor,
+              });
+            }
+          }
+        }
       }
 
       const bytes = await pdfDoc.save();
+      console.log('PDF bytes generated, size:', bytes.length);
       setPdfBytesForDisplay(bytes);
+      console.log('PDF state updated');
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       setError("PDFの生成に失敗しました");
@@ -296,7 +403,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
-    return { data: pdfBytesForDisplay.slice(0) };
+    console.log('Creating pdfFile object with bytes length:', pdfBytesForDisplay.length);
+    // 新しい配列を作成してreact-pdfに変更を認識させる
+    return { data: new Uint8Array(pdfBytesForDisplay) };
   }, [pdfBytesForDisplay]);
 
   if (error) {
@@ -538,6 +647,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                             width: "100%",
                             height: "100%",
                             borderCollapse: "collapse",
+                            tableLayout: "fixed",
                           }}
                         >
                           <tbody>
@@ -603,13 +713,51 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   )}
                   {item.type === "shape" && (
                     <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor:
-                          (item as ShapeItem).style?.backgroundColor ||
-                          "transparent",
-                      }}
+                      style={(() => {
+                        const shapeItem = item as ShapeItem;
+                        const baseStyle = {
+                          width: "100%",
+                          height: "100%",
+                        };
+
+                        if (shapeItem.shapeType === "rect") {
+                          return {
+                            ...baseStyle,
+                            backgroundColor:
+                              shapeItem.style?.backgroundColor || "transparent",
+                            border: shapeItem.style?.borderWidth
+                              ? `${shapeItem.style.borderWidth}px ${
+                                  shapeItem.style.borderStyle || "solid"
+                                } ${shapeItem.style.borderColor || "#000000"}`
+                              : undefined,
+                          };
+                        } else if (shapeItem.shapeType === "h-line") {
+                          return {
+                            ...baseStyle,
+                            backgroundColor: "transparent",
+                            borderTop: `${shapeItem.style?.borderWidth || 1}px ${
+                              shapeItem.style?.borderStyle || "solid"
+                            } ${
+                              shapeItem.style?.borderColor ||
+                              shapeItem.style?.backgroundColor ||
+                              "#000000"
+                            }`,
+                          };
+                        } else if (shapeItem.shapeType === "v-line") {
+                          return {
+                            ...baseStyle,
+                            backgroundColor: "transparent",
+                            borderLeft: `${
+                              shapeItem.style?.borderWidth || 1
+                            }px ${shapeItem.style?.borderStyle || "solid"} ${
+                              shapeItem.style?.borderColor ||
+                              shapeItem.style?.backgroundColor ||
+                              "#000000"
+                            }`,
+                          };
+                        }
+                        return baseStyle;
+                      })()}
                     />
                   )}
                 </Rnd>

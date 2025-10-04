@@ -83,6 +83,9 @@ export const ShapeItemSchema = BaseLayoutItemSchema.extend({
   style: z
     .object({
       backgroundColor: z.string().optional(),
+      borderColor: z.string().optional(),
+      borderWidth: z.number().optional(),
+      borderStyle: z.enum(["solid", "dashed", "dotted"]).optional(),
     })
     .optional(),
 });
@@ -128,6 +131,7 @@ export const InvoiceDataSchema = z.object({
     tax: FormFieldSchema.optional(),
     total: FormFieldSchema.optional(),
     line_items: z.array(LineItemSchema).optional(),
+    notes: FormFieldSchema.optional(),
   }),
 });
 

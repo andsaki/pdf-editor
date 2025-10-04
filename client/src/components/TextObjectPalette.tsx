@@ -317,7 +317,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           type="number"
           fullWidth
           margin="normal"
-          InputProps={{ inputProps: { min: 1 } }}
+          slotProps={{ htmlInput: { min: 1 } }}
           value={selectedObject.content.split("\n").length}
           onChange={(e) => {
             const newCount = parseInt(e.target.value);

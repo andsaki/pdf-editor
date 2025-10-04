@@ -94,6 +94,7 @@ async function startServer() {
       tax: FloatEntryInput
       total: FloatEntryInput
       line_items: [LineItemInput!]
+      notes: FormEntryInput
     }
 
     input StyleInput {
@@ -109,6 +110,9 @@ async function startServer() {
       backgroundColor: String
       textShadow: String
       isBullet: Boolean
+      borderColor: String
+      borderWidth: Float
+      borderStyle: String
     }
 
     input TableCellInput {
@@ -226,6 +230,7 @@ async function startServer() {
       tax: FloatEntry
       total: FloatEntry
       line_items: [LineItem!]
+      notes: CompanyInfoEntry
     }
 
     type InvoiceData {
@@ -354,6 +359,10 @@ async function startServer() {
                 amount: { value: 10000, label: "金額" },
               },
             ],
+            notes: {
+              value: "お振込手数料はご負担くださいますようお願いいたします。",
+              label: "備考",
+            },
           },
         };
       },
@@ -366,7 +375,9 @@ async function startServer() {
     Mutation: {
       updateInvoice: (_: any, { id, input }: { id: string; input: any }) => {
         console.log(
-          `Updating invoice ${id}${input.name ? ` (name: ${input.name})` : ''}:`,
+          `Updating invoice ${id}${
+            input.name ? ` (name: ${input.name})` : ""
+          }:`,
           JSON.stringify(input, null, 2)
         );
         // Here you would save the data to a database
@@ -384,22 +395,23 @@ async function startServer() {
         console.log("Generating PDF with Puppeteer...");
         const browser = await puppeteer.launch({
           headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });
         try {
           const page = await browser.newPage();
-          await page.setContent(html, { waitUntil: 'networkidle0' });
+          await page.setContent(html, { waitUntil: "networkidle0" });
           const pdfBuffer = await page.pdf({
-            format: 'A4',
+            width: "210mm",
+            height: "297mm",
             printBackground: true,
             margin: {
-              top: '0mm',
-              right: '0mm',
-              bottom: '0mm',
-              left: '0mm',
+              top: "0",
+              right: "0",
+              bottom: "0",
+              left: "0",
             },
           });
-          return Buffer.from(pdfBuffer).toString('base64');
+          return Buffer.from(pdfBuffer).toString("base64");
         } finally {
           await browser.close();
         }

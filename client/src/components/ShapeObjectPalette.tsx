@@ -8,6 +8,7 @@ import {
   Select,
   MenuItem,
   Divider,
+  TextField,
 } from "@mui/material";
 
 interface ShapeObjectPaletteProps {
@@ -76,6 +77,45 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
           style={{ width: "100%", height: "40px" }}
         />
       </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <InputLabel>枠線の色</InputLabel>
+        <input
+          type="color"
+          value={selectedObject.style?.borderColor || "#000000"}
+          onChange={(e) => handleStyleChange({ borderColor: e.target.value })}
+          style={{ width: "100%", height: "40px" }}
+        />
+      </Box>
+
+      <TextField
+        fullWidth
+        margin="normal"
+        label="枠線の太さ (px)"
+        type="number"
+        value={selectedObject.style?.borderWidth || 1}
+        onChange={(e) =>
+          handleStyleChange({ borderWidth: Number(e.target.value) })
+        }
+        slotProps={{ htmlInput: { min: 0, max: 20, step: 1 } }}
+      />
+
+      <FormControl fullWidth margin="normal">
+        <InputLabel>枠線のスタイル</InputLabel>
+        <Select
+          value={selectedObject.style?.borderStyle || "solid"}
+          label="枠線のスタイル"
+          onChange={(e) =>
+            handleStyleChange({
+              borderStyle: e.target.value as "solid" | "dashed" | "dotted",
+            })
+          }
+        >
+          <MenuItem value="solid">実線</MenuItem>
+          <MenuItem value="dashed">破線</MenuItem>
+          <MenuItem value="dotted">点線</MenuItem>
+        </Select>
+      </FormControl>
     </Box>
   );
 };
