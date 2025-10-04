@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import {
   CssBaseline,
   Box,
@@ -23,6 +23,7 @@ import { InvoiceDocument } from "./components/InvoiceDocument";
 import { LayoutPalette } from "./components/LayoutPalette";
 import { LayerPalette } from "./components/LayerPalette";
 import { useHistoryState } from "./hooks/useHistoryState";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { LeftToolbar } from "./components/LeftToolbar";
 import { pdfjs } from "react-pdf";
@@ -490,7 +491,15 @@ function App() {
     handleSelectObject(null);
   };
 
-  const cut = () => {
+  const copy = useCallback(() => {
+    if (!selectedObjectId) return;
+    const objectToCopy = layout.find((item) => item.id === selectedObjectId);
+    if (objectToCopy) {
+      setClipboard(objectToCopy);
+    }
+  }, [selectedObjectId, layout]);
+
+  const cut = useCallback(() => {
     if (!selectedObjectId) return;
     const objectToCut = layout.find((item) => item.id === selectedObjectId);
     if (objectToCut) {
@@ -500,9 +509,9 @@ function App() {
       );
       handleSelectObject(null);
     }
-  };
+  }, [selectedObjectId, layout]);
 
-  const paste = () => {
+  const paste = useCallback(() => {
     if (!clipboard) return;
     const newObject: LayoutItem = {
       ...clipboard,
@@ -511,7 +520,7 @@ function App() {
       y: clipboard.y + 10,
     };
     setLayout((prevLayout) => [...prevLayout, newObject]);
-  };
+  }, [clipboard]);
 
   const moveLayer = (direction: "up" | "down") => {
     if (!selectedObjectId) return;
@@ -793,6 +802,13 @@ function App() {
     return table?.data[rowIndex]?.[cellIndex] || null;
   }, [selectedCell, layout]);
 
+  // キーボードショートカット
+  useKeyboardShortcuts({
+    onCopy: copy,
+    onCut: cut,
+    onPaste: paste,
+  });
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -809,6 +825,9 @@ function App() {
               やり直し
             </Button>
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+            <Button onClick={copy} disabled={!selectedObjectId} size="small">
+              コピー
+            </Button>
             <Button onClick={cut} disabled={!selectedObjectId} size="small">
               切り取り
             </Button>
