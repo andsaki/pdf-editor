@@ -59,7 +59,7 @@ const getPreviewProcessedContent = (
 
   const trimmedVariableName = variableName.trim();
 
-  // Example mode
+  // データ例表示モード
   const keys = trimmedVariableName.split(".");
   const data = { form: invoiceData.form, companyInfo };
 
@@ -112,7 +112,7 @@ const getPreviewProcessedContent = (
 
   if (resolvedValue !== undefined) {
     if (contentType === "labeled-variable") {
-      // Add space between label and value if label doesn't end with space
+      // ラベルが空白で終わっていない場合は、ラベルと値の間にスペースを追加
       const labelText = label || "";
       const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
       return `${labelText}${separator}${resolvedValue}`;
@@ -404,7 +404,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
     console.log('Creating pdfFile object with bytes length:', pdfBytesForDisplay.length);
-    // 新しい配列を作成してreact-pdfに変更を認識させる
+    // react-pdfに変更を認識させるため新しい配列を作成
     return { data: new Uint8Array(pdfBytesForDisplay) };
   }, [pdfBytesForDisplay]);
 

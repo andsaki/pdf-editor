@@ -15,7 +15,7 @@ import { PdfTableItem } from "./pdf/TableItem";
 Font.register({
   family: "BIZ UDPGothic",
   fonts: [
-    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // font-style: normal, font-weight: normal
+    { src: "/fonts/BIZUDPGothic-Regular.ttf" }, // 標準フォント（通常スタイル、通常ウェイト）
     { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
   ],
 });
