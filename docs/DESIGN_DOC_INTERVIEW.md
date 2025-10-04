@@ -19,6 +19,9 @@ Undo/Redo の対象: layout: BaseLayoutItem[] のみ（form や会社情報は�
 コンポーネント設計: UI層とロジック層を明確に分離
 - UI層: EditorAppBar（トップバー）、EditorLeftSidebar（ツール）、EditorRightSidebar（プロパティ）
 - ロジック層: カスタムフック（useLayoutOperations、useFileUpload、usePdfGeneration）
+  - useLayoutOperations: オブジェクトの追加・削除・コピー・ペースト・レイヤー移動
+  - useFileUpload: 画像・PDFファイルの読み込み処理
+  - usePdfGeneration: PDF生成・プレビュー
 Server: GraphQL API（Apollo Client 経由で利用）
 データの取得・保存・プリセット参照
 この構成により、フロントは UI/操作に集中し、サーバーはデータ永続性を担保する役割分担を実現。
@@ -33,52 +36,59 @@ System context diagram
 アーキテクチャ図
 
 ```mermaid
-graph TD
-    subgraph "Client (React)"
-        User_Interactions["ユーザー操作<br/>(画面遷移, オブジェクト追加・編集, <br/>保存, プリセット読み込み, <b>PDF出力</b>)"]
+graph TB
+    User["ユーザー"]
 
-        subgraph "UI層"
-            Main_UI["メインUI<br/>(ツールバー, プロパティパネルなど)"]
-            Canvas["請求書キャンバス<br/>(オブジェクトの描画と操作)"]
+    subgraph Client["Client - React"]
+        subgraph UI["UI層"]
+            AppBar["EditorAppBar<br/>編集操作・PDF生成・保存"]
+            LeftSidebar["EditorLeftSidebar<br/>オブジェクト追加・ファイル読み込み"]
+            Canvas["PdfPreview<br/>キャンバス表示・操作"]
+            RightSidebar["EditorRightSidebar<br/>プロパティ・レイヤー管理"]
         end
 
-        subgraph "ロジック・データ層"
-            App_State["アプリケーション状態管理<br/>(<b>Undo/Redo用カスタムフック<br/>useHistoryState</b>)"]
-            GraphQL_Client["GraphQLクライアント"]
-            Pdf_Generator["PDF生成ライブラリ"]
+        AppState["App.tsx<br/>中央状態管理"]
+
+        subgraph Hooks["カスタムフック"]
+            HistoryHook["useHistoryState<br/>Undo/Redo"]
+            LayoutHook["useLayoutOperations<br/>オブジェクト操作"]
+            FileHook["useFileUpload<br/>ファイル読み込み"]
+            PdfHook["usePdfGeneration<br/>PDF生成"]
         end
 
-        User_Interactions -- "イベント発行" --> Main_UI
-        User_Interactions -- "直接操作" --> Canvas
-
-        Main_UI -- "状態更新を要求" --> App_State
-        Canvas -- "状態更新を要求" --> App_State
-
-        App_State -- "状態を提供" --> Main_UI
-        App_State -- "状態を提供" --> Canvas
-
-        %% PDF出力
-        Main_UI -- "<b>PDF生成を指示</b>" --> Pdf_Generator
-        App_State -- "<b>請求書データを提供</b>" --> Pdf_Generator
-        Pdf_Generator -- "生成したPDFをダウンロード" --> User_Interactions
-
-        %% データ永続化・復元
-        User_Interactions -- "<b>画面遷移時にデータ取得 (Query)</b><br/>(自社情報, フォームデータ)" --> GraphQL_Client
-        Main_UI -- "<b>PDFトレース/読込 (Query)</b>" --> GraphQL_Client
-        Main_UI -- "<b>保存 (Mutation)</b>" --> GraphQL_Client
-        GraphQL_Client -- "<b>取得・更新データで状態を更新</b>" --> App_State
-
-        GraphQL_Client -- "GraphQLリクエスト" --> API_Server
+        ApolloClient["Apollo Client"]
     end
 
-    subgraph "Server"
-        API_Server["APIサーバー"]
-        GraphQL_Endpoint["GraphQLエンドポイント"]
-        Database["(データストア)"]
-
-        API_Server -- "/graphql" --> GraphQL_Endpoint
-        GraphQL_Endpoint -- "CRUD処理" --> Database
+    subgraph Server
+        GraphQLServer["GraphQL Server"]
+        DB["Database"]
+        Puppeteer["Puppeteer"]
     end
+
+    User --> AppBar
+    User --> LeftSidebar
+    User --> Canvas
+    User --> RightSidebar
+
+    AppBar -->|Undo/Redo| HistoryHook
+    AppBar -->|PDF生成| PdfHook
+    AppBar -->|保存| AppState
+    LeftSidebar -->|オブジェクト追加| LayoutHook
+    LeftSidebar -->|ファイル選択| FileHook
+    Canvas --> AppState
+    RightSidebar --> AppState
+
+    AppState <--> HistoryHook
+    AppState <--> LayoutHook
+    AppState <--> FileHook
+    AppState --> PdfHook
+
+    AppState <--> ApolloClient
+    PdfHook --> ApolloClient
+
+    ApolloClient <--> GraphQLServer
+    GraphQLServer <--> DB
+    GraphQLServer <--> Puppeteer
 ```
 
 Service Interface（GraphQL）
@@ -326,8 +336,8 @@ UI 層とロジック層の分離:
 App.tsx からビジネスロジックをカスタムフックに抽出（約 460 行 → 約 330 行に削減）
 カスタムフック:
 - useLayoutOperations: レイアウトアイテムの追加・削除・コピー・ペースト・レイヤー移動
-- useFileUpload: 画像・PDF ファイルのアップロード処理
-- usePdfGeneration: React-PDF と Puppeteer を使用した PDF 生成
+- useFileUpload: 画像・PDF ファイルの読み込み処理（FileReader API を使用）
+- usePdfGeneration: React-PDF と Puppeteer を使用した PDF 生成・プレビュー
 UI コンポーネント:
 - EditorAppBar: トップバー（編集操作、プレビュー、保存ボタン）
 - EditorLeftSidebar: 左サイドバー（ツールバーと図形作成パレット）
