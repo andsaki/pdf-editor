@@ -7,7 +7,9 @@ interface DraggableItemProps {
   item: LayoutItem;
   displayScale: number;
   isSelected: boolean;
+  isMultiSelected?: boolean;
   onSelect: () => void;
+  onClick?: (itemId: string, event: React.MouseEvent) => void;
   onResize: (width: number, height: number) => void;
   onUpdatePosition: (x: number, y: number) => void;
   onRotate: (rotation: number) => void;
@@ -19,7 +21,9 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
   displayScale,
   isSelected,
+  isMultiSelected = false,
   onSelect,
+  onClick,
   onResize,
   onRotate,
   onUpdate,
@@ -47,11 +51,20 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
     height: item.height * displayScale,
     transform: `${CSS.Translate.toString(transform)} rotate(${rotation}deg)`,
     zIndex: item.zIndex,
-    border: isSelected ? "1px solid blue" : "1px dashed transparent",
-    outline: isSelected ? "2px solid #0066ff" : "none",
+    border: isMultiSelected
+      ? "2px solid #00cc66"
+      : isSelected
+      ? "1px solid blue"
+      : "1px dashed transparent",
+    outline: isMultiSelected
+      ? "2px solid #00cc66"
+      : isSelected
+      ? "2px solid #0066ff"
+      : "none",
     outlineOffset: "2px",
     cursor: item.locked ? "default" : isDragging ? "grabbing" : "grab",
     opacity: isDragging ? 0.5 : 1,
+    backgroundColor: isMultiSelected ? "rgba(0, 204, 102, 0.1)" : "transparent",
   };
 
   const handleResizeStart = (
@@ -223,12 +236,18 @@ export const DraggableItem: React.FC<DraggableItemProps> = ({
       {...attributes}
       onClick={(e) => {
         e.stopPropagation();
-        if (!item.locked) onSelect();
+        if (!item.locked) {
+          if (onClick) {
+            onClick(item.id, e);
+          } else {
+            onSelect();
+          }
+        }
       }}
       onKeyDown={handleKeyDown}
       tabIndex={item.locked ? -1 : 0}
       role="application"
-      aria-label={`回転角度: ${Math.round(rotation)}度`}
+      aria-label={`回転角度: ${Math.round(rotation)}度 ${isMultiSelected ? '(複数選択中)' : ''}`}
     >
       {children}
 

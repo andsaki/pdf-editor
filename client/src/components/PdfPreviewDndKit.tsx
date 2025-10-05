@@ -43,6 +43,11 @@ interface PdfPreviewProps {
   companyInfo?: CompanyInfo;
 }
 
+interface MultiSelectionState {
+  selectedIds: Set<string>;
+  isMultiSelecting: boolean;
+}
+
 const getPreviewProcessedContent = (
   item: LayoutItem | TableCell,
   invoiceData: InvoiceData,
@@ -152,6 +157,10 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
 
   const [announcement, setAnnouncement] = useState<string>("");
 
+  // 複数選択の状態管理
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isMultiSelecting, setIsMultiSelecting] = useState(false);
+
   // dnd-kit sensors (マウスのみ、キーボードは独自実装)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -182,13 +191,11 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     setError(null);
 
     try {
-      console.log('Generating PDF with layout items:', invoiceData.layout.length);
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage();
       const { height } = page.getSize();
 
       for (const item of invoiceData.layout) {
-        console.log('Processing item type:', item.type);
         if (item.type === "image") {
           try {
             const imageBytes = item.src.startsWith("data:image/jpeg")
@@ -288,9 +295,7 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
       }
 
       const bytes = await pdfDoc.save();
-      console.log('PDF bytes generated, size:', bytes.length);
       setPdfBytesForDisplay(bytes);
-      console.log('PDF state updated');
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       setError("PDFの生成に失敗しました");
@@ -330,8 +335,7 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     };
   }, []);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    console.log(`PDF loaded successfully with ${numPages} pages.`);
+  const onDocumentLoadSuccess = () => {
     setError(null);
   };
 
@@ -388,7 +392,6 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
 
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
-    console.log('Creating pdfFile object with bytes length:', pdfBytesForDisplay.length);
     return { data: new Uint8Array(pdfBytesForDisplay) };
   }, [pdfBytesForDisplay]);
 
@@ -396,12 +399,102 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     const { active, delta } = event;
     const itemId = active.id as string;
 
-    updateLayoutItem(itemId, (item) => ({
-      ...item,
-      x: item.x + delta.x / displayScale,
-      y: item.y + delta.y / displayScale,
-    }));
+    // 複数選択されている場合は、全てのアイテムを移動
+    if (selectedIds.has(itemId) && selectedIds.size > 1) {
+      const deltaX = delta.x / displayScale;
+      const deltaY = delta.y / displayScale;
+
+      setLayout((prevLayout) =>
+        prevLayout.map((item) =>
+          selectedIds.has(item.id)
+            ? {
+                ...item,
+                x: item.x + deltaX,
+                y: item.y + deltaY
+              }
+            : item
+        )
+      );
+    } else {
+      // 単一アイテムの移動
+      const deltaX = delta.x / displayScale;
+      const deltaY = delta.y / displayScale;
+
+      updateLayoutItem(itemId, (item) => ({
+        ...item,
+        x: item.x + deltaX,
+        y: item.y + deltaY,
+      }));
+    }
   };
+
+  // 複数選択のハンドラー
+  const handleItemClick = (itemId: string, event: React.MouseEvent) => {
+    if (event.shiftKey) {
+      // Shift+クリックで追加選択
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(itemId)) {
+          newSet.delete(itemId);
+        } else {
+          newSet.add(itemId);
+        }
+        return newSet;
+      });
+      setIsMultiSelecting(true);
+    } else if (event.ctrlKey || event.metaKey) {
+      // Ctrl/Cmd+クリックでトグル選択
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(itemId)) {
+          newSet.delete(itemId);
+        } else {
+          newSet.add(itemId);
+        }
+        setIsMultiSelecting(newSet.size > 0);
+        return newSet;
+      });
+    } else {
+      // 通常クリックは単一選択
+      setSelectedIds(new Set([itemId]));
+      setIsMultiSelecting(false);
+      onSelectObject(itemId);
+    }
+  };
+
+  // 全選択
+  const selectAll = useCallback(() => {
+    const allIds = new Set(
+      invoiceData.layout.filter((item) => !item.locked).map((item) => item.id)
+    );
+    setSelectedIds(allIds);
+    setIsMultiSelecting(true);
+  }, [invoiceData.layout]);
+
+  // 選択解除
+  const deselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+    setIsMultiSelecting(false);
+    onSelectObject(null);
+  }, [onSelectObject]);
+
+  // キーボードショートカット for multi-selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + A で全選択
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        selectAll();
+      }
+      // Escape で選択解除
+      if (e.key === 'Escape') {
+        deselectAll();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectAll, deselectAll]);
 
   // invoiceDataとlayoutの検証
   if (!invoiceData || !invoiceData.layout) {
@@ -514,6 +607,8 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
                     item={item}
                     displayScale={displayScale}
                     isSelected={selectedObjectId === item.id}
+                    isMultiSelected={selectedIds.has(item.id)}
+                    onClick={handleItemClick}
                     onSelect={() => onSelectObject(item.id)}
                     onResize={(width, height) => {
                       updateLayoutItem(item.id, (item) => ({
@@ -539,7 +634,7 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
                       updateLayoutItem(item.id, (item) => ({
                         ...item,
                         ...updates,
-                      }));
+                      } as LayoutItem));
                     }}
                   >
                     {item.type === "text" &&
