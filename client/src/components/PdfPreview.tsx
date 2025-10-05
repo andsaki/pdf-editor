@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import type {
   InvoiceData,
   LayoutItem,
@@ -47,7 +42,11 @@ const getPreviewProcessedContent = (
   variableDisplayMode: "name" | "example",
   companyInfo?: CompanyInfo
 ): string => {
-  if (!item || typeof item !== "object" || !("content" in item && "contentType" in item)) {
+  if (
+    !item ||
+    typeof item !== "object" ||
+    !("content" in item && "contentType" in item)
+  ) {
     return "";
   }
   const { contentType, content, label } = item;
@@ -93,14 +92,14 @@ const getPreviewProcessedContent = (
     ) {
       if (contentType === "labeled-variable") {
         const labelText = label || "";
-        const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+        const separator = labelText && !labelText.endsWith(" ") ? " " : "";
         return `${labelText}${separator}{{${resolvedObject.label}}}`;
       }
       return `{{${resolvedObject.label}}}`;
     }
     if (contentType === "labeled-variable") {
       const labelText = label || "";
-      const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+      const separator = labelText && !labelText.endsWith(" ") ? " " : "";
       return `${labelText}${separator}{{${trimmedVariableName}}}`;
     }
     return `{{${trimmedVariableName}}}`;
@@ -112,7 +111,7 @@ const getPreviewProcessedContent = (
     if (contentType === "labeled-variable") {
       // ラベルが空白で終わっていない場合は、ラベルと値の間にスペースを追加
       const labelText = label || "";
-      const separator = labelText && !labelText.endsWith(' ') ? ' ' : '';
+      const separator = labelText && !labelText.endsWith(" ") ? " " : "";
       return `${labelText}${separator}${resolvedValue}`;
     }
     return String(resolvedValue);
@@ -223,32 +222,42 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
       ref={containerRef}
     >
-      <div
-        className="relative shadow-lg bg-white"
-        style={{
-          width: A4_WIDTH_PX * displayScale,
-          height: A4_HEIGHT_PX * displayScale,
-        }}
-        onClick={() => {
-          onSelectObject(null);
-          onSelectCell(null);
-        }}
-      >
+      <div style={{ marginTop: "2rem" }}>
+        <div
+          className="relative shadow-lg bg-white"
+          style={{
+            width: A4_WIDTH_PX * displayScale,
+            height: 800,
+          }}
+          onClick={() => {
+            onSelectObject(null);
+            onSelectCell(null);
+          }}
+        >
         {/* HTML プレビュー（背景） */}
         <div
           style={{
             position: "absolute",
-            width: "100%",
-            height: "100%",
+            top: "50%",
+            left: "50%",
             pointerEvents: "none",
-            transform: `scale(${displayScale})`,
-            transformOrigin: "top left",
-            overflow: "hidden",
+            transform: `translate(-50%, -50%) scale(${displayScale})`,
           }}
           dangerouslySetInnerHTML={{ __html: htmlPreview }}
         />
 
         {/* 編集可能なオーバーレイ */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: `translate(-50%, -50%) scale(${displayScale})`,
+            transformOrigin: "top left",
+            width: `${A4_WIDTH_PX}px`,
+            height: `${A4_HEIGHT_PX}px`,
+          }}
+        >
         {invoiceData.layout
           .filter((item) => item.visible !== false)
           .map((item) => {
@@ -282,12 +291,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   zIndex: item.zIndex + 1000,
                 }}
                 size={{
-                  width: item.width * displayScale,
-                  height: item.height * displayScale,
+                  width: item.width,
+                  height: item.height,
                 }}
                 position={{
-                  x: item.x * displayScale,
-                  y: item.y * displayScale,
+                  x: item.x,
+                  y: item.y,
                 }}
                 onClick={(e: React.MouseEvent) => {
                   if (item.locked) return;
@@ -298,18 +307,18 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   if (item.locked) return;
                   updateLayoutItem(item.id, (item) => ({
                     ...item,
-                    x: d.x / displayScale,
-                    y: d.y / displayScale,
+                    x: d.x,
+                    y: d.y,
                   }));
                 }}
                 onResizeStop={(_e, _direction, ref, _delta, position) => {
                   if (item.locked) return;
                   updateLayoutItem(item.id, (item) => ({
                     ...item,
-                    x: position.x / displayScale,
-                    y: position.y / displayScale,
-                    width: parseFloat(ref.style.width) / displayScale,
-                    height: parseFloat(ref.style.height) / displayScale,
+                    x: position.x,
+                    y: position.y,
+                    width: parseFloat(ref.style.width),
+                    height: parseFloat(ref.style.height),
                   }));
                 }}
                 disableDragging={item.locked}
@@ -436,61 +445,59 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         }}
                       >
                         <tbody>
-                          {(item.data as TableCell[][]).map(
-                            (row, rowIndex) => (
-                              <tr key={rowIndex}>
-                                {row.map((cell, cellIndex) => {
-                                  if (!cell) return null;
+                          {(item.data as TableCell[][]).map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {row.map((cell, cellIndex) => {
+                                if (!cell) return null;
 
-                                  const isSelected =
-                                    selectedCell?.tableId === item.id &&
-                                    selectedCell.rowIndex === rowIndex &&
-                                    selectedCell.cellIndex === cellIndex;
+                                const isSelected =
+                                  selectedCell?.tableId === item.id &&
+                                  selectedCell.rowIndex === rowIndex &&
+                                  selectedCell.cellIndex === cellIndex;
 
-                                  return (
-                                    <td
-                                      key={cell.id || `${rowIndex}-${cellIndex}`}
-                                      style={{
-                                        border: isSelected
-                                          ? "1px solid blue"
-                                          : "1px solid #ccc",
-                                        padding: "5px",
-                                        fontSize: `${12 * displayScale}px`,
-                                        pointerEvents: "auto",
-                                        color: cell.style?.color || "black",
-                                        fontWeight: cell.style?.bold
-                                          ? "bold"
-                                          : "normal",
-                                        fontStyle: cell.style?.italic
-                                          ? "italic"
-                                          : "normal",
-                                        textAlign:
-                                          cell.style?.textAlign || "left",
-                                        backgroundColor:
-                                          cell.style?.backgroundColor ||
-                                          "transparent",
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onSelectCell({
-                                          tableId: item.id,
-                                          rowIndex,
-                                          cellIndex,
-                                        });
-                                      }}
-                                    >
-                                      {getPreviewProcessedContent(
-                                        cell,
-                                        invoiceData,
-                                        variableDisplayMode,
-                                        companyInfo
-                                      )}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            )
-                          )}
+                                return (
+                                  <td
+                                    key={cell.id || `${rowIndex}-${cellIndex}`}
+                                    style={{
+                                      border: isSelected
+                                        ? "1px solid blue"
+                                        : "1px solid #ccc",
+                                      padding: "5px",
+                                      fontSize: `${12 * displayScale}px`,
+                                      pointerEvents: "auto",
+                                      color: cell.style?.color || "black",
+                                      fontWeight: cell.style?.bold
+                                        ? "bold"
+                                        : "normal",
+                                      fontStyle: cell.style?.italic
+                                        ? "italic"
+                                        : "normal",
+                                      textAlign:
+                                        cell.style?.textAlign || "left",
+                                      backgroundColor:
+                                        cell.style?.backgroundColor ||
+                                        "transparent",
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onSelectCell({
+                                        tableId: item.id,
+                                        rowIndex,
+                                        cellIndex,
+                                      });
+                                    }}
+                                  >
+                                    {getPreviewProcessedContent(
+                                      cell,
+                                      invoiceData,
+                                      variableDisplayMode,
+                                      companyInfo
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -532,9 +539,9 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         return {
                           ...baseStyle,
                           backgroundColor: "transparent",
-                          borderLeft: `${
-                            shapeItem.style?.borderWidth || 1
-                          }px ${shapeItem.style?.borderStyle || "solid"} ${
+                          borderLeft: `${shapeItem.style?.borderWidth || 1}px ${
+                            shapeItem.style?.borderStyle || "solid"
+                          } ${
                             shapeItem.style?.borderColor ||
                             shapeItem.style?.backgroundColor ||
                             "#000000"
@@ -548,6 +555,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
               </Rnd>
             );
           })}
+        </div>
+        </div>
       </div>
     </div>
   );
