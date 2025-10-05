@@ -16,6 +16,11 @@ import type {
 } from "../utils/types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
+import {
+  createAnnouncer,
+  createKeyboardHandler,
+  getItemAriaLabel,
+} from "../utils/accessibility";
 
 const textContentSchema = z.string().min(1, "テキストは空にできません");
 
@@ -156,6 +161,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
+
+  const [announcement, setAnnouncement] = useState<string>("");
 
   useEffect(() => {
     const initializePageDimensions = async () => {
@@ -390,6 +397,11 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     });
   };
 
+  const announce = useMemo(
+    () => createAnnouncer(setAnnouncement),
+    [setAnnouncement]
+  );
+
   const displayScale = useMemo(() => {
     if (!pageDimensions || containerWidth === 0 || containerHeight === 0) {
       return 1;
@@ -432,6 +444,36 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
       ref={containerRef}
     >
+      {/* スクリーンリーダー用のライブリージョン（画面外に配置） */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden'
+        }}
+      >
+        {announcement}
+      </div>
+
+      {/* キーボード操作の説明（画面外に配置） */}
+      <div
+        id="keyboard-instructions"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden'
+        }}
+      >
+        矢印キーで移動、Shiftキーと矢印キーで細かく移動、Ctrl/Cmdキーと矢印キーでサイズ変更、EnterまたはSpaceキーで選択
+      </div>
+
       <div
         className="relative shadow-lg"
         style={{
@@ -485,6 +527,11 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }
                 : true;
 
+              const processedContent = item.type === "text"
+                ? getPreviewProcessedContent(item, invoiceData, variableDisplayMode, companyInfo)
+                : undefined;
+              const itemLabel = getItemAriaLabel(item, processedContent);
+
               return (
                 <Rnd
                   key={item.id}
@@ -495,6 +542,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         ? "1px solid blue"
                         : "1px dashed transparent",
                     zIndex: item.zIndex,
+                    outline: selectedObjectId === item.id ? "2px solid #0066ff" : "none",
+                    outlineOffset: "2px",
                   }}
                   size={{
                     width: item.width * displayScale,
@@ -529,6 +578,17 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }}
                   disableDragging={item.locked}
                   enableResizing={enableResizing}
+                  tabIndex={item.locked ? -1 : 0}
+                  role="application"
+                  aria-label={itemLabel}
+                  aria-grabbed={selectedObjectId === item.id}
+                  aria-describedby="keyboard-instructions"
+                  onKeyDown={createKeyboardHandler(
+                    item,
+                    updateLayoutItem,
+                    announce,
+                    onSelectObject
+                  )}
                 >
                   {item.type === "text" &&
                     (editingText === item.id ? (
