@@ -21,6 +21,7 @@ const BaseLayoutItemSchema = z.object({
   zIndex: z.number(),
   locked: z.boolean().optional(),
   visible: z.boolean().optional(),
+  rotation: z.number().optional(), // 回転角度（度数法）
 });
 
 const textItemStyleSchema = z.object({

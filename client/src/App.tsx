@@ -5,7 +5,7 @@ import {
   createTheme,
   ThemeProvider,
 } from "@mui/material";
-import { PdfPreview } from "./components/PdfPreview";
+import { PdfPreviewDndKit as PdfPreview } from "./components/PdfPreviewDndKit";
 import { EditorAppBar } from "./components/EditorAppBar";
 import { EditorLeftSidebar } from "./components/EditorLeftSidebar";
 import { EditorRightSidebar } from "./components/EditorRightSidebar";
@@ -117,13 +117,13 @@ function App() {
 
   // カスタムフックを使用してロジックを分離
   const layoutOperations = useLayoutOperations(
-    layout,
+    layout || [],
     setLayout,
     selectedObjectId,
     handleSelectObject
   );
 
-  const fileUpload = useFileUpload(layout, setLayout);
+  const fileUpload = useFileUpload(layout || [], setLayout);
 
   const pdfGeneration = usePdfGeneration(
     invoiceData,
@@ -206,10 +206,10 @@ function App() {
     }
   };
 
-  const selectedObject = layout.find((obj) => obj.id === selectedObjectId);
+  const selectedObject = layout?.find((obj) => obj.id === selectedObjectId);
 
   const selectedCellObject = useMemo(() => {
-    if (!selectedCell) return null;
+    if (!selectedCell || !layout) return null;
     const { tableId, rowIndex, cellIndex } = selectedCell;
     const table =
       (layout.find(
