@@ -16,6 +16,11 @@ import type {
 } from "../utils/types";
 import { Rnd } from "react-rnd";
 import { z } from "zod";
+import {
+  createAnnouncer,
+  createKeyboardHandler,
+  getItemAriaLabel,
+} from "../utils/accessibility";
 
 const textContentSchema = z.string().min(1, "テキストは空にできません");
 
@@ -392,98 +397,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     });
   };
 
-  const announce = (message: string) => {
-    setAnnouncement(message);
-    setTimeout(() => setAnnouncement(""), 1000);
-  };
-
-  const handleKeyDown = (item: LayoutItem) => (e: React.KeyboardEvent) => {
-    if (item.locked) return;
-
-    const { key, ctrlKey, metaKey, shiftKey } = e;
-    const isResizeMode = ctrlKey || metaKey;
-    const step = shiftKey ? 1 : 10;
-
-    if (isResizeMode) {
-      // リサイズモード (Ctrl/Cmd + 矢印キー)
-      switch (key) {
-        case "ArrowUp":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            height: Math.max(20, item.height - step),
-          }));
-          announce(`高さ: ${Math.round(item.height - step)}px`);
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            height: item.height + step,
-          }));
-          announce(`高さ: ${Math.round(item.height + step)}px`);
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            width: Math.max(20, item.width - step),
-          }));
-          announce(`幅: ${Math.round(item.width - step)}px`);
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            width: item.width + step,
-          }));
-          announce(`幅: ${Math.round(item.width + step)}px`);
-          break;
-      }
-    } else {
-      // ドラッグモード (矢印キー)
-      switch (key) {
-        case "ArrowUp":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            y: item.y - step,
-          }));
-          announce(`Y座標: ${Math.round(item.y - step)}px`);
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            y: item.y + step,
-          }));
-          announce(`Y座標: ${Math.round(item.y + step)}px`);
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            x: item.x - step,
-          }));
-          announce(`X座標: ${Math.round(item.x - step)}px`);
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          updateLayoutItem(item.id, (item) => ({
-            ...item,
-            x: item.x + step,
-          }));
-          announce(`X座標: ${Math.round(item.x + step)}px`);
-          break;
-        case "Enter":
-        case " ":
-          e.preventDefault();
-          onSelectObject(item.id);
-          announce(`${item.type === "text" ? "テキスト" : item.type === "image" ? "画像" : item.type === "table" ? "テーブル" : "図形"}を選択しました`);
-          break;
-      }
-    }
-  };
+  const announce = useMemo(
+    () => createAnnouncer(setAnnouncement),
+    [setAnnouncement]
+  );
 
   const displayScale = useMemo(() => {
     if (!pageDimensions || containerWidth === 0 || containerHeight === 0) {
@@ -610,13 +527,10 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }
                 : true;
 
-              const itemLabel = item.type === "text"
-                ? `テキスト要素: ${getPreviewProcessedContent(item, invoiceData, variableDisplayMode, companyInfo).substring(0, 20)}`
-                : item.type === "image"
-                ? "画像要素"
-                : item.type === "table"
-                ? "テーブル要素"
-                : "図形要素";
+              const processedContent = item.type === "text"
+                ? getPreviewProcessedContent(item, invoiceData, variableDisplayMode, companyInfo)
+                : undefined;
+              const itemLabel = getItemAriaLabel(item, processedContent);
 
               return (
                 <Rnd
@@ -669,7 +583,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   aria-label={itemLabel}
                   aria-grabbed={selectedObjectId === item.id}
                   aria-describedby="keyboard-instructions"
-                  onKeyDown={handleKeyDown(item)}
+                  onKeyDown={createKeyboardHandler(
+                    item,
+                    updateLayoutItem,
+                    announce,
+                    onSelectObject
+                  )}
                 >
                   {item.type === "text" &&
                     (editingText === item.id ? (
