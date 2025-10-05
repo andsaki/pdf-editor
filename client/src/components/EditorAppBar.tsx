@@ -20,7 +20,6 @@ interface EditorAppBarProps {
   hasClipboard: boolean;
   variableDisplayMode: "name" | "example";
   onToggleVariableDisplay: () => void;
-  onPreviewReactPdf: () => void;
   onPreviewPuppeteer: () => void;
   onShowStatePreview: () => void;
   onSave: () => void;
@@ -43,7 +42,6 @@ export const EditorAppBar = ({
   hasClipboard,
   variableDisplayMode,
   onToggleVariableDisplay,
-  onPreviewReactPdf,
   onPreviewPuppeteer,
   onShowStatePreview,
   onSave,
@@ -89,18 +87,10 @@ export const EditorAppBar = ({
         <Button
           variant="outlined"
           size="small"
-          onClick={onPreviewReactPdf}
-          sx={{ ml: 1 }}
-        >
-          プレビュー (React-PDF)
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
           onClick={onPreviewPuppeteer}
           sx={{ ml: 1 }}
         >
-          プレビュー (Puppeteer)
+          PDFプレビュー
         </Button>
         <Button
           variant="outlined"

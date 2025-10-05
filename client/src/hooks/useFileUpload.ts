@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import type { LayoutItem } from "../utils/types";
 import { getNewZIndex } from "../utils/layoutUtils";
-import { pdfjs } from "react-pdf";
 
 /**
  * ファイルアップロード処理を管理するカスタムフック
@@ -45,48 +44,16 @@ export const useFileUpload = (
   );
 
   /**
-   * PDFファイルのアップロード処理（各ページを画像として追加）
+   * PDFファイルのアップロード処理
+   * Note: PDF読み込み機能は現在無効化されています
+   * PDFから画像への変換が必要な場合は、サーバーサイドでの処理を検討してください
    */
   const handlePdfUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = e.target?.result as ArrayBuffer;
-        if (data) {
-          const pdf = await pdfjs.getDocument({ data }).promise;
-
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            if (context) {
-              await page.render({ canvasContext: context, viewport }).promise;
-              const imageDataUrl = canvas.toDataURL("image/png");
-              const newImage: LayoutItem = {
-                id: crypto.randomUUID(),
-                type: "image" as const,
-                src: imageDataUrl,
-                x: 50,
-                y: 50 + (i - 1) * (viewport.height + 20),
-                width: viewport.width,
-                height: viewport.height,
-                zIndex: getNewZIndex(layout),
-              };
-              setLayout((prevLayout) => [...(prevLayout || []), newImage]);
-            }
-          }
-        }
-      };
-      reader.readAsArrayBuffer(file);
+      alert("PDF読み込み機能は現在利用できません。画像ファイルをアップロードしてください。");
+      event.target.value = "";
     },
-    [layout, setLayout]
+    []
   );
 
   return {

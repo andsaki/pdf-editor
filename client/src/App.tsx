@@ -246,7 +246,6 @@ function App() {
               prev === "name" ? "example" : "name"
             )
           }
-          onPreviewReactPdf={pdfGeneration.openPdfInNewTab}
           onPreviewPuppeteer={pdfGeneration.openPdfWithPuppeteer}
           onShowStatePreview={() => setShowStatePreview((prev) => !prev)}
           onSave={saveInvoice}

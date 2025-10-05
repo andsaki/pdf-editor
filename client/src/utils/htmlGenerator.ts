@@ -1,6 +1,5 @@
 import type { InvoiceData } from "./types";
 import { getProcessedContent } from "./pdf";
-import { pxToMm } from "./coordinates";
 
 /**
  * InvoiceDataからPuppeteer用のHTML文字列を生成する
@@ -13,6 +12,7 @@ export const generateHtmlFromLayout = (
   data: InvoiceData,
   companyInfo?: any
 ): string => {
+  const scale = 1;
   // Generate a simple HTML representation of the invoice
   const itemsHtml = data.layout
     .filter((item) => item.visible !== false)
@@ -30,9 +30,9 @@ export const generateHtmlFromLayout = (
         const backgroundColor = item.style?.backgroundColor || "transparent";
         const lineHeight = item.style?.lineHeight || 1.5;
 
-        return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; font-size: ${pxToMm(item.style?.fontSize || 16)}mm; color: ${item.style?.color || "black"}; word-wrap: ${wordWrap}; white-space: ${whiteSpace}; overflow: ${overflow}; text-align: ${textAlign}; font-weight: ${fontWeight}; font-style: ${fontStyle}; background-color: ${backgroundColor}; line-height: ${lineHeight};">${processedContent}</div>`;
+        return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px; font-size: ${(item.style?.fontSize || 16) * scale}px; color: ${item.style?.color || "black"}; word-wrap: ${wordWrap}; white-space: ${whiteSpace}; overflow: ${overflow}; text-align: ${textAlign}; font-weight: ${fontWeight}; font-style: ${fontStyle}; background-color: ${backgroundColor}; line-height: ${lineHeight};">${processedContent}</div>`;
       } else if (item.type === "image" && "src" in item && item.src) {
-        return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm;"><img src="${item.src}" style="width: 100%; height: 100%; object-fit: contain;" /></div>`;
+        return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px;"><img src="${item.src}" style="width: 100%; height: 100%; object-fit: contain;" /></div>`;
       } else if (item.type === "table" && "data" in item && item.data) {
         const tableRows = item.data
           .map((row) => {
@@ -44,9 +44,9 @@ export const generateHtmlFromLayout = (
                   companyInfo
                 );
                 const cellStyle = `
-                padding: 4px;
-                border: 1px solid #ccc;
-                font-size: ${pxToMm(cell.style?.fontSize || 12)}mm;
+                padding: ${4 * scale}px;
+                border: ${1 * scale}px solid #ccc;
+                font-size: ${(cell.style?.fontSize || 12) * scale}px;
                 color: ${cell.style?.color || "black"};
                 text-align: ${cell.style?.textAlign || "left"};
                 background-color: ${cell.style?.backgroundColor || "transparent"};
@@ -58,7 +58,7 @@ export const generateHtmlFromLayout = (
           })
           .join("");
 
-        return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm;">
+        return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px;">
             <table style="width: 100%; height: 100%; border-collapse: collapse;">
               ${tableRows}
             </table>
@@ -69,16 +69,16 @@ export const generateHtmlFromLayout = (
         const borderWidth = item.style?.borderWidth || 1;
         const borderStyle = item.style?.borderStyle || "solid";
         const border = borderWidth
-          ? `${pxToMm(borderWidth)}mm ${borderStyle} ${borderColor}`
+          ? `${borderWidth * scale}px ${borderStyle} ${borderColor}`
           : "none";
 
         if (item.shapeType === "h-line") {
-          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; border-top: ${border};"></div>`;
+          return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px; border-top: ${border};"></div>`;
         } else if (item.shapeType === "v-line") {
-          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; border-left: ${border};"></div>`;
+          return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px; border-left: ${border};"></div>`;
         } else {
           // rect
-          return `<div class="item" style="left: ${pxToMm(item.x)}mm; top: ${pxToMm(item.y)}mm; width: ${pxToMm(item.width)}mm; height: ${pxToMm(item.height)}mm; background-color: ${backgroundColor}; border: ${border};"></div>`;
+          return `<div class="item" style="left: ${item.x * scale}px; top: ${item.y * scale}px; width: ${item.width * scale}px; height: ${item.height * scale}px; background-color: ${backgroundColor}; border: ${border};"></div>`;
         }
       }
       return "";
@@ -95,8 +95,8 @@ export const generateHtmlFromLayout = (
       html, body { margin: 0; padding: 0; }
       body { font-family: "BIZ UDPGothic", "Hiragino Sans", sans-serif; }
       .page {
-        width: 210mm;
-        height: 297mm;
+        width: 794px;
+        height: 1123px;
         position: relative;
         background: white;
       }

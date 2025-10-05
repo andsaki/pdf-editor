@@ -1,7 +1,5 @@
-import React, { useCallback } from "react";
-import { pdf } from "@react-pdf/renderer";
+import { useCallback } from "react";
 import type { InvoiceData } from "../utils/types";
-import { InvoiceDocument } from "../components/InvoiceDocument";
 import { generateHtmlFromLayout } from "../utils/htmlGenerator";
 import { useMutation } from "@apollo/client";
 import { GENERATE_PDF_MUTATION } from "../graphql/invoiceQueries";
@@ -14,16 +12,6 @@ export const usePdfGeneration = (
   companyInfo: any
 ) => {
   const [generatePdfMutation] = useMutation(GENERATE_PDF_MUTATION);
-
-  /**
-   * React-PDFを使用してPDFを新しいタブで開く
-   */
-  const openPdfInNewTab = useCallback(async () => {
-    const element = InvoiceDocument({ invoiceData, companyInfo }) as React.ReactElement;
-    const blob = await pdf(element).toBlob();
-    const url = URL.createObjectURL(blob);
-    window.open(url);
-  }, [invoiceData, companyInfo]);
 
   /**
    * Puppeteerを使用してPDFを生成して新しいタブで開く
@@ -66,7 +54,6 @@ export const usePdfGeneration = (
   }, [invoiceData, companyInfo, generatePdfMutation]);
 
   return {
-    openPdfInNewTab,
     openPdfWithPuppeteer,
   };
 };
