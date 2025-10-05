@@ -23,28 +23,28 @@ import { PdfTableItem } from "./pdf/TableItem";
 type FontFamily = "Noto Sans JP" | "BIZ UDPGothic" | "Noto Serif JP";
 
 /**
- * 使用するフォントを選択（デフォルト: Noto Sans JP）
+ * 使用するフォントを選択（デフォルト: BIZ UDPGothic）
  */
-const FONT_FAMILY: FontFamily = "Noto Sans JP";
+const FONT_FAMILY: FontFamily = "BIZ UDPGothic";
 
 // Noto Sans JP の登録
-Font.register({
-  family: "Noto Sans JP",
-  fonts: [
-    { src: "/fonts/NotoSansJP-Regular.ttf" },
-    { src: "/fonts/NotoSansJP-Medium.ttf", fontWeight: 500 },
-    { src: "/fonts/NotoSansJP-Bold.ttf", fontWeight: "bold" },
-  ],
-});
-
-// BIZ UDPGothic の登録（コメントアウト時に使用）
 // Font.register({
-//   family: "BIZ UDPGothic",
+//   family: "Noto Sans JP",
 //   fonts: [
-//     { src: "/fonts/BIZUDPGothic-Regular.ttf" },
-//     { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
+//     { src: "/fonts/NotoSansJP-Regular.ttf" },
+//     { src: "/fonts/NotoSansJP-Medium.ttf", fontWeight: 500 },
+//     { src: "/fonts/NotoSansJP-Bold.ttf", fontWeight: "bold" },
 //   ],
 // });
+
+// BIZ UDPGothic の登録
+Font.register({
+  family: "BIZ UDPGothic",
+  fonts: [
+    { src: "/fonts/BIZUDPGothic-Regular.ttf" },
+    { src: "/fonts/BIZUDPGothic-Bold.ttf", fontWeight: "bold" },
+  ],
+});
 
 // Noto Serif JP の登録（明朝体を使用する場合）
 // Font.register({
