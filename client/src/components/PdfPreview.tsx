@@ -157,6 +157,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   const [pdfBytesForDisplay, setPdfBytesForDisplay] =
     useState<Uint8Array | null>(null);
 
+  const [announcement, setAnnouncement] = useState<string>("");
+
   useEffect(() => {
     const initializePageDimensions = async () => {
       try {
@@ -390,6 +392,99 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     });
   };
 
+  const announce = (message: string) => {
+    setAnnouncement(message);
+    setTimeout(() => setAnnouncement(""), 1000);
+  };
+
+  const handleKeyDown = (item: LayoutItem) => (e: React.KeyboardEvent) => {
+    if (item.locked) return;
+
+    const { key, ctrlKey, metaKey, shiftKey } = e;
+    const isResizeMode = ctrlKey || metaKey;
+    const step = shiftKey ? 1 : 10;
+
+    if (isResizeMode) {
+      // リサイズモード (Ctrl/Cmd + 矢印キー)
+      switch (key) {
+        case "ArrowUp":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            height: Math.max(20, item.height - step),
+          }));
+          announce(`高さ: ${Math.round(item.height - step)}px`);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            height: item.height + step,
+          }));
+          announce(`高さ: ${Math.round(item.height + step)}px`);
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            width: Math.max(20, item.width - step),
+          }));
+          announce(`幅: ${Math.round(item.width - step)}px`);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            width: item.width + step,
+          }));
+          announce(`幅: ${Math.round(item.width + step)}px`);
+          break;
+      }
+    } else {
+      // ドラッグモード (矢印キー)
+      switch (key) {
+        case "ArrowUp":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            y: item.y - step,
+          }));
+          announce(`Y座標: ${Math.round(item.y - step)}px`);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            y: item.y + step,
+          }));
+          announce(`Y座標: ${Math.round(item.y + step)}px`);
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            x: item.x - step,
+          }));
+          announce(`X座標: ${Math.round(item.x - step)}px`);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          updateLayoutItem(item.id, (item) => ({
+            ...item,
+            x: item.x + step,
+          }));
+          announce(`X座標: ${Math.round(item.x + step)}px`);
+          break;
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          onSelectObject(item.id);
+          announce(`${item.type === "text" ? "テキスト" : item.type === "image" ? "画像" : item.type === "table" ? "テーブル" : "図形"}を選択しました`);
+          break;
+      }
+    }
+  };
+
   const displayScale = useMemo(() => {
     if (!pageDimensions || containerWidth === 0 || containerHeight === 0) {
       return 1;
@@ -432,6 +527,36 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
       className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
       ref={containerRef}
     >
+      {/* スクリーンリーダー用のライブリージョン（画面外に配置） */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden'
+        }}
+      >
+        {announcement}
+      </div>
+
+      {/* キーボード操作の説明（画面外に配置） */}
+      <div
+        id="keyboard-instructions"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden'
+        }}
+      >
+        矢印キーで移動、Shiftキーと矢印キーで細かく移動、Ctrl/Cmdキーと矢印キーでサイズ変更、EnterまたはSpaceキーで選択
+      </div>
+
       <div
         className="relative shadow-lg"
         style={{
@@ -485,6 +610,14 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }
                 : true;
 
+              const itemLabel = item.type === "text"
+                ? `テキスト要素: ${getPreviewProcessedContent(item, invoiceData, variableDisplayMode, companyInfo).substring(0, 20)}`
+                : item.type === "image"
+                ? "画像要素"
+                : item.type === "table"
+                ? "テーブル要素"
+                : "図形要素";
+
               return (
                 <Rnd
                   key={item.id}
@@ -495,6 +628,8 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                         ? "1px solid blue"
                         : "1px dashed transparent",
                     zIndex: item.zIndex,
+                    outline: selectedObjectId === item.id ? "2px solid #0066ff" : "none",
+                    outlineOffset: "2px",
                   }}
                   size={{
                     width: item.width * displayScale,
@@ -529,6 +664,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   }}
                   disableDragging={item.locked}
                   enableResizing={enableResizing}
+                  tabIndex={item.locked ? -1 : 0}
+                  role="application"
+                  aria-label={itemLabel}
+                  aria-grabbed={selectedObjectId === item.id}
+                  aria-describedby="keyboard-instructions"
+                  onKeyDown={handleKeyDown(item)}
                 >
                   {item.type === "text" &&
                     (editingText === item.id ? (
