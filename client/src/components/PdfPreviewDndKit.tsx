@@ -21,7 +21,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { DragEndEvent } from "@dnd-kit/core";
+import type { DragEndEvent, DragMoveEvent, Modifier } from "@dnd-kit/core";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import { DraggableItem } from "./DraggableItem";
 import {
@@ -41,6 +41,12 @@ interface PdfPreviewProps {
   ) => void;
   variableDisplayMode: "name" | "example";
   companyInfo?: CompanyInfo;
+  showGrid?: boolean;
+  snapToGrid?: boolean;
+  showGuidelines?: boolean;
+  onToggleGrid?: () => void;
+  onToggleSnap?: () => void;
+  onToggleGuidelines?: () => void;
 }
 
 interface MultiSelectionState {
@@ -135,6 +141,12 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
   onSelectCell,
   variableDisplayMode,
   companyInfo,
+  showGrid: showGridProp = true,
+  snapToGrid: snapToGridProp = true,
+  showGuidelines: showGuidelinesProp = true,
+  onToggleGrid,
+  onToggleSnap,
+  onToggleGuidelines,
 }) => {
   const [pageNumber] = useState(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
@@ -161,6 +173,16 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isMultiSelecting, setIsMultiSelecting] = useState(false);
 
+  // グリッドとガイドラインの状態（親コンポーネントから制御可能）
+  const showGrid = showGridProp;
+  const snapToGrid = snapToGridProp;
+  const showGuidelines = showGuidelinesProp;
+  const [gridSize] = useState(10); // 10px刻み
+  const [guidelines, setGuidelines] = useState<{
+    vertical: number[];
+    horizontal: number[];
+  }>({ vertical: [], horizontal: [] });
+
   // dnd-kit sensors (マウスのみ、キーボードは独自実装)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -168,6 +190,22 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
         distance: 8,
       },
     })
+  );
+
+  // グリッドスナップのモディファイア
+  const createSnapModifier = (gridSize: number): Modifier => {
+    return ({ transform }) => {
+      return {
+        ...transform,
+        x: snapToGrid ? Math.round(transform.x / gridSize) * gridSize : transform.x,
+        y: snapToGrid ? Math.round(transform.y / gridSize) * gridSize : transform.y,
+      };
+    };
+  };
+
+  const snapModifier = useMemo(
+    () => createSnapModifier(gridSize),
+    [gridSize, snapToGrid]
   );
 
   useEffect(() => {
@@ -395,9 +433,74 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     return { data: new Uint8Array(pdfBytesForDisplay) };
   }, [pdfBytesForDisplay]);
 
+  // ドラッグ中のガイドライン計算
+  const handleDragMove = (event: DragMoveEvent) => {
+    if (!showGuidelines) {
+      setGuidelines({ vertical: [], horizontal: [] });
+      return;
+    }
+
+    const { active, delta } = event;
+    const itemId = active.id as string;
+    const draggedItem = invoiceData.layout.find((item) => item.id === itemId);
+
+    if (!draggedItem) return;
+
+    const threshold = 5 / displayScale; // 5pxの吸着範囲
+    const newX = draggedItem.x + delta.x / displayScale;
+    const newY = draggedItem.y + delta.y / displayScale;
+    const centerX = newX + draggedItem.width / 2;
+    const centerY = newY + draggedItem.height / 2;
+
+    const verticalLines: number[] = [];
+    const horizontalLines: number[] = [];
+
+    // 他のアイテムとの位置関係をチェック
+    invoiceData.layout.forEach((item) => {
+      if (item.id === itemId) return;
+
+      const itemCenterX = item.x + item.width / 2;
+      const itemCenterY = item.y + item.height / 2;
+
+      // 中央揃え（X軸）
+      if (Math.abs(centerX - itemCenterX) < threshold) {
+        verticalLines.push(itemCenterX * displayScale);
+      }
+      // 左端揃え
+      if (Math.abs(newX - item.x) < threshold) {
+        verticalLines.push(item.x * displayScale);
+      }
+      // 右端揃え
+      if (Math.abs(newX + draggedItem.width - (item.x + item.width)) < threshold) {
+        verticalLines.push((item.x + item.width) * displayScale);
+      }
+
+      // 中央揃え（Y軸）
+      if (Math.abs(centerY - itemCenterY) < threshold) {
+        horizontalLines.push(itemCenterY * displayScale);
+      }
+      // 上端揃え
+      if (Math.abs(newY - item.y) < threshold) {
+        horizontalLines.push(item.y * displayScale);
+      }
+      // 下端揃え
+      if (Math.abs(newY + draggedItem.height - (item.y + item.height)) < threshold) {
+        horizontalLines.push((item.y + item.height) * displayScale);
+      }
+    });
+
+    setGuidelines({
+      vertical: [...new Set(verticalLines)],
+      horizontal: [...new Set(horizontalLines)],
+    });
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, delta } = event;
     const itemId = active.id as string;
+
+    // ガイドラインをクリア
+    setGuidelines({ vertical: [], horizontal: [] });
 
     // 複数選択されている場合は、全てのアイテムを移動
     if (selectedIds.has(itemId) && selectedIds.size > 1) {
@@ -530,12 +633,92 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     <DndContext
       sensors={sensors}
       onDragEnd={handleDragEnd}
-      modifiers={[restrictToParentElement]}
+      onDragMove={handleDragMove}
+      modifiers={snapToGrid ? [snapModifier, restrictToParentElement] : [restrictToParentElement]}
     >
       <div
         className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
         ref={containerRef}
       >
+        {/* グリッド・ガイドライン設定ツールバー */}
+        {(onToggleGrid || onToggleSnap || onToggleGuidelines) && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              zIndex: 10000,
+              display: 'flex',
+              gap: '8px',
+              backgroundColor: 'white',
+              padding: '8px',
+              borderRadius: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            {onToggleGrid && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleGrid();
+                }}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '3px',
+                  backgroundColor: showGrid ? '#1976d2' : 'white',
+                  color: showGrid ? 'white' : 'black',
+                  cursor: 'pointer',
+                }}
+                title="グリッド表示の切り替え"
+              >
+                グリッド
+              </button>
+            )}
+            {onToggleSnap && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSnap();
+                }}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '3px',
+                  backgroundColor: snapToGrid ? '#1976d2' : 'white',
+                  color: snapToGrid ? 'white' : 'black',
+                  cursor: 'pointer',
+                }}
+                title="グリッドスナップの切り替え"
+              >
+                スナップ
+              </button>
+            )}
+            {onToggleGuidelines && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleGuidelines();
+                }}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '3px',
+                  backgroundColor: showGuidelines ? '#1976d2' : 'white',
+                  color: showGuidelines ? 'white' : 'black',
+                  cursor: 'pointer',
+                }}
+                title="ガイドライン表示の切り替え"
+              >
+                ガイド
+              </button>
+            )}
+          </div>
+        )}
+
         {/* スクリーンリーダー用のライブリージョン */}
         <div
           role="status"
@@ -571,12 +754,66 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
           style={{
             width: pageDimensions ? pageDimensions.width * displayScale : 0,
             height: pageDimensions ? pageDimensions.height * displayScale : 0,
+            backgroundImage: showGrid
+              ? `repeating-linear-gradient(0deg, #e0e0e0 0, #e0e0e0 1px, transparent 1px, transparent ${gridSize}px),
+                 repeating-linear-gradient(90deg, #e0e0e0 0, #e0e0e0 1px, transparent 1px, transparent ${gridSize}px)`
+              : 'none',
+            backgroundSize: showGrid ? `${gridSize}px ${gridSize}px` : 'auto',
           }}
           onClick={() => {
             onSelectObject(null);
             onSelectCell(null);
+            setSelectedIds(new Set());
+            setIsMultiSelecting(false);
           }}
         >
+          {/* グリッド背景レイヤー */}
+          {showGrid && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+          )}
+
+          {/* ガイドライン表示 */}
+          {showGuidelines && guidelines.vertical.map((x, i) => (
+            <div
+              key={`v-${i}`}
+              style={{
+                position: 'absolute',
+                left: x,
+                top: 0,
+                bottom: 0,
+                width: '1px',
+                backgroundColor: '#ff00ff',
+                pointerEvents: 'none',
+                zIndex: 9999,
+              }}
+            />
+          ))}
+          {showGuidelines && guidelines.horizontal.map((y, i) => (
+            <div
+              key={`h-${i}`}
+              style={{
+                position: 'absolute',
+                top: y,
+                left: 0,
+                right: 0,
+                height: '1px',
+                backgroundColor: '#ff00ff',
+                pointerEvents: 'none',
+                zIndex: 9999,
+              }}
+            />
+          ))}
+
           <div style={{ position: "absolute", zIndex: 1 }}>
             {pdfFile && containerWidth > 0 && pageDimensions ? (
               <Document

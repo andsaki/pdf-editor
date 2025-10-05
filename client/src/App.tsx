@@ -80,6 +80,9 @@ function App() {
     "shape" | null
   >(null);
   const [showStatePreview, setShowStatePreview] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [showGuidelines, setShowGuidelines] = useState(true);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -288,6 +291,12 @@ function App() {
               onSelectCell={handleSelectCell}
               variableDisplayMode={variableDisplayMode}
               companyInfo={companyInfoData?.getCompanyInfo}
+              showGrid={showGrid}
+              snapToGrid={snapToGrid}
+              showGuidelines={showGuidelines}
+              onToggleGrid={() => setShowGrid((prev) => !prev)}
+              onToggleSnap={() => setSnapToGrid((prev) => !prev)}
+              onToggleGuidelines={() => setShowGuidelines((prev) => !prev)}
             />
           </Box>
           <EditorRightSidebar
