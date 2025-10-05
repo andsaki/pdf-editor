@@ -2,7 +2,7 @@
 
 ## 概要
 
-このリポジトリは、Design Doc と ADR（Architecture Decision Record）の作成プロセスを調査するために、AI を活用して構築した請求書編集アプリケーションです。
+このリポジトリは、Design Doc と ADR（Architecture Decision Record）の作成プロセスを調査するために、AI を活用して構築した請求書編集アプリケーションです。主に Gemini CLI で開発を進め、最後の仕上げに Claude Code を使用しました。
 
 ## 目的
 
@@ -45,7 +45,7 @@ Design Doc や ADR の清書のための調査として出力したドキュメ�
 
 ### 前提条件
 
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20+)
 - npm または [pnpm](https://pnpm.io/)
 
 ### インストールと起動
