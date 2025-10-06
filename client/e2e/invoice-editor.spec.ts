@@ -54,7 +54,10 @@ test.describe('Invoice Editor E2E', () => {
     await expect(page.getByRole('button', { name: /削除/i })).toBeVisible();
   });
 
-  test('キャンバス操作からPuppeteer PDF出力までの一連の流れ', async ({ page }) => {
+  test('キャンバス操作からPuppeteer PDF出力までの一連の流れ', async ({ page, browserName }) => {
+    // PDF出力はChromiumのみでテスト（Puppeteerと同じエンジン）
+    test.skip(browserName !== 'chromium', 'PDF出力はChromiumのみサポート');
+
     // 1. テキストアイテムを追加
     const textButton = page.getByRole('button', { name: /テキスト追加/i });
     await textButton.click();
