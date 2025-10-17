@@ -245,9 +245,9 @@ export type TextObject = BaseLayoutItem & {
   content: string; // 表示するテキスト内容
   contentType: "fixed" | "variable" | "labeled-variable"; // テキスト内容の種類
   // - "fixed": 固定テキスト（例: "御請求書"）
-  // - "variable": 変数のみ（例: content="{{form.total.value}}" → "132000"）
-  // - "labeled-variable": ラベル付き変数（例: label="合計", content="{{form.total.value}}" → "合計 132000"）
-  label?: string; // labeled-variableの場合に使用するラベル
+  // - "variable": 変数のみ（例: content="{{金額}}" → "132000"）
+  // - "labeled-variable": ラベル付き変数（例: label="合計", content="{{金額}}" → "合計 {{金額}}" → 表示時"合計 132000"）
+  label?: string; // labeled-variableの場合に変数の前に表示するラベル（例: "合計"）
   style?: TextItemStyle; // テキストのスタイル
 };
 
@@ -257,15 +257,6 @@ export type ImageObject = BaseLayoutItem & {
   src: string; // 画像のソース (URLまたはbase64データ)
 };
 
-// テーブルオブジェクト
-export type TableObject = BaseLayoutItem & {
-  type: "table";
-  data: TableCell[][];
-  style?: {
-    backgroundColor?: string;
-  };
-};
-
 // テーブルセル
 export type TableCell = {
   id: string; // セルの一意な識別子
@@ -273,6 +264,15 @@ export type TableCell = {
   contentType: "fixed" | "variable" | "labeled-variable"; // セル内容の種類（TextObjectと同様）
   label?: string; // labeled-variableの場合に使用するラベル
   style?: TextItemStyle; // セルのテキストスタイル
+};
+
+// テーブルオブジェクト
+export type TableObject = BaseLayoutItem & {
+  type: "table";
+  data: TableCell[][];
+  style?: {
+    backgroundColor?: string;
+  };
 };
 
 // 図形オブジェクト
@@ -288,20 +288,13 @@ export type ShapeObject = BaseLayoutItem & {
   };
 };
 
-// すべてのインタラクティブなオブジェクトの共用型
-export type InvoiceObject =
-  | TextObject
-  | ImageObject
-  | TableObject
-  | ShapeObject;
-
 // 請求書を構成する個々の部品（オブジェクト）の共用型
 export type LayoutItem = TextObject | ImageObject | TableObject | ShapeObject;
 
 // フォームの各項目
 export type FormField = {
   label: string;
-  value: string | number;
+  value: string | number | Date;
 };
 
 // 請求書全体のデータ構造
@@ -341,9 +334,8 @@ export type InvoiceData = {
 
 **理由:**
 
-- インタラクティブな操作: react-rnd を利用し、キャンバス上のオブジェクト（テキスト・画像・テーブル等）を直感的にドラッグ＆リサイズ可能にする。
-- 静的背景の描画: pdf-lib を使い、PDF の既存ページや画像を取り込みつつ、react-pdf で背景としてレンダリング。
-- 重ね合わせ: 上記の背景に対して、React の DOM 要素を絶対配置することで WYSIWYG に近い編集体験を実現。
+- 背景の描画: pdf-lib により既存の PDF やテンプレートファイルを読み込み、react-pdf で背景としてレンダリング。レイアウトエディタ上で「PDF 風の見た目」を再現。
+- インタラクティブな操作: react-rnd により、背景の上に配置されたオブジェクト（テキスト・画像・テーブル等）をドラッグ＆リサイズ可能にし、React の DOM 要素を絶対配置することで WYSIWYG に近い編集体験を実現。
 
 これにより リアルタイム編集の操作性 と 背景 PDF の再現性 を両立。
 
