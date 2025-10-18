@@ -106,7 +106,7 @@ sequenceDiagram
     Editor->>Data: 座標を保存 (px)
     Note over Data: { x: 100px, y: 200px, ... }
 
-    rect rgb(200, 220, 250)
+    rect rgb(0, 0, 0)
         Note over User,PDF: 方式1: jsPDF直接描画
         User->>JspdfDirect: PDF生成
         Data->>JspdfDirect: px→mm変換
@@ -116,7 +116,7 @@ sequenceDiagram
         Note over JspdfDirect: デメリット：日本語文字化け<br/>（フォント埋め込みが必要）
     end
 
-    rect rgb(250, 220, 200)
+    rect rgb(0, 0, 0)
         Note over User,PDF: 方式2: html2canvas経由
         User->>Html2Canvas: PDF生成
         Data->>Html2Canvas: HTMLを生成してCanvas化
