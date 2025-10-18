@@ -395,10 +395,14 @@ async function startServer() {
         console.log("Generating PDF with Playwright...");
         const browser = await chromium.launch({
           headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
         try {
+          console.log("Browser launched, creating page...");
           const page = await browser.newPage();
-          await page.setContent(html, { waitUntil: "networkidle" });
+          console.log("Setting content...");
+          await page.setContent(html, { waitUntil: "load" });
+          console.log("Generating PDF...");
           const pdfBuffer = await page.pdf({
             width: "210mm",
             height: "297mm",
@@ -410,9 +414,14 @@ async function startServer() {
               left: "0",
             },
           });
+          console.log("PDF generated successfully");
           return Buffer.from(pdfBuffer).toString("base64");
+        } catch (error) {
+          console.error("Error in PDF generation:", error);
+          throw error;
         } finally {
           await browser.close();
+          console.log("Browser closed");
         }
       },
     },

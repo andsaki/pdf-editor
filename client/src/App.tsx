@@ -46,7 +46,7 @@ const theme = createTheme({
  * - レイヤー管理とz-index制御
  * - クリップボード操作（コピー/カット/ペースト）
  * - 元に戻す/やり直し機能
- * - PDFプレビューと生成（React-PDFとPuppeteer）
+ * - PDFプレビューと生成（React-PDFとPlaywright）
  * - GraphQLによるデータ永続化
  */
 function App() {
@@ -247,7 +247,7 @@ function App() {
             )
           }
           onPreviewReactPdf={pdfGeneration.openPdfInNewTab}
-          onPreviewPuppeteer={pdfGeneration.openPdfWithPuppeteer}
+          onPreviewPlaywright={pdfGeneration.openPdfWithPlaywright}
           onShowStatePreview={() => setShowStatePreview((prev) => !prev)}
           onSave={saveInvoice}
         />

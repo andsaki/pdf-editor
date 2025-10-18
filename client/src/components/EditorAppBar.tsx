@@ -21,7 +21,7 @@ interface EditorAppBarProps {
   variableDisplayMode: "name" | "example";
   onToggleVariableDisplay: () => void;
   onPreviewReactPdf: () => void;
-  onPreviewPuppeteer: () => void;
+  onPreviewPlaywright: () => void;
   onShowStatePreview: () => void;
   onSave: () => void;
 }
@@ -44,7 +44,7 @@ export const EditorAppBar = ({
   variableDisplayMode,
   onToggleVariableDisplay,
   onPreviewReactPdf,
-  onPreviewPuppeteer,
+  onPreviewPlaywright,
   onShowStatePreview,
   onSave,
 }: EditorAppBarProps) => {
@@ -97,10 +97,10 @@ export const EditorAppBar = ({
         <Button
           variant="outlined"
           size="small"
-          onClick={onPreviewPuppeteer}
+          onClick={onPreviewPlaywright}
           sx={{ ml: 1 }}
         >
-          プレビュー (Puppeteer)
+          プレビュー (Playwright)
         </Button>
         <Button
           variant="outlined"
