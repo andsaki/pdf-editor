@@ -4,7 +4,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
 
 async function startServer() {
   console.log("Starting server...");
@@ -392,14 +392,13 @@ async function startServer() {
         };
       },
       generatePdf: async (_: any, { html }: { html: string }) => {
-        console.log("Generating PDF with Puppeteer...");
-        const browser = await puppeteer.launch({
+        console.log("Generating PDF with Playwright...");
+        const browser = await chromium.launch({
           headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });
         try {
           const page = await browser.newPage();
-          await page.setContent(html, { waitUntil: "networkidle0" });
+          await page.setContent(html, { waitUntil: "networkidle" });
           const pdfBuffer = await page.pdf({
             width: "210mm",
             height: "297mm",
