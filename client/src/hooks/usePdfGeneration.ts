@@ -68,7 +68,5 @@ export const usePdfGeneration = (
   return {
     openPdfInNewTab,
     openPdfWithPlaywright,
-    // 互換性のため古い名前も残す
-    openPdfWithPuppeteer: openPdfWithPlaywright,
   };
 };
