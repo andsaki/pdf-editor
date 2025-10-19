@@ -92,7 +92,7 @@ export const EditorAppBar = ({
           onClick={onPreviewReactPdf}
           sx={{ ml: 1 }}
         >
-          プレビュー (React-PDF)
+          プレビュー (jsPDF直接)
         </Button>
         <Button
           variant="outlined"
@@ -100,7 +100,7 @@ export const EditorAppBar = ({
           onClick={onPreviewPuppeteer}
           sx={{ ml: 1 }}
         >
-          プレビュー (Puppeteer)
+          プレビュー (html2canvas)
         </Button>
         <Button
           variant="outlined"
