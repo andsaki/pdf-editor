@@ -78,20 +78,64 @@ Discussion
 
 #### 1. Sensors（センサー）によるカスタマイズ
 
-**例: ドラッグ開始距離を5pxに設定**
-```tsx
-import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+センサーは入力デバイス（マウス、タッチ、キーボード）ごとの挙動を制御する機能です。
 
-const sensors = useSensors(
-  useSensor(PointerSensor, {
-    activationConstraint: {
-      distance: 5,  // 5px移動したらドラッグ開始
-    },
-  })
-);
-```
+**PC環境でのメリット**:
 
-**例: スマホでスクロールとドラッグを区別**
+1. **誤操作防止（ドラッグ開始距離の設定）**
+   ```tsx
+   import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+
+   const sensors = useSensors(
+     useSensor(PointerSensor, {
+       activationConstraint: {
+         distance: 5,  // 5px移動したらドラッグ開始
+       },
+     })
+   );
+   ```
+   - クリック時の微細な手ブレでドラッグが開始されるのを防ぐ
+   - テキスト選択とドラッグを明確に区別できる
+
+2. **キーボード操作の統一管理**
+   ```tsx
+   import { KeyboardSensor } from '@dnd-kit/core';
+
+   const sensors = useSensors(
+     useSensor(KeyboardSensor)
+   );
+   ```
+   - 全てのドラッグ可能な要素でキーボード操作が一貫する
+   - react-rndでは各`<Rnd>`で個別にキーボードイベントを実装する必要がある
+
+3. **複数の入力デバイスの同時サポート**
+   ```tsx
+   const sensors = useSensors(
+     useSensor(PointerSensor),      // マウス操作
+     useSensor(KeyboardSensor)      // キーボード操作
+   );
+   ```
+   - マウスユーザーとキーボードユーザーの両方に対応
+   - アクセシビリティ向上
+
+4. **ドラッグ開始条件のカスタマイズ**
+   ```tsx
+   useSensor(PointerSensor, {
+     activationConstraint: {
+       distance: 10,      // 10px移動でドラッグ開始
+       delay: 100,        // 100msの遅延後にドラッグ開始
+     },
+   })
+   ```
+   - 意図しないドラッグを防止
+   - UXの最適化
+
+**react-rndの場合**:
+- マウスイベント（`onMouseDown`, `onMouseMove`）を各コンポーネントで処理
+- キーボード操作は完全に別実装
+- 誤操作防止のための距離判定を自前で実装する必要がある
+
+**モバイルでの例（参考）**:
 ```tsx
 import { TouchSensor } from '@dnd-kit/core';
 
@@ -104,33 +148,109 @@ const sensors = useSensors(
   })
 );
 ```
+- スクロールとドラッグを区別
+- PCでは不要だが、タブレット対応時に有用
 
 #### 2. Modifiers（モディファイア）によるカスタマイズ
 
-**例: グリッドスナップ（10px単位）**
-```tsx
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
+**モディファイアとは**: ドラッグ中の座標変換（transform）を加工する関数です。ドラッグ中のマウス移動量を受け取り、実際に要素を移動させる座標を返します。
 
-<DndContext modifiers={[snapCenterToCursor]}>
-  {/* ドラッグ中、カーソル位置にアイテム中心をスナップ */}
-</DndContext>
+**基本的な仕組み**:
+```tsx
+type Modifier = (args: {
+  transform: { x: number; y: number };  // ドラッグによる移動量
+  draggingNodeRect: ClientRect;         // ドラッグ中の要素の位置・サイズ
+  containerNodeRect: ClientRect;        // コンテナの位置・サイズ
+}) => { x: number; y: number };         // 加工後の移動量
 ```
 
-**例: カスタムモディファイア（スマートガイドライン）**
-```tsx
-const smartGuidelineModifier: Modifier = ({ transform, draggingNodeRect, containerNodeRect }) => {
-  // 他のアイテムとの位置を比較して、近い場合はスナップ
-  const snapThreshold = 5;
-  const nearbyItems = findNearbyItems(draggingNodeRect);
+**PC環境での実用例**:
 
-  if (nearbyItems.length > 0) {
-    // ガイドライン表示 + 座標をスナップ
-    return { ...transform, x: nearbyItems[0].x };
-  }
+1. **グリッドスナップ（10px単位に吸着）**
+   ```tsx
+   import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
-  return transform;
-};
-```
+   // 10pxグリッドにスナップするカスタムモディファイア
+   const snapToGrid: Modifier = ({ transform }) => {
+     return {
+       x: Math.round(transform.x / 10) * 10,
+       y: Math.round(transform.y / 10) * 10,
+     };
+   };
+
+   <DndContext modifiers={[snapToGrid]}>
+     {/* ドラッグ中、10px単位でスナップ */}
+   </DndContext>
+   ```
+   - デザインツールでよくある機能
+   - 要素を整列させやすくなる
+
+2. **親要素の範囲内に制限**
+   ```tsx
+   import { restrictToParentElement } from '@dnd-kit/modifiers';
+
+   <DndContext modifiers={[restrictToParentElement]}>
+     {/* 要素がキャンバスの外に出ない */}
+   </DndContext>
+   ```
+   - ドラッグ中に要素がキャンバスの外に出るのを防ぐ
+   - react-rndでは`bounds="parent"`で実現可能
+
+3. **ウィンドウ端への制限**
+   ```tsx
+   import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+
+   <DndContext modifiers={[restrictToWindowEdges]}>
+     {/* 要素がブラウザウィンドウの外に出ない */}
+   </DndContext>
+   ```
+   - モーダルやフローティングパネルで有用
+
+4. **スマートガイドライン（他の要素に自動吸着）**
+   ```tsx
+   const smartGuidelineModifier: Modifier = ({ transform, draggingNodeRect, containerNodeRect }) => {
+     // 他のアイテムとの位置を比較して、近い場合はスナップ
+     const snapThreshold = 5;  // 5px以内なら吸着
+     const nearbyItems = findNearbyItems(draggingNodeRect);
+
+     if (nearbyItems.length > 0) {
+       const nearestItem = nearbyItems[0];
+
+       // X座標が近い場合はスナップ
+       if (Math.abs(draggingNodeRect.left - nearestItem.left) < snapThreshold) {
+         return { ...transform, x: nearestItem.left - draggingNodeRect.left };
+       }
+     }
+
+     return transform;
+   };
+
+   <DndContext modifiers={[smartGuidelineModifier]}>
+     {/* Figma/Canvaのような自動吸着機能 */}
+   </DndContext>
+   ```
+   - Figma、Canva、Adobe XDなどのデザインツールで見られる機能
+   - 要素同士を整列させやすくなる
+
+5. **複数のモディファイアを組み合わせ**
+   ```tsx
+   <DndContext modifiers={[
+     snapToGrid,                  // まず10pxグリッドにスナップ
+     restrictToParentElement,     // 次に親要素内に制限
+   ]}>
+     {/* モディファイアは配列順に適用される */}
+   </DndContext>
+   ```
+
+**react-rndの場合**:
+- `onDrag`イベント内で座標を加工する必要がある
+- 各`<Rnd>`で個別に実装
+- グリッドスナップは`grid={[10, 10]}`プロパティで可能だが、カスタムロジックは困難
+
+**モディファイアの利点**:
+- ドラッグ中の座標変換ロジックを一箇所で管理
+- 全てのドラッグ可能要素に一貫して適用される
+- 再利用可能（複数のコンポーネントで使い回せる）
 
 #### 3. 複数選択の実装例
 
@@ -225,11 +345,173 @@ react-rnd は標準的な React コンポーネントであり、以下のプロ
 
 **実装工数**:
 - 基本機能（Tab 移動、矢印キー、ARIA 属性）: **1-2 日**
-- 完全対応（ヘルプモーダル、複雑なフォーカス管理）: **5 日**
+- 完全対応（複雑なアクセシビリティ要件を含む）: **5 日**
+
+**「複雑なアクセシビリティ要件」の定義**:
+
+基本機能（1-2日）を超える以下の高度な要件：
+
+1. **ヘルプモーダル/チュートリアル**
+   - `?`キーでキーボードショートカット一覧を表示
+   - 初回利用時のガイダンス表示
+   - 操作ヒントの段階的表示
+
+2. **複雑なフォーカス管理**
+   - モーダル内でのフォーカストラップ（Tabキーでモーダル内を循環）
+   - フォーカス順序のカスタマイズ（レイヤー順序と連動）
+   - フォーカス復帰（モーダルを閉じたら元の要素に戻る）
+
+3. **高度なキーボード操作**
+   - Ctrl/Cmd+クリックで複数選択
+   - Shift+クリックで範囲選択
+   - Ctrl/Cmd+G でグループ化/解除
+   - Ctrl/Cmd+[ / ] でレイヤー順序変更
+
+4. **スクリーンリーダー対応の最適化**
+   - 操作コンテキストの詳細な説明（「5個の要素が選択されています」）
+   - 複数選択時の一括操作フィードバック
+   - エラー状態の明確な通知（「要素が重なっています」）
+
+5. **アクセシビリティテスト**
+   - スクリーンリーダー（NVDA、JAWS、VoiceOver）での動作確認
+   - キーボードのみでの全機能操作確認
+   - WCAG 2.1 AA 準拠の検証
 
 **dnd-kit との比較**:
 - dnd-kit: KeyboardSensor が標準搭載、ARIA 属性も自動設定
-- react-rnd: 全て手動実装だが、コード量は約 80-100 行で十分
+- react-rnd: 全て手動実装だが、基本機能は約 80-100 行で十分
+
+### dnd-kit でしか実現できない（または圧倒的に容易な）複雑なアクセシビリティ
+
+以下の機能は、dnd-kit の標準機能で実現可能ですが、react-rnd では実装が非常に困難または不可能です：
+
+#### 1. **複数選択時のキーボード操作（標準対応）**
+
+**dnd-kit の場合**:
+```tsx
+const handleDragEnd = (event) => {
+  const { active, delta } = event;
+
+  // KeyboardSensor が自動的に矢印キー入力を delta に変換
+  // 複数選択されたアイテム全てに適用するだけ
+  selectedItems.forEach(itemId => {
+    updateItem(itemId, (item) => ({
+      x: item.x + delta.x,
+      y: item.y + delta.y,
+    }));
+  });
+};
+```
+
+**react-rnd の場合**:
+- 各 `<Rnd>` が個別にキーボードイベントを受け取る
+- 複数選択時、どの `<Rnd>` がフォーカスを持つか不明確
+- 全ての `<Rnd>` のキーボードイベントを同期する必要があり、実装が複雑
+
+#### 2. **ドラッグ可能な要素の自動アナウンス**
+
+**dnd-kit の場合**:
+```tsx
+<DndContext
+  announcements={{
+    onDragStart({ active }) {
+      return `${active.id} をピックアップしました`;
+    },
+    onDragOver({ active, over }) {
+      return over ? `${active.id} を ${over.id} の上に移動中` : '';
+    },
+    onDragEnd({ active }) {
+      return `${active.id} を配置しました`;
+    },
+  }}
+>
+```
+- スクリーンリーダー用のライブリージョンが自動生成される
+- ドラッグの各フェーズで適切なメッセージを読み上げ
+
+**react-rnd の場合**:
+- ライブリージョンを手動で実装する必要がある
+- `onDragStart`, `onDrag`, `onDragStop` の各イベントで状態を更新
+- 複数の `<Rnd>` 間で一貫性のあるアナウンスを管理するのが困難
+
+#### 3. **キーボードセンサーのカスタマイズ（移動速度、加速度）**
+
+**dnd-kit の場合**:
+```tsx
+import { KeyboardSensor, KeyboardCoordinateGetter } from '@dnd-kit/core';
+
+const customKeyboardCoordinates: KeyboardCoordinateGetter = (event, { currentCoordinates }) => {
+  // 矢印キー: 10px移動
+  // Shift+矢印キー: 1px移動
+  // Ctrl/Cmd+矢印キー: 50px移動（高速移動）
+  const delta = event.shiftKey ? 1 : event.metaKey || event.ctrlKey ? 50 : 10;
+
+  switch (event.code) {
+    case 'ArrowRight':
+      return { ...currentCoordinates, x: currentCoordinates.x + delta };
+    case 'ArrowLeft':
+      return { ...currentCoordinates, x: currentCoordinates.x - delta };
+    // ... 他の方向
+  }
+};
+
+const sensors = useSensors(
+  useSensor(KeyboardSensor, {
+    coordinateGetter: customKeyboardCoordinates,
+  })
+);
+```
+
+**react-rnd の場合**:
+- 各 `<Rnd>` で `onKeyDown` を実装する必要がある
+- 移動速度のカスタマイズは可能だが、全ての `<Rnd>` で一貫性を保つ必要がある
+- 複数選択時の挙動を統一するのが困難
+
+#### 4. **ドラッグ中の衝突検知とアナウンス**
+
+**dnd-kit の場合**:
+```tsx
+const handleDragMove = (event) => {
+  const { collisions } = event;
+
+  if (collisions && collisions.length > 0) {
+    // 「他の要素と重なっています」とアナウンス
+    setAnnouncement(`${collisions.length}個の要素と重なっています`);
+  }
+};
+```
+- `useDraggable` と `useDroppable` で衝突検知が標準搭載
+- スクリーンリーダーに即座にフィードバック可能
+
+**react-rnd の場合**:
+- 衝突検知を完全に自前で実装する必要がある
+- 全ての `<Rnd>` の座標を比較し、重なりを計算
+- パフォーマンスに影響を与える可能性が高い
+
+#### 5. **ソート可能なリストのキーボード操作**
+
+**dnd-kit の場合**:
+```tsx
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+
+<SortableContext items={items} strategy={verticalListSortingStrategy}>
+  {items.map(item => <SortableItem key={item.id} id={item.id} />)}
+</SortableContext>
+```
+- Space/Enterキーでアイテムをピックアップ
+- 矢印キーで順序変更
+- Space/Enterキーで配置
+- 全てのARIA属性とキーボード操作が自動実装される
+
+**react-rnd の場合**:
+- react-rnd はフリー配置のみをサポート
+- リスト順序の概念がないため、ソート機能は実装不可能
+- 別のライブラリとの組み合わせが必要
+
+**結論**:
+- 基本的なキーボード操作（単一アイテム）: react-rnd で実装可能
+- 複数選択、衝突検知、ソート: dnd-kit でしか実現困難
+- dnd-kit は「アクセシビリティファースト」の設計思想で、複雑な要件に標準対応
 
 ### react-rnd vs dnd-kit の最終評価
 

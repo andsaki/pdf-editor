@@ -192,22 +192,6 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     })
   );
 
-  // グリッドスナップのモディファイア
-  const createSnapModifier = (gridSize: number): Modifier => {
-    return ({ transform }) => {
-      return {
-        ...transform,
-        x: snapToGrid ? Math.round(transform.x / gridSize) * gridSize : transform.x,
-        y: snapToGrid ? Math.round(transform.y / gridSize) * gridSize : transform.y,
-      };
-    };
-  };
-
-  const snapModifier = useMemo(
-    () => createSnapModifier(gridSize),
-    [gridSize, snapToGrid]
-  );
-
   useEffect(() => {
     const initializePageDimensions = async () => {
       try {
@@ -428,6 +412,17 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
     return Math.min(scaleX, scaleY);
   }, [pageDimensions, containerWidth, containerHeight]);
 
+  // グリッドスナップのモディファイア
+  const snapModifier: Modifier = ({ transform }) => {
+    if (!snapToGrid) return transform;
+
+    return {
+      ...transform,
+      x: Math.round(transform.x / gridSize) * gridSize,
+      y: Math.round(transform.y / gridSize) * gridSize,
+    };
+  };
+
   const pdfFile = useMemo(() => {
     if (!pdfBytesForDisplay) return null;
     return { data: new Uint8Array(pdfBytesForDisplay) };
@@ -446,7 +441,7 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
 
     if (!draggedItem) return;
 
-    const threshold = 5 / displayScale; // 5pxの吸着範囲
+    const threshold = 10 / displayScale; // 10pxの吸着範囲（広めに設定）
     const newX = draggedItem.x + delta.x / displayScale;
     const newY = draggedItem.y + delta.y / displayScale;
     const centerX = newX + draggedItem.width / 2;
@@ -782,38 +777,6 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
             />
           )}
 
-          {/* ガイドライン表示 */}
-          {showGuidelines && guidelines.vertical.map((x, i) => (
-            <div
-              key={`v-${i}`}
-              style={{
-                position: 'absolute',
-                left: x,
-                top: 0,
-                bottom: 0,
-                width: '1px',
-                backgroundColor: '#ff00ff',
-                pointerEvents: 'none',
-                zIndex: 9999,
-              }}
-            />
-          ))}
-          {showGuidelines && guidelines.horizontal.map((y, i) => (
-            <div
-              key={`h-${i}`}
-              style={{
-                position: 'absolute',
-                top: y,
-                left: 0,
-                right: 0,
-                height: '1px',
-                backgroundColor: '#ff00ff',
-                pointerEvents: 'none',
-                zIndex: 9999,
-              }}
-            />
-          ))}
-
           <div style={{ position: "absolute", zIndex: 1 }}>
             {pdfFile && containerWidth > 0 && pageDimensions ? (
               <Document
@@ -833,6 +796,40 @@ export const PdfPreviewDndKit: React.FC<PdfPreviewProps> = ({
               </div>
             )}
           </div>
+
+          {/* ガイドライン表示 */}
+          {showGuidelines && guidelines.vertical.map((x, i) => (
+            <div
+              key={`v-${i}`}
+              style={{
+                position: 'absolute',
+                left: x,
+                top: 0,
+                height: pageDimensions ? pageDimensions.height * displayScale : 0,
+                width: '2px',
+                backgroundColor: '#ff00ff',
+                pointerEvents: 'none',
+                zIndex: 10001,
+                boxShadow: '0 0 4px rgba(255, 0, 255, 0.6)',
+              }}
+            />
+          ))}
+          {showGuidelines && guidelines.horizontal.map((y, i) => (
+            <div
+              key={`h-${i}`}
+              style={{
+                position: 'absolute',
+                top: y,
+                left: 0,
+                width: pageDimensions ? pageDimensions.width * displayScale : 0,
+                height: '2px',
+                backgroundColor: '#ff00ff',
+                pointerEvents: 'none',
+                zIndex: 10001,
+                boxShadow: '0 0 4px rgba(255, 0, 255, 0.6)',
+              }}
+            />
+          ))}
 
           {pdfFile &&
             invoiceData.layout
