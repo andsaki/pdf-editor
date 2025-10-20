@@ -277,6 +277,7 @@ function App() {
               justifyContent: "center",
               alignItems: "center",
               p: 3,
+              position: "relative",
             }}
           >
             <PdfPreview
@@ -289,6 +290,39 @@ function App() {
               variableDisplayMode={variableDisplayMode}
               companyInfo={companyInfoData?.getCompanyInfo}
             />
+            {pdfGeneration.isGenerating && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  bgcolor: "rgba(0, 0, 0, 0.5)",
+                  zIndex: 9999,
+                }}
+              >
+                <Box
+                  sx={{
+                    bgcolor: "white",
+                    p: 4,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    textAlign: "center",
+                  }}
+                >
+                  <Box sx={{ mb: 2, fontSize: "1.2rem", fontWeight: "bold" }}>
+                    生成中...
+                  </Box>
+                  <Box sx={{ fontSize: "0.9rem", color: "text.secondary" }}>
+                    PDFを生成しています
+                  </Box>
+                </Box>
+              </Box>
+            )}
           </Box>
           <EditorRightSidebar
             activeRightPanel={activeRightPanel}
