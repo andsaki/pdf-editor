@@ -1,4 +1,4 @@
-import type { InvoiceData } from "./types";
+import type { InvoiceData, CompanyInfo } from "./types";
 import { getProcessedContent } from "./pdf";
 import { pxToMm } from "./coordinates";
 
@@ -11,7 +11,7 @@ import { pxToMm } from "./coordinates";
  */
 export const generateHtmlFromLayout = (
   data: InvoiceData,
-  companyInfo?: any
+  companyInfo?: CompanyInfo
 ): string => {
   // Generate a simple HTML representation of the invoice
   const itemsHtml = data.layout
