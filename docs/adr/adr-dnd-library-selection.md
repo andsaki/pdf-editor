@@ -17,11 +17,11 @@ Comparison Table
 | 項目 | react-rnd | dnd-kit |
 |------|-----------|---------|
 | **リサイズ機能** | ✅ 標準搭載 | ❌ 非搭載（別途実装が必要） |
-| **ドラッグ&ドロップ** | ✅ 標準搭載 | ✅ 柔軟にカスタマイズ可能 |
-| **アクセシビリティ** | 弱い（自前実装必須） | 強い（キーボード操作やSR対応あり） |
+| **ドラッグ&ドロップ** | ✅ 標準搭載 | ✅ 柔軟にカスタマイズ可能<br>（Sensors、Modifiers） |
+| **アクセシビリティ** | 弱い（自前実装必須） | 強い（KeyboardSensor標準） |
 | **画面上の操作性** | 高い（直感的） | 中〜高（センサー設定が必要） |
 | **将来的拡張性** | 低（複数選択は実装困難） | 高（複数選択・グリッドスナップ等） |
-| **学習コスト** | 低（最初の一歩が軽い） | 中〜高（概念理解が必要だが、高度な機能では相殺） |
+| **学習コスト** | 低（APIがシンプル） | 中〜高（概念理解が必要） |
 | **実装コスト（基本機能）** | 低（10分） | 高（3時間：リサイズ自前） |
 | **実装コスト（複数選択含む）** | 高（4時間：状態同期が複雑） | 中（4.5時間：中央管理で実装しやすい） |
 | **バンドルサイズ** | 約20kb | 約10kb |
@@ -46,16 +46,117 @@ PDF 表示との連携は容易で、単純な操作であれば座標変換も�
 
 Option B: dnd-kit
 👍 Pros
-センサーやモディファイアを利用した柔軟な制御が可能
-アクセシビリティに標準対応（キーボード操作、スクリーンリーダーサポート）
-将来的な拡張性が高く、複数選択やグリッドスナップなどを実装しやすい
+**センサー (Sensors) で入力デバイスをカスタマイズ可能**
+  - `PointerSensor`: マウス/タッチ操作（ドラッグ開始距離を5pxに設定など）
+  - `KeyboardSensor`: キーボード操作（矢印キーで移動）
+  - `TouchSensor`: タッチデバイス専用（スクロールとドラッグを区別）
+  - 複数センサーの同時使用が可能
+
+**モディファイア (Modifiers) でドラッグ挙動を制御**
+  - `restrictToParentElement`: 親要素内に制限
+  - `snapToGrid`: グリッドスナップ（10px単位など）
+  - `restrictToWindowEdges`: ウィンドウ端に制限
+  - カスタムモディファイアで独自ロジックも実装可能
+
+**複数選択や一括操作が実装しやすい**
+  - DndContextで全アイテムを中央管理
+  - 移動量(delta)を全選択アイテムに適用するだけ
+  - react-rndでは各コンポーネントの状態同期が複雑
+
+アクセシビリティに標準対応（KeyboardSensor、ARIA属性自動設定）
+将来的な拡張性が高い（ソート、レイヤー順序変更など）
 
 👎 Cons
-リサイズ機能は非搭載 → 自作実装が必要
-学習コストが高く、概念（センサー/モディファイア）理解が必須
-PDF 内部データとの座標同期やバグ管理が複雑になりやすい
+リサイズ機能は非搭載 → 自作実装が必要（8方向ハンドル、マウスイベント処理など）
+学習コストが高く、概念（センサー/モディファイア/transform）理解が必須
+座標の二重管理（ドラッグ中の仮位置 vs 実際の位置）が必要
+初期実装コストが高い（基本機能で1.5時間 vs react-rndの10分）
 
 Discussion
+
+### dnd-kit の「柔軟なカスタマイズ」の具体例
+
+#### 1. Sensors（センサー）によるカスタマイズ
+
+**例: ドラッグ開始距離を5pxに設定**
+```tsx
+import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 5,  // 5px移動したらドラッグ開始
+    },
+  })
+);
+```
+
+**例: スマホでスクロールとドラッグを区別**
+```tsx
+import { TouchSensor } from '@dnd-kit/core';
+
+const sensors = useSensors(
+  useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,      // 250ms長押しでドラッグ開始
+      tolerance: 5,    // 5px以内の移動は許容
+    },
+  })
+);
+```
+
+#### 2. Modifiers（モディファイア）によるカスタマイズ
+
+**例: グリッドスナップ（10px単位）**
+```tsx
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
+
+<DndContext modifiers={[snapCenterToCursor]}>
+  {/* ドラッグ中、カーソル位置にアイテム中心をスナップ */}
+</DndContext>
+```
+
+**例: カスタムモディファイア（スマートガイドライン）**
+```tsx
+const smartGuidelineModifier: Modifier = ({ transform, draggingNodeRect, containerNodeRect }) => {
+  // 他のアイテムとの位置を比較して、近い場合はスナップ
+  const snapThreshold = 5;
+  const nearbyItems = findNearbyItems(draggingNodeRect);
+
+  if (nearbyItems.length > 0) {
+    // ガイドライン表示 + 座標をスナップ
+    return { ...transform, x: nearbyItems[0].x };
+  }
+
+  return transform;
+};
+```
+
+#### 3. 複数選択の実装例
+
+**react-rnd の場合（困難）**:
+```tsx
+// 各<Rnd>が個別に位置を管理しているため、同期が複雑
+<Rnd onDragStop={(e, d) => {
+  // 選択中の他のアイテムも移動する必要がある
+  // しかし、各<Rnd>の位置を個別に計算・更新する必要がある
+}} />
+```
+
+**dnd-kit の場合（簡単）**:
+```tsx
+const handleDragEnd = (event) => {
+  const { delta } = event;
+
+  // 選択中の全アイテムに移動量を適用するだけ
+  selectedItems.forEach(itemId => {
+    updateItem(itemId, (item) => ({
+      x: item.x + delta.x,
+      y: item.y + delta.y,
+    }));
+  });
+};
+```
 
 ### アクセシビリティ機能の実装可能性
 
