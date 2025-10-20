@@ -14,29 +14,17 @@ Considered Options
 今回の意思決定をするにあたって、複数の選択が存在した場合は、ここに列挙
 Comparison Table
 
-react-rnd
-dnd-kit
-リサイズ機能
-標準搭載
-非搭載（別途実装が必要）
-ドラッグ&ドロップ
-標準搭載
-柔軟にカスタマイズ可能
-PDF 操作・編集
-座標変換が直感的
-同期処理が複雑化しやすい
-アクセシビリティ
-中（基本機能は手動実装可能、工数 1-2 日）
-強い（キーボード操作やスクリーンリーダー対応が標準搭載）
-画面上の操作性
-高い（直感的）
-中〜高（センサー設定が必要）
-将来的拡張性
-低
-高（複数選択・グリッドスナップ等）
-学習コスト
-低（API がシンプル）
-高（概念理解が必要）
+| 項目 | react-rnd | dnd-kit |
+|------|-----------|---------|
+| **リサイズ機能** | ✅ 標準搭載 | ❌ 非搭載（別途実装が必要） |
+| **ドラッグ&ドロップ** | ✅ 標準搭載 | ✅ 柔軟にカスタマイズ可能<br>（Sensors、Modifiers） |
+| **アクセシビリティ** | 弱い（自前実装必須） | 強い（KeyboardSensor標準） |
+| **画面上の操作性** | 高い（直感的） | 中〜高（センサー設定が必要） |
+| **将来的拡張性** | 低（複数選択は実装困難） | 高（複数選択・グリッドスナップ等） |
+| **学習コスト** | 低（APIがシンプル） | 中〜高（概念理解が必要） |
+| **実装コスト（基本機能）** | 低（10分） | 高（3時間：リサイズ自前） |
+| **実装コスト（複数選択含む）** | 高（4時間：状態同期が複雑） | 中（4.5時間：中央管理で実装しやすい） |
+| **バンドルサイズ** | 約20kb | 約10kb |
 
 Option A: react-rnd
 👍 Pros
@@ -58,16 +46,117 @@ PDF 表示との連携は容易で、単純な操作であれば座標変換も�
 
 Option B: dnd-kit
 👍 Pros
-センサーやモディファイアを利用した柔軟な制御が可能
-アクセシビリティに標準対応（キーボード操作、スクリーンリーダーサポート）
-将来的な拡張性が高く、複数選択やグリッドスナップなどを実装しやすい
+**センサー (Sensors) で入力デバイスをカスタマイズ可能**
+  - `PointerSensor`: マウス/タッチ操作（ドラッグ開始距離を5pxに設定など）
+  - `KeyboardSensor`: キーボード操作（矢印キーで移動）
+  - `TouchSensor`: タッチデバイス専用（スクロールとドラッグを区別）
+  - 複数センサーの同時使用が可能
+
+**モディファイア (Modifiers) でドラッグ挙動を制御**
+  - `restrictToParentElement`: 親要素内に制限
+  - `snapToGrid`: グリッドスナップ（10px単位など）
+  - `restrictToWindowEdges`: ウィンドウ端に制限
+  - カスタムモディファイアで独自ロジックも実装可能
+
+**複数選択や一括操作が実装しやすい**
+  - DndContextで全アイテムを中央管理
+  - 移動量(delta)を全選択アイテムに適用するだけ
+  - react-rndでは各コンポーネントの状態同期が複雑
+
+アクセシビリティに標準対応（KeyboardSensor、ARIA属性自動設定）
+将来的な拡張性が高い（ソート、レイヤー順序変更など）
 
 👎 Cons
-リサイズ機能は非搭載 → 自作実装が必要
-学習コストが高く、概念（センサー/モディファイア）理解が必須
-PDF 内部データとの座標同期やバグ管理が複雑になりやすい
+リサイズ機能は非搭載 → 自作実装が必要（8方向ハンドル、マウスイベント処理など）
+学習コストが高く、概念（センサー/モディファイア/transform）理解が必須
+座標の二重管理（ドラッグ中の仮位置 vs 実際の位置）が必要
+初期実装コストが高い（基本機能で1.5時間 vs react-rndの10分）
 
 Discussion
+
+### dnd-kit の「柔軟なカスタマイズ」の具体例
+
+#### 1. Sensors（センサー）によるカスタマイズ
+
+**例: ドラッグ開始距離を5pxに設定**
+```tsx
+import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 5,  // 5px移動したらドラッグ開始
+    },
+  })
+);
+```
+
+**例: スマホでスクロールとドラッグを区別**
+```tsx
+import { TouchSensor } from '@dnd-kit/core';
+
+const sensors = useSensors(
+  useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,      // 250ms長押しでドラッグ開始
+      tolerance: 5,    // 5px以内の移動は許容
+    },
+  })
+);
+```
+
+#### 2. Modifiers（モディファイア）によるカスタマイズ
+
+**例: グリッドスナップ（10px単位）**
+```tsx
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
+
+<DndContext modifiers={[snapCenterToCursor]}>
+  {/* ドラッグ中、カーソル位置にアイテム中心をスナップ */}
+</DndContext>
+```
+
+**例: カスタムモディファイア（スマートガイドライン）**
+```tsx
+const smartGuidelineModifier: Modifier = ({ transform, draggingNodeRect, containerNodeRect }) => {
+  // 他のアイテムとの位置を比較して、近い場合はスナップ
+  const snapThreshold = 5;
+  const nearbyItems = findNearbyItems(draggingNodeRect);
+
+  if (nearbyItems.length > 0) {
+    // ガイドライン表示 + 座標をスナップ
+    return { ...transform, x: nearbyItems[0].x };
+  }
+
+  return transform;
+};
+```
+
+#### 3. 複数選択の実装例
+
+**react-rnd の場合（困難）**:
+```tsx
+// 各<Rnd>が個別に位置を管理しているため、同期が複雑
+<Rnd onDragStop={(e, d) => {
+  // 選択中の他のアイテムも移動する必要がある
+  // しかし、各<Rnd>の位置を個別に計算・更新する必要がある
+}} />
+```
+
+**dnd-kit の場合（簡単）**:
+```tsx
+const handleDragEnd = (event) => {
+  const { delta } = event;
+
+  // 選択中の全アイテムに移動量を適用するだけ
+  selectedItems.forEach(itemId => {
+    updateItem(itemId, (item) => ({
+      x: item.x + delta.x,
+      y: item.y + delta.y,
+    }));
+  });
+};
+```
 
 ### アクセシビリティ機能の実装可能性
 
@@ -188,3 +277,89 @@ Consequences
 - アクセシビリティ機能は十分にテストし、ドキュメント化
 - 将来的に高度な機能が必要になった場合は、dnd-kit への移行を検討
 - react-rnd のバージョンを固定し、破壊的変更のリスクを軽減
+
+## 技術的詳細
+
+### 座標計算の違い
+
+react-rnd と dnd-kit では、ドラッグ終了時に取得できるデータが異なります：
+
+| ライブラリ | ドラッグ終了時のデータ | 座標更新方法 |
+|-----------|---------------------|------------|
+| **react-rnd** | 最終位置（絶対座標） | `x = d.x / displayScale` |
+| **dnd-kit** | 移動量（相対座標） | `x = item.x + delta.x / displayScale` |
+
+**react-rnd の例**:
+```tsx
+<Rnd
+  onDragStop={(_e, d) => {
+    updateLayoutItem(item.id, (item) => ({
+      ...item,
+      x: d.x / displayScale,  // ← 最終的な絶対位置
+      y: d.y / displayScale,
+    }));
+  }}
+/>
+```
+
+**dnd-kit の例**:
+```tsx
+const handleDragEnd = (event: DragEndEvent) => {
+  const { delta } = event;
+  updateLayoutItem(itemId, (item) => ({
+    ...item,
+    x: item.x + delta.x / displayScale,  // ← 移動量を加算
+    y: item.y + delta.y / displayScale,
+  }));
+};
+```
+
+**影響**:
+- react-rnd は位置を直接設定できるため直感的
+- dnd-kit は移動量を計算する必要があり、やや複雑
+- ただし、複数選択の一括移動では dnd-kit の方が実装しやすい（移動量を全アイテムに加算するだけ）
+
+### 状態管理の違い
+
+dnd-kit では、ドラッグ中の「仮の位置」と「実際の位置」を二重管理する必要があります。
+
+**ドラッグ中**:
+```tsx
+// transform で視覚的に移動（仮の位置）
+style={{
+  left: item.x * displayScale,  // 元の位置
+  transform: CSS.Translate.toString(transform),  // + ドラッグ中のオフセット
+}}
+```
+
+**ドラッグ終了**:
+```tsx
+// 実際の座標を更新
+x: item.x + delta.x / displayScale
+```
+
+この仕組みにより：
+- ✅ **メリット**: ドラッグ中の描画がスムーズ（transform は GPU アクセラレーション）
+- ❌ **デメリット**: 状態が二重管理になり、PDF 生成時などで実座標を使う必要がある
+
+**react-rnd の場合**:
+- コンポーネント内部で位置を管理
+- ドラッグ終了時に最終位置のみを親に通知
+- 仮の位置と実際の位置の同期を気にする必要がない
+
+### 実装コストの実測値
+
+このブランチ（`feature/replace-react-rnd-with-dnd-kit`）での実装時間：
+
+| 機能 | react-rnd (推定) | dnd-kit (実測) |
+|------|-----------------|---------------|
+| **基本ドラッグ&リサイズ** | 10分 | 1.5時間 |
+| **回転機能** | 30分 | 30分 |
+| **キーボード操作** | 1時間 | 1時間 |
+| **複数選択** | 3時間（各`<Rnd>`の状態同期） | 1時間（中央管理のため簡単） |
+| **合計** | 約5時間 | 約4時間 |
+
+**結論**:
+- MVPのみ（ドラッグ&リサイズ）: react-rnd が圧倒的に速い
+- 高度な機能（複数選択）を含む: トータルでは同程度
+- dnd-kit は最初の学習コストが高いが、拡張時に有利

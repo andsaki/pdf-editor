@@ -5,7 +5,7 @@ import {
   createTheme,
   ThemeProvider,
 } from "@mui/material";
-import { PdfPreview } from "./components/PdfPreview";
+import { PdfPreviewDndKit as PdfPreview } from "./components/PdfPreviewDndKit";
 import { EditorAppBar } from "./components/EditorAppBar";
 import { EditorLeftSidebar } from "./components/EditorLeftSidebar";
 import { EditorRightSidebar } from "./components/EditorRightSidebar";
@@ -80,6 +80,9 @@ function App() {
     "shape" | null
   >(null);
   const [showStatePreview, setShowStatePreview] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [showGuidelines, setShowGuidelines] = useState(true);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -117,13 +120,13 @@ function App() {
 
   // カスタムフックを使用してロジックを分離
   const layoutOperations = useLayoutOperations(
-    layout,
+    layout || [],
     setLayout,
     selectedObjectId,
     handleSelectObject
   );
 
-  const fileUpload = useFileUpload(layout, setLayout);
+  const fileUpload = useFileUpload(layout || [], setLayout);
 
   const pdfGeneration = usePdfGeneration(
     invoiceData,
@@ -206,10 +209,10 @@ function App() {
     }
   };
 
-  const selectedObject = layout.find((obj) => obj.id === selectedObjectId);
+  const selectedObject = layout?.find((obj) => obj.id === selectedObjectId);
 
   const selectedCellObject = useMemo(() => {
-    if (!selectedCell) return null;
+    if (!selectedCell || !layout) return null;
     const { tableId, rowIndex, cellIndex } = selectedCell;
     const table =
       (layout.find(
@@ -289,6 +292,12 @@ function App() {
               onSelectCell={handleSelectCell}
               variableDisplayMode={variableDisplayMode}
               companyInfo={companyInfoData?.getCompanyInfo}
+              showGrid={showGrid}
+              snapToGrid={snapToGrid}
+              showGuidelines={showGuidelines}
+              onToggleGrid={() => setShowGrid((prev) => !prev)}
+              onToggleSnap={() => setSnapToGrid((prev) => !prev)}
+              onToggleGuidelines={() => setShowGuidelines((prev) => !prev)}
             />
             {pdfGeneration.isGenerating && (
               <Box
