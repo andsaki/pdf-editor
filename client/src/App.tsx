@@ -64,6 +64,7 @@ function App() {
     [layout, form]
   );
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
   const [selectedCell, setSelectedCell] = useState<{
     tableId: string;
     rowIndex: number;
@@ -107,8 +108,24 @@ function App() {
     );
   };
 
-  const handleSelectObject = (objectId: string | null) => {
-    setSelectedObjectId(objectId);
+  const handleSelectObject = (objectId: string | null, multiSelect?: boolean) => {
+    if (multiSelect && objectId) {
+      // 複数選択モード
+      setSelectedObjectIds((prev) => {
+        if (prev.includes(objectId)) {
+          // 既に選択されている場合は解除
+          return prev.filter((id) => id !== objectId);
+        } else {
+          // 選択に追加
+          return [...prev, objectId];
+        }
+      });
+      setSelectedObjectId(objectId); // 最後に選択したものをprimaryに
+    } else {
+      // 単一選択モード
+      setSelectedObjectId(objectId);
+      setSelectedObjectIds(objectId ? [objectId] : []);
+    }
     if (objectId) {
       setActiveRightPanel("properties");
       setSelectedCell(null); // オブジェクトが選択されたらセルの選択を解除
@@ -284,6 +301,7 @@ function App() {
               invoiceData={invoiceData}
               setLayout={setLayout}
               selectedObjectId={selectedObjectId}
+              selectedObjectIds={selectedObjectIds}
               onSelectObject={handleSelectObject}
               selectedCell={selectedCell}
               onSelectCell={handleSelectCell}

@@ -28,7 +28,8 @@ interface PdfPreviewProps {
   invoiceData: InvoiceData;
   setLayout: React.Dispatch<React.SetStateAction<LayoutItem[]>>;
   selectedObjectId: string | null;
-  onSelectObject: (id: string | null) => void;
+  selectedObjectIds: string[];
+  onSelectObject: (id: string | null, multiSelect?: boolean) => void;
   selectedCell: { tableId: string; rowIndex: number; cellIndex: number } | null;
   onSelectCell: (
     selection: { tableId: string; rowIndex: number; cellIndex: number } | null
@@ -137,6 +138,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
   invoiceData,
   setLayout,
   selectedObjectId,
+  selectedObjectIds,
   onSelectObject,
   selectedCell,
   onSelectCell,
@@ -163,6 +165,12 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
     useState<Uint8Array | null>(null);
 
   const [announcement, setAnnouncement] = useState<string>("");
+
+  // ガイドライン用のstate
+  const [guidelines, setGuidelines] = useState<{
+    vertical: number[];
+    horizontal: number[];
+  }>({ vertical: [], horizontal: [] });
 
   useEffect(() => {
     const initializePageDimensions = async () => {
@@ -505,6 +513,38 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
           )}
         </div>
 
+        {/* ガイドライン表示 */}
+        {guidelines.vertical.map((x, i) => (
+          <div
+            key={`v-${i}`}
+            style={{
+              position: "absolute",
+              left: x * displayScale,
+              top: 0,
+              width: "1px",
+              height: pageDimensions ? pageDimensions.height * displayScale : 0,
+              backgroundColor: "#ff00ff",
+              pointerEvents: "none",
+              zIndex: 10000,
+            }}
+          />
+        ))}
+        {guidelines.horizontal.map((y, i) => (
+          <div
+            key={`h-${i}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: y * displayScale,
+              width: pageDimensions ? pageDimensions.width * displayScale : 0,
+              height: "1px",
+              backgroundColor: "#ff00ff",
+              pointerEvents: "none",
+              zIndex: 10000,
+            }}
+          />
+        ))}
+
         {pdfFile &&
           invoiceData.layout
             .filter((item) => item.visible !== false)
@@ -538,11 +578,17 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   className="cursor-grab"
                   style={{
                     border:
-                      selectedObjectId === item.id
-                        ? "1px solid blue"
+                      selectedObjectIds.includes(item.id)
+                        ? selectedObjectId === item.id
+                          ? "1px solid blue"
+                          : "1px solid #66aaff"
                         : "1px dashed transparent",
                     zIndex: item.zIndex,
-                    outline: selectedObjectId === item.id ? "2px solid #0066ff" : "none",
+                    outline: selectedObjectIds.includes(item.id)
+                      ? selectedObjectId === item.id
+                        ? "2px solid #0066ff"
+                        : "2px solid #66aaff"
+                      : "none",
                     outlineOffset: "2px",
                   }}
                   size={{
@@ -553,18 +599,99 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                     x: item.x * displayScale,
                     y: item.y * displayScale,
                   }}
+                  grid={[10 * displayScale, 10 * displayScale]}
                   onClick={(e: React.MouseEvent) => {
                     if (item.locked) return;
                     e.stopPropagation();
-                    onSelectObject(item.id);
+                    // Shift/Ctrl/Cmdキーが押されている場合は複数選択
+                    const multiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
+                    onSelectObject(item.id, multiSelect);
+                  }}
+                  onDrag={(_e, d) => {
+                    if (item.locked) return;
+
+                    // ドラッグ中の座標（displayScaleを考慮）
+                    const currentX = d.x / displayScale;
+                    const currentY = d.y / displayScale;
+                    const currentRight = currentX + item.width;
+                    const currentBottom = currentY + item.height;
+                    const currentCenterX = currentX + item.width / 2;
+                    const currentCenterY = currentY + item.height / 2;
+
+                    const threshold = 5; // 5px以内でガイドライン表示
+                    const verticalLines: number[] = [];
+                    const horizontalLines: number[] = [];
+
+                    // 他のオブジェクトとの位置関係をチェック
+                    invoiceData.layout.forEach((otherItem) => {
+                      if (otherItem.id === item.id || otherItem.visible === false) return;
+
+                      const otherRight = otherItem.x + otherItem.width;
+                      const otherBottom = otherItem.y + otherItem.height;
+                      const otherCenterX = otherItem.x + otherItem.width / 2;
+                      const otherCenterY = otherItem.y + otherItem.height / 2;
+
+                      // 垂直ガイドライン（左端、中心、右端）
+                      if (Math.abs(currentX - otherItem.x) < threshold) {
+                        verticalLines.push(otherItem.x);
+                      }
+                      if (Math.abs(currentCenterX - otherCenterX) < threshold) {
+                        verticalLines.push(otherCenterX);
+                      }
+                      if (Math.abs(currentRight - otherRight) < threshold) {
+                        verticalLines.push(otherRight);
+                      }
+
+                      // 水平ガイドライン（上端、中心、下端）
+                      if (Math.abs(currentY - otherItem.y) < threshold) {
+                        horizontalLines.push(otherItem.y);
+                      }
+                      if (Math.abs(currentCenterY - otherCenterY) < threshold) {
+                        horizontalLines.push(otherCenterY);
+                      }
+                      if (Math.abs(currentBottom - otherBottom) < threshold) {
+                        horizontalLines.push(otherBottom);
+                      }
+                    });
+
+                    // 重複を削除
+                    setGuidelines({
+                      vertical: Array.from(new Set(verticalLines)),
+                      horizontal: Array.from(new Set(horizontalLines)),
+                    });
                   }}
                   onDragStop={(_e, d) => {
                     if (item.locked) return;
-                    updateLayoutItem(item.id, (item) => ({
-                      ...item,
-                      x: d.x / displayScale,
-                      y: d.y / displayScale,
-                    }));
+
+                    // 移動量を計算
+                    const deltaX = d.x / displayScale - item.x;
+                    const deltaY = d.y / displayScale - item.y;
+
+                    // 複数選択されている場合は、全ての選択オブジェクトを移動
+                    if (selectedObjectIds.length > 1 && selectedObjectIds.includes(item.id)) {
+                      setLayout((prevLayout) =>
+                        prevLayout.map((layoutItem) => {
+                          if (selectedObjectIds.includes(layoutItem.id) && !layoutItem.locked) {
+                            return {
+                              ...layoutItem,
+                              x: layoutItem.x + deltaX,
+                              y: layoutItem.y + deltaY,
+                            };
+                          }
+                          return layoutItem;
+                        })
+                      );
+                    } else {
+                      // 単一選択の場合は通常の更新
+                      updateLayoutItem(item.id, (item) => ({
+                        ...item,
+                        x: d.x / displayScale,
+                        y: d.y / displayScale,
+                      }));
+                    }
+
+                    // ドラッグ終了時にガイドラインをクリア
+                    setGuidelines({ vertical: [], horizontal: [] });
                   }}
                   onResizeStop={(_e, _direction, ref, _delta, position) => {
                     if (item.locked) return;
@@ -581,7 +708,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
                   tabIndex={item.locked ? -1 : 0}
                   role="application"
                   aria-label={itemLabel}
-                  aria-grabbed={selectedObjectId === item.id}
+                  aria-grabbed={selectedObjectIds.includes(item.id)}
                   aria-describedby="keyboard-instructions"
                   onKeyDown={createKeyboardHandler(
                     item,
