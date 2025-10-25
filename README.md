@@ -1,27 +1,22 @@
-# 請求書エディタ (Invoice Editor)
+# Document Editor
 
 ## 概要
 
-このリポジトリは、Design Doc と ADR（Architecture Decision Record）の作成プロセスを調査するために、AI を活用して構築した請求書編集アプリケーションです。主に Gemini CLI で開発を進め、最後の仕上げに Claude Code を使用しました。
+このリポジトリは、インタラクティブなドキュメント編集アプリケーションのプロトタイプです。AI を活用した開発プロセスの実験として構築されました。
 
 ## 目的
 
-- Design Doc と ADR の作成手法の調査
+- Design Doc と ADR の作成プラクティスの実践
 - AI 駆動開発による実装プロセスの検証
-- アーキテクチャ決定の文書化プラクティスの実践
+- モダンなフロントエンド・バックエンド技術スタックの習得
 
 ## 注意事項
 
-**本プロジェクトは調査目的で作成されたものであり、動作の品質は高くありません。**
+**本プロジェクトは学習・実験目的で作成されたものであり、プロダクション品質ではありません。**
 
-- プロダクション利用を想定していません
 - エラーハンドリングやバリデーションが不完全です
 - セキュリティ対策は実装されていません
-- AI 駆動開発のため、Material-UI などの既存コンポーネントライブラリを活用して「それっぽい」UI を構築しています
-
-## ドキュメント
-
-Design Doc や ADR の清書のための調査として出力したドキュメントが `docs/` 配下に入っています。
+- UI/UX は Material-UI などのコンポーネントライブラリを使用した基本的な実装です
 
 ## 使用技術
 
@@ -32,14 +27,14 @@ Design Doc や ADR の清書のための調査として出力したドキュメ�
   - [Material-UI](https://mui.com/) (AI 駆動開発のため既存コンポーネントを活用)
   - [Apollo Client](https://www.apollographql.com/docs/react/) (GraphQL クライアント)
   - [zod](https://zod.dev/)
-  - [react-pdf](https://react-pdf.org/) (`@react-pdf/renderer`): PDFのレンダリングとプレビュー
-  - [pdf-lib](https://pdf-lib.js.org/): PDFの動的な生成
-  - [react-rnd](https://github.com/bokuweb/react-rnd): オブジェクトのドラッグ＆リサイズ
+  - [react-pdf](https://react-pdf.org/) (`@react-pdf/renderer`): PDF レンダリング
+  - [pdf-lib](https://pdf-lib.js.org/): PDF 生成
+  - [react-rnd](https://github.com/bokuweb/react-rnd): ドラッグ＆リサイズ機能
 
 - **バックエンド:**
   - [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
   - [Apollo Server](https://www.apollographql.com/docs/apollo-server/) (GraphQL サーバー)
-  - [Puppeteer](https://pptr.dev/) (サーバーサイド PDF 生成)
+  - [Puppeteer](https://pptr.dev/) (PDF 生成)
 
 ## セットアップ
 
