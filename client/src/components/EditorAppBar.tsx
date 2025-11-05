@@ -59,7 +59,7 @@ export const EditorAppBar = ({
         }}
       >
         <Text variant="h6" sx={{ fontWeight: 'bold' }}>
-          Invoice Editor
+          PDF Editor
         </Text>
 
         <div style={{ flexGrow: 1 }} />
