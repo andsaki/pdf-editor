@@ -1,11 +1,6 @@
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Divider,
-} from "@mui/material";
+import { Button } from "accessibility-learning/src/design-system/components";
+import { colors, spacing, shadows } from "accessibility-learning/src/design-system/tokens";
+import { Container, Text, Divider } from "../design-system/components";
 
 interface EditorAppBarProps {
   onUndo: () => void;
@@ -49,81 +44,72 @@ export const EditorAppBar = ({
   onSave,
 }: EditorAppBarProps) => {
   return (
-    <AppBar position="static" color="default" elevation={1}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ fontWeight: "bold", mr: 2 }}>
+    <Container
+      sx={{
+        backgroundColor: colors.background.paper,
+        boxShadow: shadows.boxShadow.sm,
+        borderBottom: `1px solid ${colors.border.default}`,
+      }}
+    >
+      <Container
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          padding: `${spacing.scale[2]} ${spacing.scale[4]}`,
+          gap: spacing.scale[2],
+        }}
+      >
+        <Text variant="h6" sx={{ fontWeight: 'bold', marginRight: spacing.scale[2] }}>
           Invoice Editor
-        </Typography>
-        <Button onClick={onUndo} disabled={!canUndo} size="small">
+        </Text>
+
+        <Button onClick={onUndo} disabled={!canUndo} size="sm" variant="secondary">
           元に戻す
         </Button>
-        <Button onClick={onRedo} disabled={!canRedo} size="small">
+        <Button onClick={onRedo} disabled={!canRedo} size="sm" variant="secondary">
           やり直し
         </Button>
-        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-        <Button onClick={onCopy} disabled={!hasSelectedObject} size="small">
+
+        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[1]}`, backgroundColor: colors.border.default }} />
+
+        <Button onClick={onCopy} disabled={!hasSelectedObject} size="sm" variant="secondary">
           コピー
         </Button>
-        <Button onClick={onCut} disabled={!hasSelectedObject} size="small">
+        <Button onClick={onCut} disabled={!hasSelectedObject} size="sm" variant="secondary">
           切り取り
         </Button>
-        <Button onClick={onPaste} disabled={!hasClipboard} size="small">
+        <Button onClick={onPaste} disabled={!hasClipboard} size="sm" variant="secondary">
           貼り付け
         </Button>
-        <Button
-          onClick={onDelete}
-          disabled={!hasSelectedObject}
-          size="small"
-          color="error"
-        >
+        <Button onClick={onDelete} disabled={!hasSelectedObject} size="sm" variant="secondary">
           削除
         </Button>
-        <Box sx={{ flexGrow: 1 }} />
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onToggleVariableDisplay}
-        >
+
+        <div style={{ flexGrow: 1 }} />
+
+        <Button variant="outline" size="sm" onClick={onToggleVariableDisplay}>
           {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
         </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onPreviewReactPdf}
-          sx={{ ml: 1 }}
-        >
+        <Button variant="outline" size="sm" onClick={onPreviewReactPdf}>
           プレビュー (React-PDF)
         </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onPreviewPuppeteer}
-          sx={{ ml: 1 }}
-        >
+        <Button variant="outline" size="sm" onClick={onPreviewPuppeteer}>
           プレビュー (Puppeteer)
         </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => alert("PDFトレース機能は未実装です")}
-          sx={{ ml: 1 }}
-        >
+        <Button variant="outline" size="sm" onClick={() => alert("PDFトレース機能は未実装です")}>
           PDFをトレース
         </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onShowStatePreview}
-          sx={{ ml: 1 }}
-        >
+        <Button variant="outline" size="sm" onClick={onShowStatePreview}>
           State Preview
         </Button>
-        <Box sx={{ flexGrow: 1 }} />
-        <Button>キャンセル</Button>
-        <Button variant="contained" onClick={onSave} sx={{ ml: 1 }}>
+
+        <div style={{ flexGrow: 1 }} />
+
+        <Button variant="secondary" size="sm">キャンセル</Button>
+        <Button variant="primary" size="sm" onClick={onSave}>
           保存
         </Button>
-      </Toolbar>
-    </AppBar>
+      </Container>
+    </Container>
   );
 };

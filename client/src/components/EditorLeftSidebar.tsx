@@ -1,4 +1,5 @@
-import { Box } from "@mui/material";
+import { colors, spacing } from "accessibility-learning/src/design-system/tokens";
+import { Container } from "../design-system/components";
 import { LeftToolbar } from "./LeftToolbar";
 import { ShapeCreationPalette } from "./ShapeCreationPalette";
 
@@ -32,20 +33,18 @@ export const EditorLeftSidebar = ({
   onCloseCreationPalette,
 }: EditorLeftSidebarProps) => {
   return (
-    <Box
+    <Container
       sx={{
         position: "relative",
         display: "flex",
       }}
     >
-      <Box
-        component="aside"
+      <Container
         sx={{
-          width: 64,
-          bgcolor: "background.paper",
-          p: 1,
-          borderRight: "1px solid",
-          borderColor: "divider",
+          width: '64px',
+          backgroundColor: colors.background.paper,
+          padding: spacing.scale[2],
+          borderRight: `1px solid ${colors.border.default}`,
           height: "100%",
         }}
       >
@@ -58,17 +57,17 @@ export const EditorLeftSidebar = ({
           onAddPdf={onAddPdf}
           onToggleLayers={onToggleLayers}
         />
-      </Box>
+      </Container>
       {activeCreationPalette === "shape" && (
-        <Box sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
+        <Container sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
           <ShapeCreationPalette
             onAddShape={(type) => {
               onAddShapeObject(type);
               onCloseCreationPalette();
             }}
           />
-        </Box>
+        </Container>
       )}
-    </Box>
+    </Container>
   );
 };
