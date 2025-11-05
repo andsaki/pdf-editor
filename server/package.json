@@ -8,8 +8,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "GraphQL server for document editor",
   "dependencies": {
     "@apollo/server": "^4.10.4",
     "@types/body-parser": "^1.19.6",
@@ -18,7 +18,7 @@
     "express": "^4.17.1",
     "graphql": "^16.11.0",
     "pdf-lib": "^1.17.1",
-    "puppeteer": "^24.23.0"
+    "playwright": "^1.56.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

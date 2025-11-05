@@ -1,9 +1,9 @@
-import type { InvoiceData } from "./types";
+import type { InvoiceData, CompanyInfo } from "./types";
 import { getProcessedContent } from "./pdf";
 import { pxToMm } from "./coordinates";
 
 /**
- * InvoiceDataからPuppeteer用のHTML文字列を生成する
+ * InvoiceDataからPlaywright用のHTML文字列を生成する
  *
  * @param data 請求書データ
  * @param companyInfo 会社情報
@@ -11,7 +11,7 @@ import { pxToMm } from "./coordinates";
  */
 export const generateHtmlFromLayout = (
   data: InvoiceData,
-  companyInfo?: any
+  companyInfo?: CompanyInfo
 ): string => {
   // Generate a simple HTML representation of the invoice
   const itemsHtml = data.layout

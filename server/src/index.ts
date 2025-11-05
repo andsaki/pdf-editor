@@ -4,7 +4,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
 
 async function startServer() {
   console.log("Starting server...");
@@ -13,7 +13,7 @@ async function startServer() {
   console.log("Express app and HTTP server created.");
 
   const corsOptions = {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     optionsSuccessStatus: 200,
   };
 
@@ -392,14 +392,17 @@ async function startServer() {
         };
       },
       generatePdf: async (_: any, { html }: { html: string }) => {
-        console.log("Generating PDF with Puppeteer...");
-        const browser = await puppeteer.launch({
+        console.log("Generating PDF with Playwright...");
+        const browser = await chromium.launch({
           headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
         try {
+          console.log("Browser launched, creating page...");
           const page = await browser.newPage();
-          await page.setContent(html, { waitUntil: "networkidle0" });
+          console.log("Setting content...");
+          await page.setContent(html, { waitUntil: "load" });
+          console.log("Generating PDF...");
           const pdfBuffer = await page.pdf({
             width: "210mm",
             height: "297mm",
@@ -411,9 +414,14 @@ async function startServer() {
               left: "0",
             },
           });
+          console.log("PDF generated successfully");
           return Buffer.from(pdfBuffer).toString("base64");
+        } catch (error) {
+          console.error("Error in PDF generation:", error);
+          throw error;
         } finally {
           await browser.close();
+          console.log("Browser closed");
         }
       },
     },

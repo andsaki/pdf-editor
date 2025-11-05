@@ -441,7 +441,16 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
 
   return (
     <div
-      className="w-full h-full bg-gray-100 rounded-lg p-4 flex justify-center items-start overflow-auto"
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        backgroundColor: "#f5f5f5",
+        padding: "40px",
+        overflow: "auto",
+      }}
       ref={containerRef}
     >
       {/* スクリーンリーダー用のライブリージョン（画面外に配置） */}
@@ -479,6 +488,7 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({
         style={{
           width: pageDimensions ? pageDimensions.width * displayScale : 0,
           height: pageDimensions ? pageDimensions.height * displayScale : 0,
+          backgroundColor: "white",
         }}
         onClick={() => {
           onSelectObject(null);

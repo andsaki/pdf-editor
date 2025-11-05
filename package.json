@@ -1,16 +1,16 @@
 {
-  "name": "invoice-editor",
+  "name": "document-editor",
   "version": "1.0.0",
-  "description": "",
+  "description": "Interactive document editor with drag-and-drop capabilities",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"pnpm run dev:client\" \"pnpm run dev:server\"",
     "dev:client": "pnpm --filter client dev",
     "dev:server": "pnpm --filter server dev"
   },
-  "keywords": [],
+  "keywords": ["document", "editor", "react", "graphql", "pdf"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "volta": {
     "node": "20.19.4"
   },

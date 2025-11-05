@@ -1,10 +1,6 @@
 import { useState, useRef, useMemo, useCallback } from "react";
-import {
-  CssBaseline,
-  Box,
-  createTheme,
-  ThemeProvider,
-} from "@mui/material";
+import { colors } from "accessibility-learning/src/design-system/tokens";
+import { Container } from "./design-system/components";
 import { PdfPreview } from "./components/PdfPreview";
 import { EditorAppBar } from "./components/EditorAppBar";
 import { EditorLeftSidebar } from "./components/EditorLeftSidebar";
@@ -27,17 +23,6 @@ import {
   GET_INVOICE,
 } from "./graphql/invoiceQueries";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#1976d2",
-    },
-    secondary: {
-      main: "#dc004e",
-    },
-  },
-});
-
 /**
  * 請求書エディターのメインコンポーネント
  *
@@ -46,7 +31,7 @@ const theme = createTheme({
  * - レイヤー管理とz-index制御
  * - クリップボード操作（コピー/カット/ペースト）
  * - 元に戻す/やり直し機能
- * - PDFプレビューと生成（React-PDFとPuppeteer）
+ * - PDFプレビューと生成（React-PDFとPlaywright）
  * - GraphQLによるデータ永続化
  */
 function App() {
@@ -226,10 +211,8 @@ function App() {
   });
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-        <EditorAppBar
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      <EditorAppBar
           onUndo={undo}
           onRedo={redo}
           canUndo={canUndo}
@@ -246,12 +229,11 @@ function App() {
               prev === "name" ? "example" : "name"
             )
           }
-          onPreviewReactPdf={pdfGeneration.openPdfInNewTab}
-          onPreviewPuppeteer={pdfGeneration.openPdfWithPuppeteer}
+          onPreviewPlaywright={pdfGeneration.openPdfWithPlaywright}
           onShowStatePreview={() => setShowStatePreview((prev) => !prev)}
           onSave={saveInvoice}
         />
-        <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <Container sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
           <EditorLeftSidebar
             onAddText={layoutOperations.addTextObject}
             onAddBullet={layoutOperations.addBulletObject}
@@ -268,15 +250,15 @@ function App() {
             activeCreationPalette={activeCreationPalette}
             onCloseCreationPalette={() => setActiveCreationPalette(null)}
           />
-          <Box
-            component="main"
+          <Container
             sx={{
               flex: 1,
-              bgcolor: "grey.50",
+              backgroundColor: colors.background.default,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              p: 3,
+              padding: "24px",
+              position: "relative",
             }}
           >
             <PdfPreview
@@ -289,7 +271,40 @@ function App() {
               variableDisplayMode={variableDisplayMode}
               companyInfo={companyInfoData?.getCompanyInfo}
             />
-          </Box>
+            {pdfGeneration.isGenerating && (
+              <Container
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  zIndex: 9999,
+                }}
+              >
+                <Container
+                  sx={{
+                    backgroundColor: colors.background.paper,
+                    padding: "32px",
+                    borderRadius: "8px",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    textAlign: "center",
+                  }}
+                >
+                  <Container sx={{ marginBottom: "16px", fontSize: "1.2rem", fontWeight: "bold" }}>
+                    生成中...
+                  </Container>
+                  <Container sx={{ fontSize: "0.9rem", color: colors.text.secondary }}>
+                    PDFを生成しています
+                  </Container>
+                </Container>
+              </Container>
+            )}
+          </Container>
           <EditorRightSidebar
             activeRightPanel={activeRightPanel}
             showStatePreview={showStatePreview}
@@ -312,7 +327,7 @@ function App() {
             selectedObject={selectedObject}
             onDelete={layoutOperations.deleteSelectedObject}
           />
-        </Box>
+        </Container>
         <input
           type="file"
           accept="image/*"
@@ -327,8 +342,7 @@ function App() {
           onChange={fileUpload.handlePdfUpload}
           style={{ display: "none" }}
         />
-      </Box>
-    </ThemeProvider>
+    </div>
   );
 }
 
