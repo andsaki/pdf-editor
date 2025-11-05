@@ -229,7 +229,6 @@ function App() {
               prev === "name" ? "example" : "name"
             )
           }
-          onPreviewReactPdf={pdfGeneration.openPdfInNewTab}
           onPreviewPlaywright={pdfGeneration.openPdfWithPlaywright}
           onShowStatePreview={() => setShowStatePreview((prev) => !prev)}
           onSave={saveInvoice}
