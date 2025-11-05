@@ -51,6 +51,28 @@ export const EditorAppBar = ({
         borderBottom: `1px solid ${colors.border.default}`,
       }}
     >
+      {/* 1行目: タイトルと保存ボタン */}
+      <Container
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          padding: `${spacing.scale[2]} ${spacing.scale[4]} 0`,
+          gap: spacing.scale[3],
+        }}
+      >
+        <Text variant="h6" sx={{ fontWeight: 'bold' }}>
+          Invoice Editor
+        </Text>
+
+        <div style={{ flexGrow: 1 }} />
+
+        <Button variant="secondary" size="sm">キャンセル</Button>
+        <Button variant="primary" size="sm" onClick={onSave}>
+          保存
+        </Button>
+      </Container>
+
+      {/* 2行目: 編集操作とプレビュー */}
       <Container
         sx={{
           display: "flex",
@@ -59,10 +81,6 @@ export const EditorAppBar = ({
           gap: spacing.scale[2],
         }}
       >
-        <Text variant="h6" sx={{ fontWeight: 'bold', marginRight: spacing.scale[2] }}>
-          Invoice Editor
-        </Text>
-
         <Button onClick={onUndo} disabled={!canUndo} size="sm" variant="secondary">
           元に戻す
         </Button>
@@ -70,7 +88,7 @@ export const EditorAppBar = ({
           やり直し
         </Button>
 
-        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[1]}`, backgroundColor: colors.border.default }} />
+        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
 
         <Button onClick={onCopy} disabled={!hasSelectedObject} size="sm" variant="secondary">
           コピー
@@ -85,7 +103,7 @@ export const EditorAppBar = ({
           削除
         </Button>
 
-        <div style={{ flexGrow: 1 }} />
+        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
 
         <Button variant="outline" size="sm" onClick={onToggleVariableDisplay}>
           {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
@@ -101,13 +119,6 @@ export const EditorAppBar = ({
         </Button>
         <Button variant="outline" size="sm" onClick={onShowStatePreview}>
           State Preview
-        </Button>
-
-        <div style={{ flexGrow: 1 }} />
-
-        <Button variant="secondary" size="sm">キャンセル</Button>
-        <Button variant="primary" size="sm" onClick={onSave}>
-          保存
         </Button>
       </Container>
     </Container>
