@@ -1,4 +1,4 @@
-import { Button } from "accessibility-learning/src/design-system/components";
+import { Button } from "../design-system/components";
 import { colors, spacing, shadows } from "accessibility-learning/src/design-system/tokens";
 import { Container, Text, Divider } from "../design-system/components";
 

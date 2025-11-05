@@ -1,7 +1,6 @@
 import React from "react";
-import { Button } from "accessibility-learning/src/design-system/components";
 import { colors, spacing, radii } from "accessibility-learning/src/design-system/tokens";
-import { Container, Text, Divider } from "../design-system/components";
+import { Container, Text, Divider, Button } from "../design-system/components";
 
 interface ShapeCreationPaletteProps {
   onAddShape: (shapeType: 'rect' | 'h-line' | 'v-line') => void;

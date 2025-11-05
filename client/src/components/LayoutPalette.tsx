@@ -10,8 +10,7 @@ import type {
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
 import { ShapeObjectPalette } from "./ShapeObjectPalette";
-import { Button } from "accessibility-learning/src/design-system/components";
-import { Container, Text, Divider, Input } from "../design-system/components";
+import { Container, Text, Divider, Input, Button } from "../design-system/components";
 import { spacing } from "accessibility-learning/src/design-system/tokens";
 
 interface LayoutPaletteProps {

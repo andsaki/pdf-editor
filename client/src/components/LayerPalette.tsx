@@ -1,7 +1,6 @@
 import React from "react";
 import type { LayoutItem } from "../utils/types";
-import { Container, Text } from "../design-system/components";
-import { Button } from "accessibility-learning/src/design-system/components";
+import { Container, Text, Button } from "../design-system/components";
 import { spacing } from "accessibility-learning/src/design-system/tokens";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
