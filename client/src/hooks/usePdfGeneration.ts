@@ -27,12 +27,12 @@ export const usePdfGeneration = (
   }, [invoiceData, companyInfo]);
 
   /**
-   * Puppeteerを使用してPDFを生成して新しいタブで開く
+   * Playwrightを使用してPDFを生成して新しいタブで開く
    */
-  const openPdfWithPuppeteer = useCallback(async () => {
+  const openPdfWithPlaywright = useCallback(async () => {
     setIsGenerating(true);
     try {
-      console.log("Starting Puppeteer PDF generation...");
+      console.log("Starting Playwright PDF generation...");
       // 現在のレイアウトからHTMLを生成
       const htmlContent = generateHtmlFromLayout(invoiceData, companyInfo);
       console.log("Generated HTML:", htmlContent);
@@ -76,7 +76,7 @@ export const usePdfGeneration = (
 
   return {
     openPdfInNewTab,
-    openPdfWithPuppeteer,
+    openPdfWithPlaywright,
     isGenerating,
   };
 };

@@ -3,7 +3,7 @@ import { getProcessedContent } from "./pdf";
 import { pxToMm } from "./coordinates";
 
 /**
- * InvoiceDataからPuppeteer用のHTML文字列を生成する
+ * InvoiceDataからPlaywright用のHTML文字列を生成する
  *
  * @param data 請求書データ
  * @param companyInfo 会社情報

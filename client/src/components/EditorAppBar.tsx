@@ -15,8 +15,7 @@ interface EditorAppBarProps {
   hasClipboard: boolean;
   variableDisplayMode: "name" | "example";
   onToggleVariableDisplay: () => void;
-  onPreviewReactPdf: () => void;
-  onPreviewPuppeteer: () => void;
+  onPreviewPlaywright: () => void;
   onShowStatePreview: () => void;
   onSave: () => void;
 }
@@ -38,8 +37,7 @@ export const EditorAppBar = ({
   hasClipboard,
   variableDisplayMode,
   onToggleVariableDisplay,
-  onPreviewReactPdf,
-  onPreviewPuppeteer,
+  onPreviewPlaywright,
   onShowStatePreview,
   onSave,
 }: EditorAppBarProps) => {
@@ -61,7 +59,7 @@ export const EditorAppBar = ({
         }}
       >
         <Text variant="h6" sx={{ fontWeight: 'bold' }}>
-          Invoice Editor
+          PDF Editor
         </Text>
 
         <div style={{ flexGrow: 1 }} />
@@ -108,14 +106,8 @@ export const EditorAppBar = ({
         <Button variant="outline" size="sm" onClick={onToggleVariableDisplay} style={{ height: '36px' }}>
           {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
         </Button>
-        <Button variant="outline" size="sm" onClick={onPreviewReactPdf} style={{ height: '36px' }}>
-          プレビュー (React-PDF)
-        </Button>
-        <Button variant="outline" size="sm" onClick={onPreviewPuppeteer} style={{ height: '36px' }}>
-          プレビュー (Puppeteer)
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => alert("PDFトレース機能は未実装です")} style={{ height: '36px' }}>
-          PDFをトレース
+        <Button variant="outline" size="sm" onClick={onPreviewPlaywright} style={{ height: '36px' }}>
+          PDFプレビュー
         </Button>
         <Button variant="outline" size="sm" onClick={onShowStatePreview} style={{ height: '36px' }}>
           State Preview
