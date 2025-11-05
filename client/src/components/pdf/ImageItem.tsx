@@ -16,7 +16,7 @@ export const PdfImageItem: React.FC<ImageItemProps> = ({ item }) => {
   return (
     <Image
       key={item.id}
-      src={item.data}
+      src={item.src}
       style={{
         position: "absolute",
         left: item.x,

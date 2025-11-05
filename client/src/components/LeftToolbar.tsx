@@ -34,7 +34,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 }) => {
   return (
     <Container
-      sx={{
+      style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -78,7 +78,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
         </IconButton>
       </Tooltip>
 
-      <Divider sx={{ margin: `${spacing.scale[2]} 0`, width: '100%' }} />
+      <Divider style={{ margin: `${spacing.scale[2]} 0`, width: '100%' }} />
 
       <Tooltip content="レイヤー表示切替" position="right">
         <IconButton onClick={onToggleLayers} aria-label="レイヤー表示切替">

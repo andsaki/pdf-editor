@@ -1,5 +1,5 @@
 import React from 'react';
-import { colors, spacing, radii, accessibilityLevels } from 'accessibility-learning/src/design-system/tokens';
+import { colors, radii, accessibilityLevels } from 'accessibility-learning/src/design-system/tokens';
 import type { WCAGLevel } from 'accessibility-learning/src/design-system/tokens';
 
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,7 +22,6 @@ export const IconButton: React.FC<IconButtonProps> = ({
   wcagLevel = 'AA',
   ...props
 }) => {
-  const levelColors = accessibilityLevels.button[wcagLevel];
   const levelFocus = accessibilityLevels.focus[wcagLevel];
 
   const [isKeyboardFocus, setIsKeyboardFocus] = React.useState(false);
@@ -90,9 +89,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
 
   const focusStyles: React.CSSProperties = isKeyboardFocus
     ? {
-        boxShadow: levelFocus.outline,
-        outline: levelFocus.outlineWidth,
-        outlineColor: levelFocus.outlineColor,
+        outline: `${levelFocus.outlineWidth} solid ${levelFocus.outline}`,
         outlineOffset: levelFocus.outlineOffset,
       }
     : {};

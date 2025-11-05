@@ -1,15 +1,8 @@
 import React from "react";
 import type { LayoutItem } from "../utils/types";
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Container, Text } from "../design-system/components";
+import { Button } from "accessibility-learning/src/design-system/components";
+import { spacing } from "accessibility-learning/src/design-system/tokens";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Lock from "@mui/icons-material/Lock";
@@ -48,79 +41,97 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <Container>
+      <Text variant="h6" style={{ marginBottom: spacing.scale[2] }}>
         レイヤー
-      </Typography>
-      <List dense>
+      </Text>
+      <Container as="ul" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {sortedLayout.map((item) => (
-          <ListItem
+          <Container
             key={item.id}
-            disablePadding
-            secondaryAction={
-              <>
-                <Tooltip title="上に移動">
-                  <IconButton
-                    edge="end"
-                    aria-label="move up"
-                    onClick={() => onMoveLayer("up")}
-                    disabled={selectedObjectId !== item.id}
-                  >
-                    <ArrowUpward />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="下に移動">
-                  <IconButton
-                    edge="end"
-                    aria-label="move down"
-                    onClick={() => onMoveLayer("down")}
-                    disabled={selectedObjectId !== item.id}
-                  >
-                    <ArrowDownward />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={item.visible !== false ? "非表示" : "表示"}>
-                  <IconButton
-                    edge="end"
-                    aria-label="toggle visibility"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleProperty(item.id, "visible");
-                    }}
-                  >
-                    {item.visible !== false ? (
-                      <Visibility />
-                    ) : (
-                      <VisibilityOff />
-                    )}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={item.locked ? "ロック解除" : "ロック"}>
-                  <IconButton
-                    edge="end"
-                    aria-label="toggle locked"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleProperty(item.id, "locked");
-                    }}
-                  >
-                    {item.locked ? <Lock /> : <LockOpen />}
-                  </IconButton>
-                </Tooltip>
-              </>
-            }
+            as="li"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.scale[1],
+              padding: spacing.scale[2],
+              marginBottom: spacing.scale[1],
+              border: '1px solid',
+              borderColor: selectedObjectId === item.id ? 'primary.main' : 'divider',
+              borderRadius: '4px',
+              backgroundColor: selectedObjectId === item.id ? 'action.selected' : 'transparent',
+              cursor: 'pointer',
+            }}
+            onClick={() => onSelectObject(item.id)}
           >
-            <ListItemButton
-              selected={selectedObjectId === item.id}
-              onClick={() => onSelectObject(item.id)}
-            >
-              <ListItemText
-                primary={`${item.type} - ${item.id.substring(0, 8)}`}
-              />
-            </ListItemButton>
-          </ListItem>
+            <Container style={{ flex: 1 }}>
+              <Text variant="body">
+                {`${item.type} - ${item.id.substring(0, 8)}`}
+              </Text>
+            </Container>
+            <Container style={{ display: 'flex', gap: spacing.scale[1] }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  onMoveLayer("up");
+                }}
+                disabled={selectedObjectId !== item.id}
+                aria-label="上に移動"
+                title="上に移動"
+                style={{ minWidth: 'auto', padding: spacing.scale[1] }}
+              >
+                <ArrowUpward fontSize="small" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  onMoveLayer("down");
+                }}
+                disabled={selectedObjectId !== item.id}
+                aria-label="下に移動"
+                title="下に移動"
+                style={{ minWidth: 'auto', padding: spacing.scale[1] }}
+              >
+                <ArrowDownward fontSize="small" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  toggleProperty(item.id, "visible");
+                }}
+                aria-label={item.visible !== false ? "非表示" : "表示"}
+                title={item.visible !== false ? "非表示" : "表示"}
+                style={{ minWidth: 'auto', padding: spacing.scale[1] }}
+              >
+                {item.visible !== false ? (
+                  <Visibility fontSize="small" />
+                ) : (
+                  <VisibilityOff fontSize="small" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  toggleProperty(item.id, "locked");
+                }}
+                aria-label={item.locked ? "ロック解除" : "ロック"}
+                title={item.locked ? "ロック解除" : "ロック"}
+                style={{ minWidth: 'auto', padding: spacing.scale[1] }}
+              >
+                {item.locked ? <Lock fontSize="small" /> : <LockOpen fontSize="small" />}
+              </Button>
+            </Container>
+          </Container>
         ))}
-      </List>
-    </Box>
+      </Container>
+    </Container>
   );
 };

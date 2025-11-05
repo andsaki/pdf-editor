@@ -1,13 +1,8 @@
 import React, { useState } from "react";
-import type { InvoiceData, TableItem, LayoutItem } from "../utils/types";
+import type { TableItem, LayoutItem } from "../utils/types";
 import { TableItemSchema } from "../utils/schemas";
-import {
-  Box,
-  Typography,
-  TextField,
-  Divider,
-  InputLabel,
-} from "@mui/material";
+import { Container, Text, Divider, Input } from "../design-system/components";
+import { spacing } from "accessibility-learning/src/design-system/tokens";
 
 interface TableObjectPaletteProps {
   selectedObject: TableItem;
@@ -70,14 +65,14 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle1" gutterBottom>
+    <Container style={{ marginTop: spacing.scale[2] }}>
+      <Divider style={{ margin: `${spacing.scale[2]} 0` }} />
+      <Text variant="body" style={{ marginBottom: spacing.scale[2], display: 'block' }}>
         テーブルオブジェクト
-      </Typography>
-      <Box sx={{ display: "flex", flexWrap: "wrap", mx: -1 }}>
-        <Box sx={{ width: "100%", px: 1, mb: 2 }}>
-          <InputLabel>背景色</InputLabel>
+      </Text>
+      <Container style={{ display: "flex", flexWrap: "wrap", gap: spacing.scale[2] }}>
+        <Container style={{ flex: '1 1 100%' }}>
+          <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>背景色</Text>
           <input
             type="color"
             value={selectedObject.style?.backgroundColor || "#FFFFFF"}
@@ -86,13 +81,12 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
             }
             style={{ width: "100%", height: "40px" }}
           />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <TextField
+        </Container>
+        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
+          <Input
             label="行数"
             type="number"
-            fullWidth
-            InputProps={{ inputProps: { min: 2 } }}
+            min={2}
             value={selectedObject.data.length}
             onChange={(e) =>
               handleTableDataChange(
@@ -100,16 +94,14 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
                 selectedObject.data[0]?.length || 1
               )
             }
-            error={!!tableErrors.rows}
-            helperText={tableErrors.rows}
+            error={tableErrors.rows}
           />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <TextField
+        </Container>
+        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
+          <Input
             label="列数"
             type="number"
-            fullWidth
-            InputProps={{ inputProps: { min: 2 } }}
+            min={2}
             value={selectedObject.data[0]?.length || 1}
             onChange={(e) =>
               handleTableDataChange(
@@ -117,11 +109,10 @@ export const TableObjectPalette: React.FC<TableObjectPaletteProps> = ({
                 parseInt(e.target.value)
               )
             }
-            error={!!tableErrors.cols}
-            helperText={tableErrors.cols}
+            error={tableErrors.cols}
           />
-        </Box>
-      </Box>
-    </Box>
+        </Container>
+      </Container>
+    </Container>
   );
 };

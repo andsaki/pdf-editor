@@ -45,7 +45,7 @@ export const EditorRightSidebar = ({
 }: EditorRightSidebarProps) => {
   return (
     <Container
-      sx={{
+      style={{
         width: '320px',
         backgroundColor: colors.background.paper,
         padding: spacing.scale[4],
