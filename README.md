@@ -34,7 +34,6 @@
 - **バックエンド:**
   - [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
   - [Apollo Server](https://www.apollographql.com/docs/apollo-server/) (GraphQL サーバー)
-  - [Puppeteer](https://pptr.dev/) (PDF 生成)
 
 ## セットアップ
 
