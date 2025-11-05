@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import { colors } from "accessibility-learning/src/design-system/tokens";
 import { Container } from "./design-system/components";
+import { PdfPreview } from "./components/PdfPreview";
 import { EditorAppBar } from "./components/EditorAppBar";
 import { EditorLeftSidebar } from "./components/EditorLeftSidebar";
 import { EditorRightSidebar } from "./components/EditorRightSidebar";
@@ -228,6 +229,7 @@ function App() {
               prev === "name" ? "example" : "name"
             )
           }
+          onPreviewReactPdf={pdfGeneration.openPdfInNewTab}
           onPreviewPlaywright={pdfGeneration.openPdfWithPlaywright}
           onShowStatePreview={() => setShowStatePreview((prev) => !prev)}
           onSave={saveInvoice}

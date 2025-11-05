@@ -15,6 +15,7 @@ interface EditorAppBarProps {
   hasClipboard: boolean;
   variableDisplayMode: "name" | "example";
   onToggleVariableDisplay: () => void;
+  onPreviewReactPdf: () => void;
   onPreviewPlaywright: () => void;
   onShowStatePreview: () => void;
   onSave: () => void;
@@ -37,6 +38,7 @@ export const EditorAppBar = ({
   hasClipboard,
   variableDisplayMode,
   onToggleVariableDisplay,
+  onPreviewReactPdf,
   onPreviewPlaywright,
   onShowStatePreview,
   onSave,
@@ -106,8 +108,11 @@ export const EditorAppBar = ({
         <Button variant="outline" size="sm" onClick={onToggleVariableDisplay} style={{ height: '36px' }}>
           {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}
         </Button>
+        <Button variant="outline" size="sm" onClick={onPreviewReactPdf} style={{ height: '36px' }}>
+          プレビュー (React-PDF)
+        </Button>
         <Button variant="outline" size="sm" onClick={onPreviewPlaywright} style={{ height: '36px' }}>
-          PDFプレビュー
+          プレビュー (Playwright)
         </Button>
         <Button variant="outline" size="sm" onClick={() => alert("PDFトレース機能は未実装です")} style={{ height: '36px' }}>
           PDFをトレース
