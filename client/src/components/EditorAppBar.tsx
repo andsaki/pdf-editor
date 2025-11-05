@@ -109,9 +109,6 @@ export const EditorAppBar = ({
         <Button variant="outline" size="sm" onClick={onPreviewPlaywright} style={{ height: '36px' }}>
           PDFプレビュー
         </Button>
-        <Button variant="outline" size="sm" onClick={() => alert("PDFトレース機能は未実装です")} style={{ height: '36px' }}>
-          PDFをトレース
-        </Button>
         <Button variant="outline" size="sm" onClick={onShowStatePreview} style={{ height: '36px' }}>
           State Preview
         </Button>
