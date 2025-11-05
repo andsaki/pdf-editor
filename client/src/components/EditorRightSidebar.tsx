@@ -1,4 +1,5 @@
-import { Box } from "@mui/material";
+import { colors, spacing } from "accessibility-learning/src/design-system/tokens";
+import { Container } from "../design-system/components";
 import { LayerPalette } from "./LayerPalette";
 import { TextObjectPalette } from "./TextObjectPalette";
 import { LayoutPalette } from "./LayoutPalette";
@@ -43,14 +44,12 @@ export const EditorRightSidebar = ({
   onDelete,
 }: EditorRightSidebarProps) => {
   return (
-    <Box
-      component="aside"
+    <Container
       sx={{
-        width: 320,
-        bgcolor: "background.paper",
-        p: 2,
-        borderLeft: "1px solid",
-        borderColor: "divider",
+        width: '320px',
+        backgroundColor: colors.background.paper,
+        padding: spacing.scale[4],
+        borderLeft: `1px solid ${colors.border.default}`,
         overflowY: "auto",
         position: "relative",
       }}
@@ -92,6 +91,6 @@ export const EditorRightSidebar = ({
           );
         }
       })()}
-    </Box>
+    </Container>
   );
 };

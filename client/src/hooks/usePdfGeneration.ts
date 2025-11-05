@@ -1,6 +1,6 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import type { InvoiceData } from "../utils/types";
+import type { InvoiceData, CompanyInfo } from "../utils/types";
 import { InvoiceDocument } from "../components/InvoiceDocument";
 import { generateHtmlFromLayout } from "../utils/htmlGenerator";
 import { useMutation } from "@apollo/client";
@@ -11,9 +11,10 @@ import { GENERATE_PDF_MUTATION } from "../graphql/invoiceQueries";
  */
 export const usePdfGeneration = (
   invoiceData: InvoiceData,
-  companyInfo: any
+  companyInfo?: CompanyInfo
 ) => {
   const [generatePdfMutation] = useMutation(GENERATE_PDF_MUTATION);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   /**
    * React-PDFを使用してPDFを新しいタブで開く
@@ -29,6 +30,7 @@ export const usePdfGeneration = (
    * Playwrightを使用してPDFを生成して新しいタブで開く
    */
   const openPdfWithPlaywright = useCallback(async () => {
+    setIsGenerating(true);
     try {
       console.log("Starting Playwright PDF generation...");
       // 現在のレイアウトからHTMLを生成
@@ -58,15 +60,23 @@ export const usePdfGeneration = (
         console.error("No PDF data in result:", result);
         alert("PDF生成に失敗しました: データが返されませんでした");
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error("Error generating PDF:", e);
-      console.error("Error details:", e.graphQLErrors, e.networkError);
-      alert(`PDF生成に失敗しました: ${e.message}`);
+      if (e && typeof e === 'object') {
+        console.error("Error details:", 'graphQLErrors' in e ? e.graphQLErrors : undefined, 'networkError' in e ? e.networkError : undefined);
+        const message = 'message' in e && typeof e.message === 'string' ? e.message : 'Unknown error';
+        alert(`PDF生成に失敗しました: ${message}`);
+      } else {
+        alert(`PDF生成に失敗しました: ${String(e)}`);
+      }
+    } finally {
+      setIsGenerating(false);
     }
   }, [invoiceData, companyInfo, generatePdfMutation]);
 
   return {
     openPdfInNewTab,
     openPdfWithPlaywright,
+    isGenerating,
   };
 };

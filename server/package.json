@@ -8,8 +8,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "GraphQL server for document editor",
   "dependencies": {
     "@apollo/server": "^4.10.4",
     "@types/body-parser": "^1.19.6",
