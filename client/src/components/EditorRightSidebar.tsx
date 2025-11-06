@@ -1,4 +1,4 @@
-import { colors, spacing } from "accessibility-learning/src/design-system/tokens";
+import { colors, spacing } from "../design-system/tokens";
 import { Container } from "../design-system/components";
 import { LayerPalette } from "./LayerPalette";
 import { TextObjectPalette } from "./TextObjectPalette";
@@ -45,12 +45,12 @@ export const EditorRightSidebar = ({
 }: EditorRightSidebarProps) => {
   return (
     <Container
-      sx={{
+      style={{
         width: '320px',
         backgroundColor: colors.background.paper,
-        padding: spacing.scale[4],
         borderLeft: `1px solid ${colors.border.default}`,
         overflowY: "auto",
+        overflowX: "hidden",
         position: "relative",
       }}
     >

@@ -6,19 +6,8 @@ import type {
   CompanyInfoGql,
   TableCell,
 } from "../utils/types";
-import {
-  Box,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Checkbox,
-  FormControlLabel,
-  Divider,
-  ListSubheader,
-} from "@mui/material";
+import { Container, Text, Divider, PropertyInput as Input, Select, Checkbox, Textarea } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface TextObjectPaletteProps {
   selectedObject: TextItem | TableCell;
@@ -45,13 +34,14 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           key: `companyInfo.${key}`,
           label: entry.label,
         }));
-      options.push(<ListSubheader key="company-info">自社情報</ListSubheader>);
       options.push(
-        ...companyVariables.map((v) => (
-          <MenuItem key={v.key} value={`{{${v.key}.value}}`}>
-            {v.label}
-          </MenuItem>
-        ))
+        <optgroup key="company-info" label="自社情報">
+          {companyVariables.map((v) => (
+            <option key={v.key} value={`{{${v.key}.value}}`}>
+              {v.label}
+            </option>
+          ))}
+        </optgroup>
       );
     }
 
@@ -66,35 +56,39 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
           label: entry.label,
         }));
       options.push(
-        <ListSubheader key="invoice-data">請求書データ</ListSubheader>
-      );
-      options.push(
-        ...invoiceFormVariables.map((v) => (
-          <MenuItem key={v.key} value={`{{${v.key}.value}}`}>
-            {v.label}
-          </MenuItem>
-        ))
+        <optgroup key="invoice-data" label="請求書データ">
+          {invoiceFormVariables.map((v) => (
+            <option key={v.key} value={`{{${v.key}.value}}`}>
+              {v.label}
+            </option>
+          ))}
+        </optgroup>
       );
 
       if (
         invoiceData.form.line_items &&
         invoiceData.form.line_items.length > 0
       ) {
-        options.push(<ListSubheader key="line-items">明細項目</ListSubheader>);
+        const lineItemOptions: JSX.Element[] = [];
         invoiceData.form.line_items.forEach((item, index) => {
           Object.entries(item)
             .filter(([key, entry]) => entry && key !== "__typename")
             .forEach(([key, entry]: [string, any]) => {
-              options.push(
-                <MenuItem
+              lineItemOptions.push(
+                <option
                   key={`line_items.${index}.${key}`}
                   value={`{{form.line_items.${index}.${key}.value}}`}
                 >
                   {`明細 ${index + 1} - ${entry.label}`}
-                </MenuItem>
+                </option>
               );
             });
         });
+        options.push(
+          <optgroup key="line-items" label="明細項目">
+            {lineItemOptions}
+          </optgroup>
+        );
       }
     }
 
@@ -102,16 +96,15 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle1" gutterBottom>
+    <Container style={{ marginTop: spacing.scale[2] }}>
+      <Divider style={{ margin: `${spacing.scale[2]} 0` }} />
+      <Text variant="body" style={{ marginBottom: spacing.scale[2], display: 'block' }}>
         テキストオブジェクト
-      </Typography>
-      <FormControl fullWidth margin="normal">
-        <InputLabel>コンテントタイプ</InputLabel>
+      </Text>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
         <Select
-          value={selectedObject.contentType}
           label="コンテントタイプ"
+          value={selectedObject.contentType}
           onChange={(e) =>
             onContentChange(
               "contentType",
@@ -119,227 +112,206 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             )
           }
         >
-          <MenuItem value="fixed">固定文言</MenuItem>
-          <MenuItem value="variable">データ</MenuItem>
-          <MenuItem value="labeled-variable">カスタマイズ</MenuItem>
+          <option value="fixed">固定文言</option>
+          <option value="variable">データ</option>
+          <option value="labeled-variable">カスタマイズ</option>
         </Select>
-      </FormControl>
+      </Container>
 
       {selectedObject.contentType === "fixed" && (
-        <TextField
-          label="内容"
-          multiline
-          rows={4}
-          fullWidth
-          margin="normal"
-          value={selectedObject.content}
-          onChange={(e) => onContentChange("content", e.target.value)}
-        />
+        <Container style={{ marginBottom: spacing.scale[2] }}>
+          <Textarea
+            label="内容"
+            rows={4}
+            value={selectedObject.content}
+            onChange={(e) => onContentChange("content", e.target.value)}
+            style={{ boxSizing: 'border-box' }}
+          />
+        </Container>
       )}
 
       {selectedObject.contentType === "variable" && (
-        <FormControl fullWidth margin="normal">
-          <InputLabel>データ</InputLabel>
+        <Container style={{ marginBottom: spacing.scale[2] }}>
           <Select
-            value={selectedObject.content}
             label="データ"
+            value={selectedObject.content}
             onChange={(e) => onContentChange("content", e.target.value)}
           >
             {renderVariableOptions()}
           </Select>
-        </FormControl>
+        </Container>
       )}
 
       {selectedObject.contentType === "labeled-variable" && (
         <>
-          <TextField
-            label="ラベル"
-            fullWidth
-            margin="normal"
-            value={selectedObject.label || ""}
-            onChange={(e) => onContentChange("label", e.target.value)}
-          />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>変数</InputLabel>
+          <Container style={{ marginBottom: spacing.scale[2] }}>
+            <Input
+              label="ラベル"
+              value={selectedObject.label || ""}
+              onChange={(e) => onContentChange("label", e.target.value)}
+            />
+          </Container>
+          <Container style={{ marginBottom: spacing.scale[2] }}>
             <Select
-              value={selectedObject.content}
               label="変数"
+              value={selectedObject.content}
               onChange={(e) => onContentChange("content", e.target.value)}
             >
               {renderVariableOptions()}
             </Select>
-          </FormControl>
+          </Container>
         </>
       )}
 
-      <Box sx={{ display: "flex", flexWrap: "wrap", mx: -1, mt: 1 }}>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>フォント</InputLabel>
-            <Select
-              value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
-              label="フォント"
-              onChange={(e) =>
-                onStyleChange({
-                  fontFamily: e.target.value as TextItemStyle["fontFamily"],
-                })
-              }
-            >
-              <MenuItem value="BIZ UDPGothic">BIZ UDPGothic</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <TextField
-            label="フォントサイズ"
-            type="number"
-            fullWidth
-            value={selectedObject.style?.fontSize || 12}
-            onChange={(e) =>
-              onStyleChange({ fontSize: parseFloat(e.target.value) })
-            }
-          />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <TextField
-            label="行の高さ"
-            type="number"
-            fullWidth
-            value={selectedObject.style?.lineHeight || 1}
-            onChange={(e) =>
-              onStyleChange({ lineHeight: parseFloat(e.target.value) })
-            }
-          />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>水平方向の配置</InputLabel>
-            <Select
-              value={selectedObject.style?.textAlign || "left"}
-              label="水平方向の配置"
-              onChange={(e) =>
-                onStyleChange({
-                  textAlign: e.target.value as TextItemStyle["textAlign"],
-                })
-              }
-            >
-              <MenuItem value="left">左揃え</MenuItem>
-              <MenuItem value="center">中央揃え</MenuItem>
-              <MenuItem value="right">右揃え</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>垂直方向の配置</InputLabel>
-            <Select
-              value={selectedObject.style?.verticalAlign || "top"}
-              label="垂直方向の配置"
-              onChange={(e) =>
-                onStyleChange({
-                  verticalAlign: e.target
-                    .value as TextItemStyle["verticalAlign"],
-                })
-              }
-            >
-              <MenuItem value="top">上揃え</MenuItem>
-              <MenuItem value="center">中央揃え</MenuItem>
-              <MenuItem value="bottom">下揃え</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <TextField
-            label="テキスト影"
-            fullWidth
-            value={selectedObject.style?.textShadow || ""}
-            onChange={(e) => onStyleChange({ textShadow: e.target.value })}
-            placeholder="e.g., 2px 2px 4px #000000"
-          />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <InputLabel>色</InputLabel>
-          <input
-            type="color"
-            value={selectedObject.style?.color || "#000000"}
-            onChange={(e) => onStyleChange({ color: e.target.value })}
-            style={{ width: "100%", height: "40px" }}
-          />
-        </Box>
-        <Box sx={{ width: "50%", px: 1, mb: 2 }}>
-          <InputLabel>背景色</InputLabel>
-          <input
-            type="color"
-            value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-            onChange={(e) =>
-              onStyleChange({ backgroundColor: e.target.value })
-            }
-            style={{ width: "100%", height: "40px" }}
-          />
-        </Box>
-      </Box>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="フォント"
+          value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
+          onChange={(e) =>
+            onStyleChange({
+              fontFamily: e.target.value as TextItemStyle["fontFamily"],
+            })
+          }
+        >
+          <option value="BIZ UDPGothic">BIZ UDPGothic</option>
+        </Select>
+      </Container>
 
-      <Box sx={{ mt: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={selectedObject.style?.bold || false}
-              onChange={(e) => onStyleChange({ bold: e.target.checked })}
-            />
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="フォントサイズ"
+          type="number"
+          value={selectedObject.style?.fontSize || 12}
+          onChange={(e) =>
+            onStyleChange({ fontSize: parseFloat(e.target.value) })
           }
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="行の高さ"
+          type="number"
+          value={selectedObject.style?.lineHeight || 1}
+          onChange={(e) =>
+            onStyleChange({ lineHeight: parseFloat(e.target.value) })
+          }
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="水平方向の配置"
+          value={selectedObject.style?.textAlign || "left"}
+          onChange={(e) =>
+            onStyleChange({
+              textAlign: e.target.value as TextItemStyle["textAlign"],
+            })
+          }
+        >
+          <option value="left">左揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="right">右揃え</option>
+        </Select>
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="垂直方向の配置"
+          value={selectedObject.style?.verticalAlign || "top"}
+          onChange={(e) =>
+            onStyleChange({
+              verticalAlign: e.target
+                .value as TextItemStyle["verticalAlign"],
+            })
+          }
+        >
+          <option value="top">上揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="bottom">下揃え</option>
+        </Select>
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="テキスト影"
+          value={selectedObject.style?.textShadow || ""}
+          onChange={(e) => onStyleChange({ textShadow: e.target.value })}
+          placeholder="e.g., 2px 2px 4px #000000"
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>色</Text>
+        <input
+          type="color"
+          value={selectedObject.style?.color || "#000000"}
+          onChange={(e) => onStyleChange({ color: e.target.value })}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>背景色</Text>
+        <input
+          type="color"
+          value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+          onChange={(e) =>
+            onStyleChange({ backgroundColor: e.target.value })
+          }
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
+        />
+      </Container>
+
+      <Container style={{ marginTop: spacing.scale[2] }}>
+        <Checkbox
           label="太字"
+          checked={selectedObject.style?.bold || false}
+          onChange={(e) => onStyleChange({ bold: e.target.checked })}
         />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={selectedObject.style?.italic || false}
-              onChange={(e) => onStyleChange({ italic: e.target.checked })}
-            />
-          }
+        <Checkbox
           label="斜体"
+          checked={selectedObject.style?.italic || false}
+          onChange={(e) => onStyleChange({ italic: e.target.checked })}
         />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={selectedObject.style?.wordWrap || false}
-              onChange={(e) =>
-                onStyleChange({ wordWrap: e.target.checked })
-              }
-            />
-          }
+        <Checkbox
           label="折り返し"
+          checked={selectedObject.style?.wordWrap || false}
+          onChange={(e) =>
+            onStyleChange({ wordWrap: e.target.checked })
+          }
         />
-      </Box>
+      </Container>
 
       {selectedObject.style?.isBullet && (
-        <TextField
-          label="箇条書きの数"
-          type="number"
-          fullWidth
-          margin="normal"
-          slotProps={{ htmlInput: { min: 1 } }}
-          value={selectedObject.content.split("\n").length}
-          onChange={(e) => {
-            const newCount = parseInt(e.target.value);
-            if (isNaN(newCount) || newCount < 1) return;
+        <Container style={{ marginTop: spacing.scale[2] }}>
+          <Input
+            label="箇条書きの数"
+            type="number"
+            min={1}
+            value={selectedObject.content.split("\n").length}
+            onChange={(e) => {
+              const newCount = parseInt(e.target.value);
+              if (isNaN(newCount) || newCount < 1) return;
 
-            const lines = selectedObject.content.split("\n");
-            let newContent = "";
+              const lines = selectedObject.content.split("\n");
+              let newContent = "";
 
-            if (newCount > lines.length) {
-              newContent = lines.join("\n");
-              for (let i = lines.length; i < newCount; i++) {
-                newContent += `\n項目${i + 1}`;
+              if (newCount > lines.length) {
+                newContent = lines.join("\n");
+                for (let i = lines.length; i < newCount; i++) {
+                  newContent += `\n項目${i + 1}`;
+                }
+              } else if (newCount < lines.length) {
+                newContent = lines.slice(0, newCount).join("\n");
+              } else {
+                newContent = selectedObject.content;
               }
-            } else if (newCount < lines.length) {
-              newContent = lines.slice(0, newCount).join("\n");
-            } else {
-              newContent = selectedObject.content;
-            }
-            onContentChange("content", newContent);
-          }}
-        />
+              onContentChange("content", newContent);
+            }}
+          />
+        </Container>
       )}
-    </Box>
+    </Container>
   );
 };

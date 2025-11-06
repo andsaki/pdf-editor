@@ -36,8 +36,8 @@ importers:
         specifier: ^2.9.1
         version: 2.9.1
       accessibility-learning:
-        specifier: file:/tmp/accessibility-learning
-        version: file:../../../../../tmp/accessibility-learning(tailwindcss@4.1.16)
+        specifier: file:../../accessibility-learning
+        version: file:../accessibility-learning(tailwindcss@4.1.16)
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -1348,8 +1348,8 @@ packages:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
 
-  accessibility-learning@file:../../../../../tmp/accessibility-learning:
-    resolution: {directory: ../../../../../tmp/accessibility-learning, type: directory}
+  accessibility-learning@file:../accessibility-learning:
+    resolution: {directory: ../accessibility-learning, type: directory}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -3695,7 +3695,7 @@ snapshots:
     dependencies:
       graphql: 16.11.0
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.66.0(react@19.2.0))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.66.0(react@18.3.1))':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.66.0(react@19.2.0)
@@ -4421,10 +4421,10 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  accessibility-learning@file:../../../../../tmp/accessibility-learning(tailwindcss@4.1.16):
+  accessibility-learning@file:../accessibility-learning(tailwindcss@4.1.16):
     dependencies:
       '@digital-go-jp/tailwind-theme-plugin': 0.3.2(tailwindcss@4.1.16)
-      '@hookform/resolvers': 5.2.2(react-hook-form@7.66.0(react@19.2.0))
+      '@hookform/resolvers': 5.2.2(react-hook-form@7.66.0(react@18.3.1))
       lucide-react: 0.552.0(react@19.2.0)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)

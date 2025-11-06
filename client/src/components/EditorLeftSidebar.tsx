@@ -1,4 +1,4 @@
-import { colors, spacing } from "accessibility-learning/src/design-system/tokens";
+import { colors, spacing } from "../design-system/tokens";
 import { Container } from "../design-system/components";
 import { LeftToolbar } from "./LeftToolbar";
 import { ShapeCreationPalette } from "./ShapeCreationPalette";
@@ -34,13 +34,13 @@ export const EditorLeftSidebar = ({
 }: EditorLeftSidebarProps) => {
   return (
     <Container
-      sx={{
+      style={{
         position: "relative",
         display: "flex",
       }}
     >
       <Container
-        sx={{
+        style={{
           width: '64px',
           backgroundColor: colors.background.paper,
           padding: spacing.scale[2],
@@ -59,7 +59,7 @@ export const EditorLeftSidebar = ({
         />
       </Container>
       {activeCreationPalette === "shape" && (
-        <Container sx={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
+        <Container style={{ position: "absolute", top: 0, left: "64px", zIndex: 10 }}>
           <ShapeCreationPalette
             onAddShape={(type) => {
               onAddShapeObject(type);

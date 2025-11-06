@@ -1,6 +1,6 @@
 import React from "react";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
-import { Tooltip } from "accessibility-learning/src/components/Tooltip";
+import { spacing } from "../design-system/tokens";
+import { Tooltip } from "../design-system/components";
 import { Container, Divider } from "../design-system/components";
 import { IconButton } from "../design-system/components/IconButton";
 import {
@@ -34,7 +34,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
 }) => {
   return (
     <Container
-      sx={{
+      style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -78,7 +78,7 @@ export const LeftToolbar: React.FC<LeftToolbarProps> = ({
         </IconButton>
       </Tooltip>
 
-      <Divider sx={{ margin: `${spacing.scale[2]} 0`, width: '100%' }} />
+      <Divider style={{ margin: `${spacing.scale[2]} 0`, width: '100%' }} />
 
       <Tooltip content="レイヤー表示切替" position="right">
         <IconButton onClick={onToggleLayers} aria-label="レイヤー表示切替">

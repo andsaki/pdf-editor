@@ -1,15 +1,7 @@
 import React from "react";
 import type { LayoutItem, ShapeItem } from "../utils/types";
-import {
-  Box,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
-  TextField,
-} from "@mui/material";
+import { Container, Text, Divider, PropertyInput as Input, Select } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface ShapeObjectPaletteProps {
   selectedObject: ShapeItem;
@@ -43,16 +35,15 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
   };
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle1" gutterBottom>
+    <Container style={{ marginTop: spacing.scale[2] }}>
+      <Divider style={{ margin: `${spacing.scale[2]} 0` }} />
+      <Text variant="body" style={{ marginBottom: spacing.scale[2], display: 'block' }}>
         図形オブジェクト
-      </Typography>
-      <FormControl fullWidth margin="normal">
-        <InputLabel>図形の種類</InputLabel>
+      </Text>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
         <Select
-          value={selectedObject.shapeType}
           label="図形の種類"
+          value={selectedObject.shapeType}
           onChange={(e) =>
             handleShapeChange(
               "shapeType",
@@ -60,62 +51,63 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
             )
           }
         >
-          <MenuItem value="rect">四角形</MenuItem>
-          <MenuItem value="h-line">横線</MenuItem>
-          <MenuItem value="v-line">縦線</MenuItem>
+          <option value="rect">四角形</option>
+          <option value="h-line">横線</option>
+          <option value="v-line">縦線</option>
         </Select>
-      </FormControl>
+      </Container>
 
-      <Box sx={{ mt: 2 }}>
-        <InputLabel>背景色</InputLabel>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>背景色</Text>
         <input
           type="color"
           value={selectedObject.style?.backgroundColor || "#cccccc"}
           onChange={(e) =>
             handleStyleChange({ backgroundColor: e.target.value })
           }
-          style={{ width: "100%", height: "40px" }}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
         />
-      </Box>
+      </Container>
 
-      <Box sx={{ mt: 2 }}>
-        <InputLabel>枠線の色</InputLabel>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>枠線の色</Text>
         <input
           type="color"
           value={selectedObject.style?.borderColor || "#000000"}
           onChange={(e) => handleStyleChange({ borderColor: e.target.value })}
-          style={{ width: "100%", height: "40px" }}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
         />
-      </Box>
+      </Container>
 
-      <TextField
-        fullWidth
-        margin="normal"
-        label="枠線の太さ (px)"
-        type="number"
-        value={selectedObject.style?.borderWidth || 1}
-        onChange={(e) =>
-          handleStyleChange({ borderWidth: Number(e.target.value) })
-        }
-        slotProps={{ htmlInput: { min: 0, max: 20, step: 1 } }}
-      />
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="枠線の太さ (px)"
+          type="number"
+          min={0}
+          max={20}
+          step={1}
+          value={selectedObject.style?.borderWidth || 1}
+          onChange={(e) =>
+            handleStyleChange({ borderWidth: Number(e.target.value) })
+          }
+        />
+      </Container>
 
-      <FormControl fullWidth margin="normal">
-        <InputLabel>枠線のスタイル</InputLabel>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
         <Select
-          value={selectedObject.style?.borderStyle || "solid"}
           label="枠線のスタイル"
+          value={selectedObject.style?.borderStyle || "solid"}
           onChange={(e) =>
             handleStyleChange({
               borderStyle: e.target.value as "solid" | "dashed" | "dotted",
             })
           }
         >
-          <MenuItem value="solid">実線</MenuItem>
-          <MenuItem value="dashed">破線</MenuItem>
-          <MenuItem value="dotted">点線</MenuItem>
+          <option value="solid">実線</option>
+          <option value="dashed">破線</option>
+          <option value="dotted">点線</option>
         </Select>
-      </FormControl>
-    </Box>
+      </Container>
+    </Container>
   );
 };

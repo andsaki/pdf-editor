@@ -1,5 +1,5 @@
-import { Button } from "accessibility-learning/src/design-system/components";
-import { colors, spacing, shadows } from "accessibility-learning/src/design-system/tokens";
+import { Button } from "../design-system/components";
+import { colors, spacing, shadows } from "../design-system/tokens";
 import { Container, Text, Divider } from "../design-system/components";
 
 interface EditorAppBarProps {
@@ -43,7 +43,7 @@ export const EditorAppBar = ({
 }: EditorAppBarProps) => {
   return (
     <Container
-      sx={{
+      style={{
         backgroundColor: colors.background.paper,
         boxShadow: shadows.boxShadow.sm,
         borderBottom: `1px solid ${colors.border.default}`,
@@ -51,14 +51,14 @@ export const EditorAppBar = ({
     >
       {/* 1行目: タイトルと保存ボタン */}
       <Container
-        sx={{
+        style={{
           display: "flex",
           alignItems: "center",
           padding: `${spacing.scale[2]} ${spacing.scale[4]} 0`,
           gap: spacing.scale[3],
         }}
       >
-        <Text variant="h6" sx={{ fontWeight: 'bold' }}>
+        <Text variant="h6" style={{ fontWeight: 'bold' }}>
           PDF Editor
         </Text>
 
@@ -72,7 +72,7 @@ export const EditorAppBar = ({
 
       {/* 2行目: 編集操作とプレビュー */}
       <Container
-        sx={{
+        style={{
           display: "flex",
           alignItems: "center",
           padding: `${spacing.scale[2]} ${spacing.scale[4]}`,
@@ -86,7 +86,7 @@ export const EditorAppBar = ({
           やり直し
         </Button>
 
-        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
+        <Divider style={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
 
         <Button onClick={onCopy} disabled={!hasSelectedObject} size="sm" variant="secondary" style={{ height: '36px' }}>
           コピー
@@ -101,7 +101,7 @@ export const EditorAppBar = ({
           削除
         </Button>
 
-        <Divider sx={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
+        <Divider style={{ height: '24px', width: '1px', margin: `0 ${spacing.scale[2]}`, backgroundColor: colors.border.default }} />
 
         <Button variant="outline" size="sm" onClick={onToggleVariableDisplay} style={{ height: '36px' }}>
           {variableDisplayMode === "name" ? "データ例で表示" : "変数で表示"}

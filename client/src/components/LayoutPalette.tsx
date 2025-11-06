@@ -10,13 +10,8 @@ import type {
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
 import { ShapeObjectPalette } from "./ShapeObjectPalette";
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Divider,
-} from "@mui/material";
+import { Container, Text, Divider, PropertyInput as Input, Button } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface LayoutPaletteProps {
   invoiceData: InvoiceData;
@@ -75,67 +70,61 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <Container style={{ padding: spacing.scale[4] }}>
+      <Text variant="h6" style={{ marginBottom: spacing.scale[2] }}>
         プロパティ
-      </Typography>
+      </Text>
 
-      <Divider sx={{ my: 2 }} />
+      <Divider style={{ margin: `${spacing.scale[2]} 0` }} />
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button onClick={() => onMoveLayer("up")} fullWidth variant="outlined">
+      <Container style={{ display: 'flex', gap: spacing.scale[2], marginBottom: spacing.scale[2] }}>
+        <Button onClick={() => onMoveLayer("up")} variant="outline" size="sm" style={{ width: '100%' }}>
           上へ
         </Button>
-        <Button onClick={() => onMoveLayer("down")} fullWidth variant="outlined">
+        <Button onClick={() => onMoveLayer("down")} variant="outline" size="sm" style={{ width: '100%' }}>
           下へ
         </Button>
-      </Box>
+      </Container>
 
-      <Typography variant="subtitle1" gutterBottom>
+      <Text variant="body" style={{ marginBottom: spacing.scale[2], display: 'block' }}>
         共通
-      </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
-        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
-          <TextField
-            label="X"
-            type="number"
-            size="small"
-            value={selectedObject.x}
-            onChange={(e) => handleNumericChange("x", e.target.value)}
-            fullWidth
-          />
-        </Box>
-        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
-          <TextField
-            label="Y"
-            type="number"
-            size="small"
-            value={selectedObject.y}
-            onChange={(e) => handleNumericChange("y", e.target.value)}
-            fullWidth
-          />
-        </Box>
-        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
-          <TextField
-            label="幅"
-            type="number"
-            size="small"
-            value={selectedObject.width}
-            onChange={(e) => handleNumericChange("width", e.target.value)}
-            fullWidth
-          />
-        </Box>
-        <Box sx={{ width: '50%', px: 1, mb: 2 }}>
-          <TextField
-            label="高さ"
-            type="number"
-            size="small"
-            value={selectedObject.height}
-            onChange={(e) => handleNumericChange("height", e.target.value)}
-            fullWidth
-          />
-        </Box>
-      </Box>
+      </Text>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="X"
+          type="number"
+          value={selectedObject.x}
+          onChange={(e) => handleNumericChange("x", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="Y"
+          type="number"
+          value={selectedObject.y}
+          onChange={(e) => handleNumericChange("y", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="幅"
+          type="number"
+          value={selectedObject.width}
+          onChange={(e) => handleNumericChange("width", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="高さ"
+          type="number"
+          value={selectedObject.height}
+          onChange={(e) => handleNumericChange("height", e.target.value)}
+        />
+      </Container>
 
       {selectedObject.type === "text" && (
         <TextObjectPalette
@@ -163,13 +152,12 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
 
       <Button
         onClick={onDelete}
-        fullWidth
-        variant="outlined"
-        color="error"
-        sx={{ mt: 2 }}
+        variant="secondary"
+        size="sm"
+        style={{ width: '100%', marginTop: spacing.scale[2], backgroundColor: '#dc2626', color: '#ffffff' }}
       >
         削除
       </Button>
-    </Box>
+    </Container>
   );
 };
