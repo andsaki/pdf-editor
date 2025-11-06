@@ -1,5 +1,5 @@
 import { Button } from "../design-system/components";
-import { colors, spacing, shadows } from "accessibility-learning/src/design-system/tokens";
+import { colors, spacing, shadows } from "../design-system/tokens";
 import { Container, Text, Divider } from "../design-system/components";
 
 interface EditorAppBarProps {

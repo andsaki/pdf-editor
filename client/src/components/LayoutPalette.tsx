@@ -10,8 +10,8 @@ import type {
 import { TextObjectPalette } from "./TextObjectPalette";
 import { TableObjectPalette } from "./TableObjectPalette";
 import { ShapeObjectPalette } from "./ShapeObjectPalette";
-import { Container, Text, Divider, Input, Button } from "../design-system/components";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
+import { Container, Text, Divider, PropertyInput as Input, Button } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface LayoutPaletteProps {
   invoiceData: InvoiceData;
@@ -70,7 +70,7 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
   };
 
   return (
-    <Container>
+    <Container style={{ padding: spacing.scale[4] }}>
       <Text variant="h6" style={{ marginBottom: spacing.scale[2] }}>
         プロパティ
       </Text>
@@ -89,39 +89,41 @@ export const LayoutPalette: React.FC<LayoutPaletteProps> = ({
       <Text variant="body" style={{ marginBottom: spacing.scale[2], display: 'block' }}>
         共通
       </Text>
-      <Container style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.scale[2] }}>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="X"
-            type="number"
-            value={selectedObject.x}
-            onChange={(e) => handleNumericChange("x", e.target.value)}
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="Y"
-            type="number"
-            value={selectedObject.y}
-            onChange={(e) => handleNumericChange("y", e.target.value)}
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="幅"
-            type="number"
-            value={selectedObject.width}
-            onChange={(e) => handleNumericChange("width", e.target.value)}
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="高さ"
-            type="number"
-            value={selectedObject.height}
-            onChange={(e) => handleNumericChange("height", e.target.value)}
-          />
-        </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="X"
+          type="number"
+          value={selectedObject.x}
+          onChange={(e) => handleNumericChange("x", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="Y"
+          type="number"
+          value={selectedObject.y}
+          onChange={(e) => handleNumericChange("y", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="幅"
+          type="number"
+          value={selectedObject.width}
+          onChange={(e) => handleNumericChange("width", e.target.value)}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="高さ"
+          type="number"
+          value={selectedObject.height}
+          onChange={(e) => handleNumericChange("height", e.target.value)}
+        />
       </Container>
 
       {selectedObject.type === "text" && (

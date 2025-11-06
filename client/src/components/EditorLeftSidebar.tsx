@@ -1,4 +1,4 @@
-import { colors, spacing } from "accessibility-learning/src/design-system/tokens";
+import { colors, spacing } from "../design-system/tokens";
 import { Container } from "../design-system/components";
 import { LeftToolbar } from "./LeftToolbar";
 import { ShapeCreationPalette } from "./ShapeCreationPalette";

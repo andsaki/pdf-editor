@@ -6,8 +6,8 @@ import type {
   CompanyInfoGql,
   TableCell,
 } from "../utils/types";
-import { Container, Text, Divider, Input, Select, Checkbox, Textarea } from "../design-system/components";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
+import { Container, Text, Divider, PropertyInput as Input, Select, Checkbox, Textarea } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface TextObjectPaletteProps {
   selectedObject: TextItem | TableCell;
@@ -125,6 +125,7 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
             rows={4}
             value={selectedObject.content}
             onChange={(e) => onContentChange("content", e.target.value)}
+            style={{ boxSizing: 'border-box' }}
           />
         </Container>
       )}
@@ -162,99 +163,104 @@ export const TextObjectPalette: React.FC<TextObjectPaletteProps> = ({
         </>
       )}
 
-      <Container style={{ display: "flex", flexWrap: "wrap", gap: spacing.scale[2] }}>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Select
-            label="フォント"
-            value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
-            onChange={(e) =>
-              onStyleChange({
-                fontFamily: e.target.value as TextItemStyle["fontFamily"],
-              })
-            }
-          >
-            <option value="BIZ UDPGothic">BIZ UDPGothic</option>
-          </Select>
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="フォントサイズ"
-            type="number"
-            value={selectedObject.style?.fontSize || 12}
-            onChange={(e) =>
-              onStyleChange({ fontSize: parseFloat(e.target.value) })
-            }
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="行の高さ"
-            type="number"
-            value={selectedObject.style?.lineHeight || 1}
-            onChange={(e) =>
-              onStyleChange({ lineHeight: parseFloat(e.target.value) })
-            }
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Select
-            label="水平方向の配置"
-            value={selectedObject.style?.textAlign || "left"}
-            onChange={(e) =>
-              onStyleChange({
-                textAlign: e.target.value as TextItemStyle["textAlign"],
-              })
-            }
-          >
-            <option value="left">左揃え</option>
-            <option value="center">中央揃え</option>
-            <option value="right">右揃え</option>
-          </Select>
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Select
-            label="垂直方向の配置"
-            value={selectedObject.style?.verticalAlign || "top"}
-            onChange={(e) =>
-              onStyleChange({
-                verticalAlign: e.target
-                  .value as TextItemStyle["verticalAlign"],
-              })
-            }
-          >
-            <option value="top">上揃え</option>
-            <option value="center">中央揃え</option>
-            <option value="bottom">下揃え</option>
-          </Select>
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Input
-            label="テキスト影"
-            value={selectedObject.style?.textShadow || ""}
-            onChange={(e) => onStyleChange({ textShadow: e.target.value })}
-            placeholder="e.g., 2px 2px 4px #000000"
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>色</Text>
-          <input
-            type="color"
-            value={selectedObject.style?.color || "#000000"}
-            onChange={(e) => onStyleChange({ color: e.target.value })}
-            style={{ width: "100%", height: "40px" }}
-          />
-        </Container>
-        <Container style={{ flex: '1 1 calc(50% - 8px)' }}>
-          <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>背景色</Text>
-          <input
-            type="color"
-            value={selectedObject.style?.backgroundColor || "#FFFFFF"}
-            onChange={(e) =>
-              onStyleChange({ backgroundColor: e.target.value })
-            }
-            style={{ width: "100%", height: "40px" }}
-          />
-        </Container>
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="フォント"
+          value={selectedObject.style?.fontFamily || "BIZ UDPGothic"}
+          onChange={(e) =>
+            onStyleChange({
+              fontFamily: e.target.value as TextItemStyle["fontFamily"],
+            })
+          }
+        >
+          <option value="BIZ UDPGothic">BIZ UDPGothic</option>
+        </Select>
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="フォントサイズ"
+          type="number"
+          value={selectedObject.style?.fontSize || 12}
+          onChange={(e) =>
+            onStyleChange({ fontSize: parseFloat(e.target.value) })
+          }
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="行の高さ"
+          type="number"
+          value={selectedObject.style?.lineHeight || 1}
+          onChange={(e) =>
+            onStyleChange({ lineHeight: parseFloat(e.target.value) })
+          }
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="水平方向の配置"
+          value={selectedObject.style?.textAlign || "left"}
+          onChange={(e) =>
+            onStyleChange({
+              textAlign: e.target.value as TextItemStyle["textAlign"],
+            })
+          }
+        >
+          <option value="left">左揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="right">右揃え</option>
+        </Select>
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Select
+          label="垂直方向の配置"
+          value={selectedObject.style?.verticalAlign || "top"}
+          onChange={(e) =>
+            onStyleChange({
+              verticalAlign: e.target
+                .value as TextItemStyle["verticalAlign"],
+            })
+          }
+        >
+          <option value="top">上揃え</option>
+          <option value="center">中央揃え</option>
+          <option value="bottom">下揃え</option>
+        </Select>
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Input
+          label="テキスト影"
+          value={selectedObject.style?.textShadow || ""}
+          onChange={(e) => onStyleChange({ textShadow: e.target.value })}
+          placeholder="e.g., 2px 2px 4px #000000"
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>色</Text>
+        <input
+          type="color"
+          value={selectedObject.style?.color || "#000000"}
+          onChange={(e) => onStyleChange({ color: e.target.value })}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
+        />
+      </Container>
+
+      <Container style={{ marginBottom: spacing.scale[2] }}>
+        <Text as="label" variant="body" style={{ display: 'block', marginBottom: spacing.scale[1] }}>背景色</Text>
+        <input
+          type="color"
+          value={selectedObject.style?.backgroundColor || "#FFFFFF"}
+          onChange={(e) =>
+            onStyleChange({ backgroundColor: e.target.value })
+          }
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
+        />
       </Container>
 
       <Container style={{ marginTop: spacing.scale[2] }}>

@@ -1,6 +1,6 @@
 import React from "react";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
-import { Tooltip } from "accessibility-learning/src/components/Tooltip";
+import { spacing } from "../design-system/tokens";
+import { Tooltip } from "../design-system/components";
 import { Container, Divider } from "../design-system/components";
 import { IconButton } from "../design-system/components/IconButton";
 import {

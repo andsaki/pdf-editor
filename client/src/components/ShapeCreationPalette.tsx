@@ -1,5 +1,5 @@
 import React from "react";
-import { colors, spacing, radii } from "accessibility-learning/src/design-system/tokens";
+import { colors, spacing, radii } from "../design-system/tokens";
 import { Container, Text, Divider, Button } from "../design-system/components";
 
 interface ShapeCreationPaletteProps {

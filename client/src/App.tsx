@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useCallback } from "react";
-import { colors } from "accessibility-learning/src/design-system/tokens";
+import { colors } from "./design-system/tokens";
 import { Container } from "./design-system/components";
 import { PdfPreview } from "./components/PdfPreview";
 import { EditorAppBar } from "./components/EditorAppBar";

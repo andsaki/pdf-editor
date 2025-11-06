@@ -1,7 +1,7 @@
 import React from "react";
 import type { LayoutItem, ShapeItem } from "../utils/types";
-import { Container, Text, Divider, Input, Select } from "../design-system/components";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
+import { Container, Text, Divider, PropertyInput as Input, Select } from "../design-system/components";
+import { spacing } from "../design-system/tokens";
 
 interface ShapeObjectPaletteProps {
   selectedObject: ShapeItem;
@@ -65,7 +65,7 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
           onChange={(e) =>
             handleStyleChange({ backgroundColor: e.target.value })
           }
-          style={{ width: "100%", height: "40px" }}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
         />
       </Container>
 
@@ -75,7 +75,7 @@ export const ShapeObjectPalette: React.FC<ShapeObjectPaletteProps> = ({
           type="color"
           value={selectedObject.style?.borderColor || "#000000"}
           onChange={(e) => handleStyleChange({ borderColor: e.target.value })}
-          style={{ width: "100%", height: "40px" }}
+          style={{ width: "100%", height: "40px", boxSizing: "border-box" }}
         />
       </Container>
 

@@ -33,6 +33,7 @@ export const SelectWrapper: React.FC<SelectWrapperProps> = ({
 
   const selectStyles: React.CSSProperties = {
     width: '100%',
+    boxSizing: 'border-box',
     fontFamily: typography.fontFamily.base,
     fontSize: typography.fontSize.base,
     borderRadius: radii.borderRadius.md,
@@ -60,7 +61,7 @@ export const SelectWrapper: React.FC<SelectWrapperProps> = ({
   };
 
   const containerStyles: React.CSSProperties = {
-    marginBottom: spacing.scale[4],
+    marginBottom: 0,
   };
 
   const getAriaDescribedBy = () => {

@@ -1,7 +1,7 @@
 import React from "react";
 import type { LayoutItem } from "../utils/types";
 import { Container, Text, Button } from "../design-system/components";
-import { spacing } from "accessibility-learning/src/design-system/tokens";
+import { spacing } from "../design-system/tokens";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Lock from "@mui/icons-material/Lock";
@@ -40,7 +40,7 @@ export const LayerPalette: React.FC<LayerPaletteProps> = ({
   };
 
   return (
-    <Container>
+    <Container style={{ padding: spacing.scale[4] }}>
       <Text variant="h6" style={{ marginBottom: spacing.scale[2] }}>
         レイヤー
       </Text>
